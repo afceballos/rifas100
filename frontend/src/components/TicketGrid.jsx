@@ -270,7 +270,7 @@ export default function TicketGrid() {
         )}
 
         <div className="inline-flex items-center gap-2 px-6 py-2 mb-8 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md shadow-sm">
-          <span className="text-zinc-500 dark:text-zinc-400 font-medium">Inversión por acceso:</span>
+          <span className="text-zinc-500 dark:text-zinc-400 font-medium">Valor sorteo:</span>
           <span className="font-mono text-xl font-bold text-emerald-600 dark:text-emerald-400">${raffle.price_per_ticket}</span>
         </div>
 
@@ -453,7 +453,7 @@ export default function TicketGrid() {
                 <button type="button" disabled={submitting} className="flex-1 px-4 py-3 rounded-xl text-zinc-600 dark:text-zinc-400 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
                   onClick={() => setShowReserveModal(false)}>Cancelar</button>
                 <button type="submit" disabled={submitting || sortedSelection.length === 0} className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50">
-                  Aceptar y continuar
+                  Reservar
                 </button>
               </div>
             </form>
