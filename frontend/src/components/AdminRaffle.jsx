@@ -13,7 +13,7 @@ export default function AdminRaffle() {
 
   const fetchDashboard = async () => {
     try {
-      const res = await fetch(`/api/admin_dashboard.php?id=${id}`);
+      const res = await fetch(`/api/admin_dashboard.php?id=${id}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
         setStats(data.stats);
@@ -30,7 +30,8 @@ export default function AdminRaffle() {
       const res = await fetch('/api/admin_mark_paid.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ raffle_id: id, ticket_number: ticketNumber, new_status: newStatus })
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: id, ticket_number: ticketNumber, new_status: newStatus }),
       });
       const data = await res.json();
       if (data.success) fetchDashboard();

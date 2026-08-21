@@ -1,7 +1,55 @@
 <?php
-session_start();
+require_once 'auth.php';
+require_once 'db.php';
 header('Content-Type: application/json');
- catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Error al cargar datos']);
+
+require_auth();
+
+$raffle_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+if ($raffle_id <= 0) {
+    echo json_encode(['success' => false, 'error' => 'ID de sorteo inválido']);
+    exit;
 }
 
+try {
+    // Stats de boletos
+    $stmt = $pdo->prepare("
+        SELECT
+            COUNT(CASE WHEN status = 'available' THEN 1 END) AS available,
+            COUNT(CASE WHEN status = 'reserved' THEN 1 END) AS reserved,
+            COUNT(CASE WHEN status = 'paid' THEN 1 END) AS paid
+        FROM tickets WHERE raffle_id = ?
+    ");
+    $stmt->execute([$raffle_id]);
+    $stats = $stmt->fetch();
+
+    // Dinero recaudado (solo boletos pagados)
+    $stmt2 = $pdo->prepare("
+        SELECT COALESCE(SUM(r.price_per_ticket), 0) AS money
+        FROM tickets t
+        JOIN raffles r ON r.id = t.raffle_id
+        WHERE t.raffle_id = ? AND t.status = 'paid'
+    ");
+    $stmt2->execute([$raffle_id]);
+    $money = $stmt2->fetchColumn();
+
+    // Listado de compradores (boletos reservados o pagados)
+    $stmt3 = $pdo->prepare("
+        SELECT ticket_number, buyer_name, buyer_phone, status
+        FROM tickets
+        WHERE raffle_id = ? AND status != 'available'
+        ORDER BY ticket_number ASC
+    ");
+    $stmt3->execute([$raffle_id]);
+    $buyers = $stmt3->fetchAll();
+
+    echo json_encode([
+        'success' => true,
+        'stats'   => $stats,
+        'money'   => $money,
+        'buyers'  => $buyers,
+    ]);
+} catch (Exception $e) {
+    echo json_encode(['success' => false, 'error' => 'Error al cargar datos']);
+}

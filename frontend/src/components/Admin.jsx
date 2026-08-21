@@ -19,7 +19,7 @@ export default function Admin() {
 
   const checkAuth = async () => {
     try {
-      const res = await fetch('/api/admin_get_raffles.php');
+      const res = await fetch('/api/admin_get_raffles.php', { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
         setIsLoggedIn(true);
@@ -32,7 +32,12 @@ export default function Admin() {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('/api/login.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
+      const res = await fetch('/api/login.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, password }),
+      });
       const data = await res.json();
       if (data.success) checkAuth();
       else alert(data.message);
@@ -44,7 +49,12 @@ export default function Admin() {
     e.preventDefault();
     setCreating(true);
     try {
-      const res = await fetch('/api/admin_create_raffle.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newRaffle) });
+      const res = await fetch('/api/admin_create_raffle.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(newRaffle),
+      });
       const data = await res.json();
       if (data.success) {
         setShowCreate(false);
@@ -56,7 +66,7 @@ export default function Admin() {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/logout.php');
+      await fetch('/api/logout.php', { credentials: 'include' });
       setIsLoggedIn(false);
     } catch (err) {
       console.error("Error logging out", err);
