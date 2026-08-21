@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 <<<<<<< HEAD
+<<<<<<< HEAD
 require_once 'db.php';
 require_once 'auth.php';
 
@@ -45,6 +46,9 @@ try {
     $stmt->execute([$raffle_id]);
 =======
 
+=======
+
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
 if (!isset($_SESSION['admin_id'])) {
     echo json_encode(['success' => false, 'error' => 'No autorizado']);
     exit;
@@ -69,15 +73,24 @@ try {
 
     // Lista de compradores
     $stmt = $pdo->query("SELECT ticket_number, status, buyer_name, buyer_phone, buyer_email, updated_at FROM tickets WHERE status != 'available' ORDER BY updated_at DESC");
+<<<<<<< HEAD
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
+=======
 >>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
     $buyers = $stmt->fetchAll();
 
     echo json_encode([
         'success' => true,
 <<<<<<< HEAD
+<<<<<<< HEAD
         'stats'   => $stats,
         'money'   => $money,
         'buyers'  => $buyers,
+=======
+        'stats' => $stats,
+        'money' => $money,
+        'buyers' => $buyers
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
 =======
         'stats' => $stats,
         'money' => $money,

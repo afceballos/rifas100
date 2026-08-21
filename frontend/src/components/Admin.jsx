@@ -1,17 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import ThemeToggle from './ThemeToggle';
 <<<<<<< HEAD
+<<<<<<< HEAD
 import { LayoutDashboard, LogOut, PlusCircle, ArrowRight } from 'lucide-react';
 import { apiGet, apiPost, getToken, setToken, clearToken } from '../api';
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(!!getToken());
 =======
+=======
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
 import { DollarSign, Ticket, Clock, CheckCircle2, LayoutDashboard, LogOut } from 'lucide-react';
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   
+<<<<<<< HEAD
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
+=======
 >>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -24,6 +30,7 @@ export default function Admin() {
 
   useEffect(() => { fetchDashboard(); }, []);
 
+<<<<<<< HEAD
 <<<<<<< HEAD
   useEffect(() => {
     if (getToken()) fetchRaffles();
@@ -47,6 +54,10 @@ export default function Admin() {
 =======
   const fetchDashboard = async () => {
     try {
+=======
+  const fetchDashboard = async () => {
+    try {
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
       const res = await fetch('/api/admin_dashboard.php');
       const data = await res.json();
       if (data.success) {
@@ -56,6 +67,9 @@ export default function Admin() {
         setBuyers(data.buyers);
       } else { setIsLoggedIn(false); }
     } catch (err) { console.error(err); }
+<<<<<<< HEAD
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
+=======
 >>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
   };
 
@@ -63,6 +77,7 @@ export default function Admin() {
     e.preventDefault();
     setLoading(true);
     try {
+<<<<<<< HEAD
 <<<<<<< HEAD
       const data = await apiPost('/api/login.php', { username, password });
       if (data.success && data.token) {
@@ -76,6 +91,8 @@ export default function Admin() {
       alert('Error de conexión');
     }
 =======
+=======
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
       const res = await fetch('/api/login.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -87,6 +104,9 @@ export default function Admin() {
         fetchDashboard();
       } else { setLoginError(data.message); }
     } catch (err) { setLoginError('Error de conexión'); }
+<<<<<<< HEAD
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
+=======
 >>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
     setLoading(false);
   };
@@ -94,6 +114,7 @@ export default function Admin() {
   const markAsPaid = async (ticketNumber) => {
     if (!window.confirm(`¿Confirmar pago del boleto #${ticketNumber}?`)) return;
     try {
+<<<<<<< HEAD
 <<<<<<< HEAD
       const data = await apiPost('/api/admin_create_raffle.php', newRaffle);
       if (data.success) {
@@ -110,6 +131,20 @@ export default function Admin() {
     setIsLoggedIn(false);
   };
 
+=======
+      const res = await fetch('/api/admin_mark_paid.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticket_number: ticketNumber })
+      });
+      const data = await res.json();
+      if (data.success) fetchDashboard();
+      else alert(data.error || 'Error al actualizar');
+    } catch (err) { alert('Error de conexión'); }
+  };
+
+  // --- LOGIN VIEW ---
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
 =======
       const res = await fetch('/api/admin_mark_paid.php', {
         method: 'POST',
@@ -168,7 +203,13 @@ export default function Admin() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
 <<<<<<< HEAD
+<<<<<<< HEAD
             <button onClick={handleLogout} className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><LogOut size={16} /></button>
+=======
+            <button onClick={() => setIsLoggedIn(false)} className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors">
+              <LogOut size={16} /> Salir
+            </button>
+>>>>>>> parent of e50b982 (Arquitectura Multi-tenant SaaS y Landing Page implementada)
 =======
             <button onClick={() => setIsLoggedIn(false)} className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors">
               <LogOut size={16} /> Salir
