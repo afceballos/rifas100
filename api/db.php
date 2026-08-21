@@ -1,5 +1,5 @@
 <?php
-$host = 'localhost';
+$host = 'srv1776.hstgr.io';
 $dbname = 'u527801383_rifas100';
 $user = 'rifas100admin';
 $pass = '12345678aF*';
