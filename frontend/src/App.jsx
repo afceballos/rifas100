@@ -1,11 +1,16 @@
 import React from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import TicketGrid from './components/TicketGrid'
+import Admin from './components/Admin'
 
 function App() {
   return (
-    <div className="min-h-screen bg-[#0F172A]">
-      <TicketGrid raffleId={1} />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<TicketGrid />} />
+        <Route path="/admin" element={<Admin />} />
+      </Routes>
+    </BrowserRouter>
   )
 }
 
