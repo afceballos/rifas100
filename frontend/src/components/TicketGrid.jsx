@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ThemeToggle from './ThemeToggle';
 import NotFound from './NotFound';
-import { ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag } from 'lucide-react';
 
 gsap.registerPlugin(useGSAP);
 
@@ -40,13 +40,15 @@ export default function TicketGrid() {
   const containerRef = useRef();
   const [tickets, setTickets] = useState([]);
   const [raffle, setRaffle] = useState(null);
-  const [selectedTicket, setSelectedTicket] = useState(null);
+  const [selectedNumbers, setSelectedNumbers] = useState(new Set());
+  const [showReserveModal, setShowReserveModal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
   const [notFoundVariant, setNotFoundVariant] = useState(null);
 
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
   const [purchaseStatus, setPurchaseStatus] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [isEnded, setIsEnded] = useState(false);
@@ -58,6 +60,42 @@ export default function TicketGrid() {
 
   // Resetear la página cuando cambia la rifa
   useEffect(() => { setPage(0); }, [id]);
+
+  // Restaurar la selección guardada para esta rifa (sobrevive a recargas de página)
+  const storageKey = `ticketvault_selection_${id}`;
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      setSelectedNumbers(raw ? new Set(JSON.parse(raw)) : new Set());
+    } catch {
+      setSelectedNumbers(new Set());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  // Persistir la selección en cada cambio
+  useEffect(() => {
+    try {
+      if (selectedNumbers.size > 0) localStorage.setItem(storageKey, JSON.stringify([...selectedNumbers]));
+      else localStorage.removeItem(storageKey);
+    } catch { /* localStorage no disponible */ }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedNumbers, id]);
+
+  // Si un número seleccionado ya no está disponible (lo tomó alguien más), se limpia de la selección
+  useEffect(() => {
+    setSelectedNumbers(prev => {
+      let changed = false;
+      const next = new Set(prev);
+      tickets.forEach(t => {
+        if (next.has(t.number) && t.status !== 'available') {
+          next.delete(t.number);
+          changed = true;
+        }
+      });
+      return changed ? next : prev;
+    });
+  }, [tickets]);
 
   const loadTickets = (targetPage) => {
     setPageLoading(true);
@@ -135,20 +173,26 @@ export default function TicketGrid() {
     if (clamped !== page) setPage(clamped);
   };
 
-  const handleSelect = (ticket, element) => {
+  const toggleSelect = (ticket, element) => {
     if (ticket.status !== 'available' || isEnded) return;
-    
-    gsap.to(element, {
-      scale: 0.9, duration: 0.1, yoyo: true, repeat: 1,
-      onComplete: () => {
-        setSelectedTicket(ticket);
-        setPurchaseStatus('');
-      }
+
+    gsap.to(element, { scale: 0.9, duration: 0.1, yoyo: true, repeat: 1 });
+    setSelectedNumbers(prev => {
+      const next = new Set(prev);
+      if (next.has(ticket.number)) next.delete(ticket.number);
+      else next.add(ticket.number);
+      return next;
     });
   };
 
+  const clearSelection = () => setSelectedNumbers(new Set());
+
+  const sortedSelection = [...selectedNumbers].sort((a, b) => a - b);
+  const selectionTotal = raffle ? (sortedSelection.length * parseFloat(raffle.price_per_ticket)) : 0;
+
   const handlePurchase = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     setPurchaseStatus('Procesando reserva...');
     try {
       const res = await fetch('/api/reserve_ticket.php', {
@@ -156,7 +200,7 @@ export default function TicketGrid() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           raffle_id: raffle.id,
-          ticket_number: selectedTicket.number,
+          ticket_numbers: sortedSelection,
           buyer_name: formData.name,
           buyer_phone: formData.phone,
           buyer_email: formData.email
@@ -164,16 +208,28 @@ export default function TicketGrid() {
       });
       const data = await res.json();
       if(data.success) {
-        setPurchaseStatus('¡Boleto bloqueado a tu nombre!');
+        setPurchaseStatus('¡Boletos bloqueados a tu nombre!');
         setTimeout(() => {
-          setSelectedTicket(null);
+          setShowReserveModal(false);
+          setSelectedNumbers(new Set());
           setFormData({ name: '', phone: '', email: '' });
+          setPurchaseStatus('');
           loadTickets(page);
         }, 2000);
       } else {
-        setPurchaseStatus(data.message || 'Error al reservar.');
+        if (Array.isArray(data.unavailable) && data.unavailable.length > 0) {
+          const stale = new Set(data.unavailable);
+          setSelectedNumbers(prev => new Set([...prev].filter(n => !stale.has(n))));
+          setPurchaseStatus(`Los boletos ${data.unavailable.map(n => n.toString().padStart(pad, '0')).join(', ')} ya no estaban disponibles y fueron quitados de tu selección. Revisa e intenta de nuevo.`);
+        } else {
+          setPurchaseStatus(data.message || 'Error al reservar.');
+        }
+        setSubmitting(false);
       }
-    } catch(err) { setPurchaseStatus('Error de conexión.'); }
+    } catch(err) {
+      setPurchaseStatus('Error de conexión.');
+      setSubmitting(false);
+    }
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-sans bg-zinc-50 dark:bg-zinc-950"><div className="animate-pulse flex items-center gap-2"><Ticket className="animate-spin text-blue-500" /> Cargando bóveda...</div></div>;
@@ -287,16 +343,19 @@ export default function TicketGrid() {
         <div className={`grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3 transition-opacity duration-200 ${isEnded ? 'opacity-50 pointer-events-none grayscale' : ''} ${pageLoading ? 'opacity-30 pointer-events-none' : ''}`}>
           {tickets.map((t) => {
             const isAv = t.status === 'available';
-            const bgClass = isAv
-              ? 'bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:shadow-blue-500/20 hover:border-blue-500 dark:hover:border-blue-400 text-zinc-900 dark:text-zinc-100'
-              : t.status === 'paid'
-                ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-500 opacity-60 cursor-not-allowed'
-                : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 opacity-50 cursor-not-allowed';
+            const isSelected = isAv && selectedNumbers.has(t.number);
+            const bgClass = isSelected
+              ? 'bg-gradient-to-br from-blue-500 to-violet-500 border border-transparent text-white shadow-lg shadow-blue-500/30 scale-105'
+              : isAv
+                ? 'bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:shadow-blue-500/20 hover:border-blue-500 dark:hover:border-blue-400 text-zinc-900 dark:text-zinc-100'
+                : t.status === 'paid'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-500 opacity-60 cursor-not-allowed'
+                  : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 opacity-50 cursor-not-allowed';
 
             return (
               <button
                 key={t.number}
-                onClick={(e) => handleSelect(t, e.currentTarget)}
+                onClick={(e) => toggleSelect(t, e.currentTarget)}
                 disabled={!isAv || isEnded}
                 className={`ticket-item h-12 sm:h-14 flex items-center justify-center rounded-xl font-mono text-base sm:text-lg font-bold transition-all duration-300 ${bgClass}`}
               >
@@ -307,19 +366,55 @@ export default function TicketGrid() {
         </div>
       </div>
 
+      {/* Barra flotante de selección */}
+      <div
+        className={`fixed bottom-4 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-40 transition-all duration-300 ${
+          selectedNumbers.size > 0 && !isEnded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
+        }`}
+      >
+        <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl rounded-2xl pl-2 pr-3 py-2 sm:pl-3 sm:pr-4 sm:py-3">
+          <button
+            onClick={clearSelection}
+            title="Vaciar selección"
+            className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors shrink-0"
+          >
+            <Trash2 size={18} />
+          </button>
+          <div className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
+            {selectedNumbers.size} boleto{selectedNumbers.size === 1 ? '' : 's'} seleccionado{selectedNumbers.size === 1 ? '' : 's'}
+          </div>
+          <button
+            onClick={() => { setPurchaseStatus(''); setShowReserveModal(true); }}
+            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 whitespace-nowrap"
+          >
+            <ShoppingBag size={16} /> Tomar números
+          </button>
+        </div>
+      </div>
+
       {/* Modal Desplegable Premium */}
-      {selectedTicket && !isEnded && (
+      {showReserveModal && !isEnded && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setSelectedTicket(null)}></div>
-          <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 transform transition-all">
-            
-            <div className="flex justify-between items-start mb-6">
+          <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => !submitting && setShowReserveModal(false)}></div>
+          <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 transform transition-all max-h-[90vh] overflow-y-auto">
+
+            <div className="flex justify-between items-start mb-4">
               <div>
                 <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Reservar Acceso</h2>
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Boleto seleccionado: <span className="font-mono text-blue-500 font-bold">#{selectedTicket.number.toString().padStart(pad, '0')}</span></p>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
+                  {sortedSelection.length} boleto{sortedSelection.length === 1 ? '' : 's'} seleccionado{sortedSelection.length === 1 ? '' : 's'}
+                </p>
               </div>
             </div>
-            
+
+            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto mb-6 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
+              {sortedSelection.map(num => (
+                <span key={num} className="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
+                  #{num.toString().padStart(pad, '0')}
+                </span>
+              ))}
+            </div>
+
             {purchaseStatus && (
               <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 rounded-2xl border border-blue-100 dark:border-blue-900/50 text-center text-sm font-medium">
                 {purchaseStatus}
@@ -329,25 +424,36 @@ export default function TicketGrid() {
             <form onSubmit={handlePurchase} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Nombre Completo <span className="text-blue-500">*</span></label>
-                <input required type="text" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all" 
+                <input required type="text" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                   value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej. Juan Pérez" />
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Teléfono Celular <span className="text-blue-500">*</span></label>
-                <input required type="tel" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all" 
+                <input required type="tel" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                   value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+00 0000000" />
               </div>
               <div>
                 <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Correo Electrónico (Opcional)</label>
-                <input type="email" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all" 
+                <input type="email" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                   value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="tu@correo.com" />
               </div>
-              
+
+              <div className="flex items-center justify-between px-1 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                <div>
+                  <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Cantidad</p>
+                  <p className="font-mono font-bold text-lg">{sortedSelection.length}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Total</p>
+                  <p className="font-mono font-bold text-lg text-emerald-600 dark:text-emerald-400">${selectionTotal.toFixed(2)}</p>
+                </div>
+              </div>
+
               <div className="pt-4 flex gap-3">
-                <button type="button" className="flex-1 px-4 py-3 rounded-xl text-zinc-600 dark:text-zinc-400 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                  onClick={() => setSelectedTicket(null)}>Cancelar</button>
-                <button type="submit" className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95">
-                  Confirmar
+                <button type="button" disabled={submitting} className="flex-1 px-4 py-3 rounded-xl text-zinc-600 dark:text-zinc-400 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                  onClick={() => setShowReserveModal(false)}>Cancelar</button>
+                <button type="submit" disabled={submitting || sortedSelection.length === 0} className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50">
+                  Aceptar y continuar
                 </button>
               </div>
             </form>
