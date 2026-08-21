@@ -1,6 +1,5 @@
 <?php
 header('Content-Type: application/json');
-<<<<<<< HEAD
 require_once 'db.php';
 require_once 'auth.php';
 
@@ -13,7 +12,7 @@ if ($raffle_id <= 0) {
 }
 
 try {
-    // Stats por estado
+    // Stats por estado para esta rifa
     $stmt = $pdo->prepare("
         SELECT status, COUNT(*) AS total
         FROM tickets
