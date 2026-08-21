@@ -1,7 +1,7 @@
 <?php
-$host = 'srv1776.hstgr.io';
+$host = 'localhost';
 $dbname = 'u527801383_rifas100';
-$user = 'rifas100admin';
+$user = 'u527801383_rifas100admin';
 $pass = '12345678aF*';
 
 $dsn = "mysql:host=$host;dbname=$dbname;charset=utf8mb4";
