@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ThemeToggle from './ThemeToggle';
 import { DollarSign, Ticket, Clock, CheckCircle2, LayoutDashboard, LogOut } from 'lucide-react';
-import { apiGet, apiPost, clearToken, setToken } from '../api';
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-
+  
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -15,23 +14,18 @@ export default function Admin() {
   const [buyers, setBuyers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-
   useEffect(() => { fetchDashboard(); }, []);
 
   const fetchDashboard = async () => {
     try {
-      const data = await apiGet('/api/admin_dashboard.php');
-
+      const res = await fetch('/api/admin_dashboard.php');
+      const data = await res.json();
       if (data.success) {
         setIsLoggedIn(true);
         setStats(data.stats);
         setMoney(data.money);
         setBuyers(data.buyers);
-
-      } else {
-        clearToken();
-        setIsLoggedIn(false);
-      }
+      } else { setIsLoggedIn(false); }
     } catch (err) { console.error(err); }
   };
 
@@ -39,11 +33,15 @@ export default function Admin() {
     e.preventDefault();
     setLoading(true);
     try {
-      const data = await apiPost('/api/login.php', { username, password });
+      const res = await fetch('/api/login.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
       if (data.success) {
-        setToken(data.token);
         setLoginError('');
-        await fetchDashboard();
+        fetchDashboard();
       } else { setLoginError(data.message); }
     } catch (err) { setLoginError('Error de conexión'); }
     setLoading(false);
@@ -52,7 +50,12 @@ export default function Admin() {
   const markAsPaid = async (ticketNumber) => {
     if (!window.confirm(`¿Confirmar pago del boleto #${ticketNumber}?`)) return;
     try {
-      const data = await apiPost('/api/admin_mark_paid.php', { ticket_number: ticketNumber });
+      const res = await fetch('/api/admin_mark_paid.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticket_number: ticketNumber })
+      });
+      const data = await res.json();
       if (data.success) fetchDashboard();
       else alert(data.error || 'Error al actualizar');
     } catch (err) { alert('Error de conexión'); }
@@ -68,7 +71,6 @@ export default function Admin() {
             <div className="p-3 bg-blue-100 dark:bg-blue-500/10 rounded-2xl text-blue-600 dark:text-blue-500"><LayoutDashboard size={32} /></div>
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-center mb-8 text-zinc-900 dark:text-white">Acceso Operativo</h2>
-
           
           {loginError && <div className="mb-6 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-xl text-center text-sm font-medium">{loginError}</div>}
           
@@ -103,9 +105,7 @@ export default function Admin() {
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-
-            <button onClick={() => { clearToken(); setIsLoggedIn(false); }} className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors">
-
+            <button onClick={() => setIsLoggedIn(false)} className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors">
               <LogOut size={16} /> Salir
             </button>
           </div>
@@ -113,7 +113,6 @@ export default function Admin() {
       </nav>
 
       <div className="max-w-6xl mx-auto px-6 mt-10">
-
         {/* Tarjetas SaaS Modernas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {[
