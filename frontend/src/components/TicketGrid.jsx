@@ -1,5 +1,4 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ThemeToggle from './ThemeToggle';
@@ -20,7 +19,6 @@ const TimeBlock = ({ value, label }) => (
 );
 
 export default function TicketGrid() {
-  const { id } = useParams();
   const containerRef = useRef();
   const [tickets, setTickets] = useState([]);
   const [raffle, setRaffle] = useState(null);
@@ -34,7 +32,7 @@ export default function TicketGrid() {
   const [isEnded, setIsEnded] = useState(false);
 
   const loadTickets = () => {
-    fetch(`/api/get_tickets.php?id=${id}`)
+    fetch('/api/get_tickets.php')
       .then(res => res.json())
       .then(data => {
         if(data.success) {
