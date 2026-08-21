@@ -51,9 +51,9 @@ export default function TicketGrid() {
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [isEnded, setIsEnded] = useState(false);
 
-  // Paginación: cuando la rifa tiene más de PAGE_SIZE boletos, se piden
-  // al servidor de a PAGE_SIZE por vez (carga diferida por página).
-  const PAGE_SIZE = 100;
+  // Paginación: solo aplica a rifas de más de 3 cifras (más de 1000 boletos).
+  // Cada página trae 1000 boletos del servidor (0-999, 1000-1999, ...).
+  const PAGE_SIZE = 1000;
   const [page, setPage] = useState(0);
 
   // Resetear la página cuando cambia la rifa
@@ -113,9 +113,11 @@ export default function TicketGrid() {
 
   useGSAP(() => {
     if (tickets.length > 0 && !loading) {
+      // stagger por "amount" total (no por ítem): con páginas de hasta 1000
+      // boletos, un stagger fijo por ítem tardaría demasiado en terminar.
       gsap.fromTo('.ticket-item',
         { y: 40, opacity: 0, scale: 0.9 },
-        { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.015, ease: 'back.out(1.2)' }
+        { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: { amount: 0.7, from: 'start' }, ease: 'back.out(1.2)' }
       );
     }
   }, { dependencies: [tickets, loading], scope: containerRef });

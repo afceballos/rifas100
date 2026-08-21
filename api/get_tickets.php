@@ -4,7 +4,7 @@ require_once 'db.php';
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $offset = isset($_GET['offset']) ? max(0, (int)$_GET['offset']) : 0;
-$limit = isset($_GET['limit']) ? min(200, max(1, (int)$_GET['limit'])) : 100;
+$limit = isset($_GET['limit']) ? min(1000, max(1, (int)$_GET['limit'])) : 1000;
 
 try {
     $stmt = $pdo->prepare("SELECT id, title, description, background_image, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
