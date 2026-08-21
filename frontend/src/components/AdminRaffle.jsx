@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
 import { DollarSign, Ticket, Clock, CheckCircle2, ArrowLeft } from 'lucide-react';
+import { apiGet, apiPost, getToken } from '../api';
 
 export default function AdminRaffle() {
   const { id } = useParams();
@@ -9,12 +10,11 @@ export default function AdminRaffle() {
   const [money, setMoney] = useState(0);
   const [buyers, setBuyers] = useState([]);
 
-  useEffect(() => { fetchDashboard(); }, [id]);
+  useEffect(() => { if (getToken()) fetchDashboard(); }, [id]);
 
   const fetchDashboard = async () => {
     try {
-      const res = await fetch(`/api/admin_dashboard.php?id=${id}`);
-      const data = await res.json();
+      const data = await apiGet(`/api/admin_dashboard.php?id=${id}`);
       if (data.success) {
         setStats(data.stats);
         setMoney(data.money);
@@ -27,12 +27,11 @@ export default function AdminRaffle() {
     const newStatus = currentStatus === 'reserved' ? 'paid' : 'reserved';
     if (!window.confirm(`¿Cambiar estado del boleto #${ticketNumber} a ${newStatus.toUpperCase()}?`)) return;
     try {
-      const res = await fetch('/api/admin_mark_paid.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ raffle_id: id, ticket_number: ticketNumber, new_status: newStatus })
+      const data = await apiPost('/api/admin_mark_paid.php', {
+        raffle_id: id,
+        ticket_number: ticketNumber,
+        new_status: newStatus
       });
-      const data = await res.json();
       if (data.success) fetchDashboard();
       else alert(data.error || 'Error al actualizar');
     } catch (err) { alert('Error de conexión'); }

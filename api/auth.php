@@ -1,25 +1,37 @@
 <?php
-// Evitar iniciar sesión si ya se inició en el archivo padre
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
+// Lee el header Authorization: Bearer <token>
+function get_bearer_token() {
+    $headers = [];
+    if (function_exists('getallheaders')) {
+        $headers = array_change_key_case(getallheaders(), CASE_LOWER);
+    }
+    $auth = $headers['authorization'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+
+    if (preg_match('/Bearer\s+(\S+)/i', $auth, $m)) {
+        return $m[1];
+    }
+    return null;
 }
 
 function require_auth() {
-    if (!isset($_SESSION['admin_id'])) {
+    global $pdo;
+
+    $token = get_bearer_token();
+    if (!$token) {
         http_response_code(401);
-        echo json_encode(['success' => false, 'error' => 'No autorizado']);
+        echo json_encode(['success' => false, 'error' => 'No autorizado: falta token']);
         exit;
     }
 
-    // Expiración por inactividad estricta (1 hora = 3600 segundos)
-    if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity'] > 3600)) {
-        session_unset();
-        session_destroy();
+    $stmt = $pdo->prepare("SELECT user_id FROM auth_tokens WHERE token = ? AND expires_at > NOW() LIMIT 1");
+    $stmt->execute([$token]);
+    $row = $stmt->fetch();
+
+    if (!$row) {
         http_response_code(401);
-        echo json_encode(['success' => false, 'error' => 'Sesión expirada por inactividad']);
+        echo json_encode(['success' => false, 'error' => 'Token inválido o expirado']);
         exit;
     }
 
-    // Renovar la ventana de tiempo si hubo actividad
-    $_SESSION['last_activity'] = time();
+    return (int)$row['user_id'];
 }

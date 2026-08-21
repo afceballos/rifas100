@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
 import { LayoutDashboard, LogOut, PlusCircle, ArrowRight } from 'lucide-react';
+import { apiGet, apiPost, getToken, setToken, clearToken } from '../api';
 
 export default function Admin() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(!!getToken());
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -15,28 +16,42 @@ export default function Admin() {
   const [newRaffle, setNewRaffle] = useState({ title: '', price_per_ticket: '', digits: '2', draw_date: '' });
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => { checkAuth(); }, []);
+  useEffect(() => {
+    if (getToken()) fetchRaffles();
+  }, []);
 
-  const checkAuth = async () => {
+  const fetchRaffles = async () => {
     try {
-      const res = await fetch('/api/admin_get_raffles.php');
-      const data = await res.json();
+      const data = await apiGet('/api/admin_get_raffles.php');
       if (data.success) {
         setIsLoggedIn(true);
-        setRaffles(data.raffles);
-      } else setIsLoggedIn(false);
-    } catch (err) { setIsLoggedIn(false); }
+        setRaffles(data.raffles || []);
+      } else {
+        // Token expiró o es inválido
+        clearToken();
+        setIsLoggedIn(false);
+      }
+    } catch (err) {
+      clearToken();
+      setIsLoggedIn(false);
+    }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('/api/login.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username, password }) });
-      const data = await res.json();
-      if (data.success) checkAuth();
-      else alert(data.message);
-    } catch (err) { alert('Error de conexión'); }
+      const data = await apiPost('/api/login.php', { username, password });
+      if (data.success && data.token) {
+        setToken(data.token);
+        setIsLoggedIn(true);
+        fetchRaffles();
+      } else {
+        alert(data.message || 'Error de login');
+      }
+    } catch (err) {
+      alert('Error de conexión');
+    }
     setLoading(false);
   };
 
@@ -44,23 +59,19 @@ export default function Admin() {
     e.preventDefault();
     setCreating(true);
     try {
-      const res = await fetch('/api/admin_create_raffle.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(newRaffle) });
-      const data = await res.json();
+      const data = await apiPost('/api/admin_create_raffle.php', newRaffle);
       if (data.success) {
         setShowCreate(false);
-        checkAuth();
+        fetchRaffles();
       } else alert(data.error);
     } catch (err) { alert('Error al crear'); }
     setCreating(false);
   };
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/logout.php');
-      setIsLoggedIn(false);
-    } catch (err) {
-      console.error("Error logging out", err);
-    }
+    try { await apiPost('/api/logout.php', {}); } catch (err) { /* ignorar */ }
+    clearToken();
+    setIsLoggedIn(false);
   };
 
   if (!isLoggedIn) {

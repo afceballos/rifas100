@@ -13,6 +13,17 @@ $options = [
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
+
+    // Crea la tabla de tokens de auth si no existe (no necesitas correr SQL manual)
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS auth_tokens (
+            token VARCHAR(64) PRIMARY KEY,
+            user_id INT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at DATETIME NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+    ");
 } catch (\PDOException $e) {
     header('HTTP/1.1 500 Internal Server Error');
     echo json_encode(['error' => 'Database connection failed']);
