@@ -4,6 +4,7 @@ import Landing from './components/Landing'
 import TicketGrid from './components/TicketGrid'
 import Admin from './components/Admin'
 import AdminRaffle from './components/AdminRaffle'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
@@ -12,7 +13,14 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/sorteo/:id" element={<TicketGrid />} />
         <Route path="/admin" element={<Admin />} />
-        <Route path="/admin/raffle/:id" element={<AdminRaffle />} />
+        <Route
+          path="/admin/raffle/:id"
+          element={
+            <ProtectedRoute>
+              <AdminRaffle />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </BrowserRouter>
   )
