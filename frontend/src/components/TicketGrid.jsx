@@ -214,7 +214,11 @@ export default function TicketGrid() {
 
   const clearSelection = () => setSelectedNumbers(new Set());
 
-  const scrollToGrid = () => {
+  const viewAvailableNumbers = () => {
+    // Refresca los boletos de la página actual en tiempo real (sin recargar el
+    // navegador) para reflejar lo que otros compradores hayan tomado mientras
+    // tanto, y desplaza hasta la grilla.
+    loadTickets(page);
     gridSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -359,7 +363,7 @@ export default function TicketGrid() {
         {!isEnded && (
           <div className="flex items-center justify-center gap-3 mt-10 flex-wrap">
             <button
-              onClick={scrollToGrid}
+              onClick={viewAvailableNumbers}
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
               <LayoutGrid size={16} /> Ver números disponibles
