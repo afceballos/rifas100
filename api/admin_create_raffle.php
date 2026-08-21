@@ -1,13 +1,7 @@
 <?php
 session_start();
 header('Content-Type: application/json');
-if (!isset($_SESSION['admin_id'])) { echo json_encode(['success' => false, 'error' => 'No autorizado']); exit; }
-require_once 'db.php';
 
-$data = json_decode(file_get_contents('php://input'), true);
-if(!isset($data['title'], $data['price_per_ticket'], $data['digits'], $data['draw_date'])) {
-    echo json_encode(['success' => false, 'error' => 'Faltan datos']); exit;
-}
 
 // Digits: 2 (100 boletos: 00-99), 3 (1000 boletos: 000-999), 4 (10000 boletos: 0000-9999)
 $digits = (int)$data['digits'];
@@ -45,3 +39,4 @@ try {
     $pdo->rollBack();
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);
 }
+

@@ -54,6 +54,15 @@ export default function Admin() {
     setCreating(false);
   };
 
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/logout.php');
+      setIsLoggedIn(false);
+    } catch (err) {
+      console.error("Error logging out", err);
+    }
+  };
+
   if (!isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
@@ -76,7 +85,7 @@ export default function Admin() {
           <div className="flex items-center gap-2 font-bold text-lg"><LayoutDashboard className="text-blue-500" /> Sorteos Activos</div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <button onClick={() => setIsLoggedIn(false)} className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><LogOut size={16} /></button>
+            <button onClick={handleLogout} className="text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white"><LogOut size={16} /></button>
           </div>
         </div>
       </nav>
