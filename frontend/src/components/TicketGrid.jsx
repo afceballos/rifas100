@@ -4,7 +4,9 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ThemeToggle from './ThemeToggle';
 import NotFound from './NotFound';
-import { ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag } from 'lucide-react';
+import { ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, LayoutGrid, Dices, X, RotateCcw } from 'lucide-react';
+
+const RANDOM_PRESETS = [1, 2, 3, 5];
 
 gsap.registerPlugin(useGSAP);
 
@@ -45,6 +47,7 @@ const TimeBlock = ({ value, label }) => (
 export default function TicketGrid() {
   const { id } = useParams();
   const containerRef = useRef();
+  const gridSectionRef = useRef(null);
   const [tickets, setTickets] = useState([]);
   const [raffle, setRaffle] = useState(null);
   const [selectedNumbers, setSelectedNumbers] = useState(new Set());
@@ -54,6 +57,14 @@ export default function TicketGrid() {
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
   const [notFoundVariant, setNotFoundVariant] = useState(null);
+
+  // Selección al azar
+  const [showRandomModal, setShowRandomModal] = useState(false);
+  const [randomStep, setRandomStep] = useState('pick'); // 'pick' | 'preview'
+  const [randomQuantity, setRandomQuantity] = useState(null);
+  const [randomNumbers, setRandomNumbers] = useState([]);
+  const [randomLoading, setRandomLoading] = useState(false);
+  const [randomError, setRandomError] = useState('');
 
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
   const [purchaseStatus, setPurchaseStatus] = useState('');
@@ -203,8 +214,47 @@ export default function TicketGrid() {
 
   const clearSelection = () => setSelectedNumbers(new Set());
 
+  const scrollToGrid = () => {
+    gridSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const openRandomModal = () => {
+    setRandomStep('pick');
+    setRandomQuantity(null);
+    setRandomNumbers([]);
+    setRandomError('');
+    setShowRandomModal(true);
+  };
+
+  const drawRandomNumbers = async () => {
+    if (!randomQuantity) return;
+    setRandomLoading(true);
+    setRandomError('');
+    try {
+      const res = await fetch(`/api/random_tickets.php?raffle_id=${raffle.id}&count=${randomQuantity}`);
+      const data = await res.json();
+      if (data.success && data.ticket_numbers.length > 0) {
+        setRandomNumbers(data.ticket_numbers.sort((a, b) => a - b));
+        setRandomStep('preview');
+      } else {
+        setRandomError(data.message || 'No hay suficientes boletos disponibles para elegir al azar.');
+      }
+    } catch {
+      setRandomError('Error de conexión.');
+    }
+    setRandomLoading(false);
+  };
+
+  const confirmRandomSelection = () => {
+    setSelectedNumbers(prev => new Set([...prev, ...randomNumbers]));
+    setShowRandomModal(false);
+    setPurchaseStatus('');
+    setShowReserveModal(true);
+  };
+
   const sortedSelection = [...selectedNumbers].sort((a, b) => a - b);
   const selectionTotal = raffle ? (sortedSelection.length * parseFloat(raffle.price_per_ticket)) : 0;
+  const randomTotal = raffle ? (randomNumbers.length * parseFloat(raffle.price_per_ticket)) : 0;
 
   const handlePurchase = async (e) => {
     e.preventDefault();
@@ -305,6 +355,23 @@ export default function TicketGrid() {
             </div>
           )}
         </div>
+
+        {!isEnded && (
+          <div className="flex items-center justify-center gap-3 mt-10 flex-wrap">
+            <button
+              onClick={scrollToGrid}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <LayoutGrid size={16} /> Ver números disponibles
+            </button>
+            <button
+              onClick={openRandomModal}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-blue-500 to-violet-500 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all active:scale-95"
+            >
+              <Dices size={16} /> Elegir al azar
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Paginación: cada página trae 100 boletos nuevos desde el servidor */}
@@ -350,7 +417,7 @@ export default function TicketGrid() {
       )}
 
       {/* Grilla Interactiva */}
-      <div className="relative max-w-5xl mx-auto px-4 pb-20">
+      <div ref={gridSectionRef} className="relative max-w-5xl mx-auto px-4 pb-20 scroll-mt-4">
         {pageLoading && (
           <div className="absolute inset-0 flex items-center justify-center z-10">
             <Loader2 className="animate-spin text-blue-500" size={28} />
@@ -496,6 +563,104 @@ export default function TicketGrid() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de selección al azar */}
+      {showRandomModal && !isEnded && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => !randomLoading && setShowRandomModal(false)}></div>
+          <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 transform transition-all max-h-[90vh] overflow-y-auto">
+
+            <div className="flex justify-between items-start mb-6">
+              <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Seleccionar números</h2>
+              <button onClick={() => setShowRandomModal(false)} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+
+            {randomStep === 'pick' ? (
+              <>
+                <div className="grid grid-cols-2 gap-3 mb-6">
+                  {RANDOM_PRESETS.map(n => (
+                    <button
+                      key={n}
+                      onClick={() => setRandomQuantity(n)}
+                      className={`flex flex-col items-center justify-center gap-1 py-5 rounded-2xl font-bold transition-all ${
+                        randomQuantity === n
+                          ? 'bg-gradient-to-br from-blue-500 to-violet-500 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                          : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-blue-400 dark:hover:border-blue-500'
+                      }`}
+                    >
+                      <span className="text-2xl">+{n}</span>
+                      <span className="text-xs font-medium opacity-80">Tomar al azar</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-center gap-2 mb-6 text-sm">
+                  <span className="text-zinc-500 dark:text-zinc-400">Valor del número:</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">${raffle.price_per_ticket}</span>
+                </div>
+
+                {randomError && (
+                  <div className="mb-6 p-3 bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 rounded-xl border border-red-100 dark:border-red-900/50 text-center text-sm font-medium">
+                    {randomError}
+                  </div>
+                )}
+
+                <button
+                  onClick={drawRandomNumbers}
+                  disabled={!randomQuantity || randomLoading}
+                  className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                >
+                  {randomLoading ? 'Sorteando...' : 'Continuar'}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-4">
+                  {randomNumbers.length} boleto{randomNumbers.length === 1 ? '' : 's'} elegido{randomNumbers.length === 1 ? '' : 's'} al azar
+                </p>
+
+                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto mb-6 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
+                  {randomNumbers.map(num => (
+                    <span key={num} className="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
+                      #{num.toString().padStart(pad, '0')}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="flex items-center justify-between px-1 pb-6 mb-2 border-b border-zinc-100 dark:border-zinc-800">
+                  <div>
+                    <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Cantidad</p>
+                    <p className="font-mono font-bold text-lg">{randomNumbers.length}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Total</p>
+                    <p className="font-mono font-bold text-lg text-emerald-600 dark:text-emerald-400">${randomTotal.toFixed(2)}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={drawRandomNumbers}
+                    disabled={randomLoading}
+                    title="Elegir otros números al azar"
+                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-zinc-600 dark:text-zinc-400 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                  >
+                    <RotateCcw size={16} /> Elegir otros
+                  </button>
+                  <button
+                    onClick={confirmRandomSelection}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95"
+                  >
+                    Continuar
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
