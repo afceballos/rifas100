@@ -5,6 +5,44 @@ import Dialog from './Dialog';
 import AdminRaffleSidebar from './AdminRaffleSidebar';
 import { DollarSign, Ticket, Clock, CheckCircle2, ArrowLeft, Trash2 } from 'lucide-react';
 
+const CircularProgress = ({ percent, size = 132, strokeWidth = 11 }) => {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const clamped = Math.min(100, Math.max(0, percent));
+  const offset = circumference - (clamped / 100) * circumference;
+
+  return (
+    <div className="relative shrink-0" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2} cy={size / 2} r={radius}
+          fill="none" strokeWidth={strokeWidth}
+          className="stroke-zinc-100 dark:stroke-zinc-800"
+        />
+        <defs>
+          <linearGradient id="raffleProgressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#8b5cf6" />
+          </linearGradient>
+        </defs>
+        <circle
+          cx={size / 2} cy={size / 2} r={radius}
+          fill="none" stroke="url(#raffleProgressGradient)" strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-2xl font-mono font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-violet-500">
+          {Math.round(clamped)}%
+        </span>
+      </div>
+    </div>
+  );
+};
+
 export default function AdminRaffle() {
   const { id } = useParams();
   const [raffle, setRaffle] = useState(null);
@@ -101,6 +139,26 @@ export default function AdminRaffle() {
         <AdminRaffleSidebar id={id} raffle={raffle} activeSection="admin" />
 
         <div className="flex-1 min-w-0">
+          <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6 flex flex-col sm:flex-row items-center gap-6">
+            <CircularProgress percent={raffle && raffle.total_tickets ? ((stats.reserved + stats.paid) / raffle.total_tickets) * 100 : 0} />
+            <div className="flex-1 text-center sm:text-left">
+              <h3 className="font-bold text-lg mb-1">Progreso del sorteo</h3>
+              <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-4">
+                {stats.reserved + stats.paid} de {raffle?.total_tickets ?? 0} boletos vendidos
+              </p>
+              <div className="flex gap-5 justify-center sm:justify-start text-sm font-medium">
+                <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
+                  <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-blue-500 to-violet-500" />
+                  Vendidos: {stats.reserved + stats.paid}
+                </span>
+                <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
+                  <span className="w-2.5 h-2.5 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+                  Disponibles: {stats.available}
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             {[
               { title: 'Recaudado (Pagos)', val: `$${money}`, icon: <DollarSign size={24}/>, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
