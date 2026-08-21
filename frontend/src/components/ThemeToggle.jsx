@@ -1,15 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { Sun, Moon } from 'lucide-react';
 
+const THEME_KEY = 'ticketvault_theme';
+
+// Por defecto claro; solo oscuro si el usuario lo eligió explícitamente antes.
+const getInitialTheme = () => {
+  try {
+    return localStorage.getItem(THEME_KEY) === 'dark';
+  } catch {
+    return false;
+  }
+};
+
 export default function ThemeToggle() {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(getInitialTheme);
 
   useEffect(() => {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle('dark', isDark);
+    try {
+      localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
+    } catch { /* localStorage no disponible */ }
   }, [isDark]);
 
   return (
