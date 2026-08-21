@@ -500,7 +500,7 @@ export default function TicketGrid() {
                   <Trash2 size={18} />
                 </button>
                 <div className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
-                  {selectedNumbers.size} boleto{selectedNumbers.size === 1 ? '' : 's'} seleccionado{selectedNumbers.size === 1 ? '' : 's'}
+                  {selectedNumbers.size} boleto{selectedNumbers.size === 1 ? '' : 's'} 
                 </div>
                 <button
                   onClick={() => { setPurchaseStatus(''); setShowReserveModal(true); }}
