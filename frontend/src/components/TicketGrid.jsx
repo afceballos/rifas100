@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ThemeToggle from './ThemeToggle';
 import NotFound from './NotFound';
-import { ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag } from 'lucide-react';
+import { ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, DollarSign, CalendarDays } from 'lucide-react';
 
 gsap.registerPlugin(useGSAP);
 
@@ -21,6 +21,12 @@ const buildPageList = (current, total) => {
     prev = p;
   }
   return result;
+};
+
+const formatDrawDate = (value) => {
+  if (!value) return '';
+  const d = new Date(value.replace(/-/g, '/'));
+  return d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
 const TimeBlock = ({ value, label }) => (
@@ -42,6 +48,8 @@ export default function TicketGrid() {
   const [raffle, setRaffle] = useState(null);
   const [selectedNumbers, setSelectedNumbers] = useState(new Set());
   const [showReserveModal, setShowReserveModal] = useState(false);
+  const [availableCount, setAvailableCount] = useState(null);
+  const barContentRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
   const [notFoundVariant, setNotFoundVariant] = useState(null);
@@ -105,6 +113,7 @@ export default function TicketGrid() {
         if(data.success) {
           setTickets(data.tickets);
           setRaffle(data.raffle);
+          setAvailableCount(data.available_count);
           setNotFoundVariant(null);
         } else {
           setRaffle(null);
@@ -172,6 +181,12 @@ export default function TicketGrid() {
     const clamped = Math.min(Math.max(targetPage, 0), totalPages - 1);
     if (clamped !== page) setPage(clamped);
   };
+
+  // Crossfade entre el resumen de la rifa y los controles de selección en la barra flotante
+  useGSAP(() => {
+    if (!barContentRef.current) return;
+    gsap.fromTo(barContentRef.current, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.25, ease: 'power2.out' });
+  }, { dependencies: [selectedNumbers.size > 0], scope: containerRef });
 
   const toggleSelect = (ticket, element) => {
     if (ticket.status !== 'available' || isEnded) return;
@@ -366,31 +381,52 @@ export default function TicketGrid() {
         </div>
       </div>
 
-      {/* Barra flotante de selección */}
-      <div
-        className={`fixed bottom-4 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-40 transition-all duration-300 ${
-          selectedNumbers.size > 0 && !isEnded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6 pointer-events-none'
-        }`}
-      >
-        <div className="flex items-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl rounded-2xl pl-2 pr-3 py-2 sm:pl-3 sm:pr-4 sm:py-3">
-          <button
-            onClick={clearSelection}
-            title="Vaciar selección"
-            className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors shrink-0"
-          >
-            <Trash2 size={18} />
-          </button>
-          <div className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
-            {selectedNumbers.size} boleto{selectedNumbers.size === 1 ? '' : 's'} seleccionado{selectedNumbers.size === 1 ? '' : 's'}
+      {/* Barra flotante: resumen de la rifa cuando no hay selección, controles de reserva cuando sí la hay */}
+      {!isEnded && (
+        <div className="fixed bottom-4 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-40">
+          <div ref={barContentRef} className="flex items-center gap-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-2xl rounded-2xl pl-3 pr-3 py-2.5 sm:pl-4 sm:pr-4 sm:py-3">
+            {selectedNumbers.size === 0 ? (
+              <>
+                <div className="flex items-center gap-2 text-sm">
+                  <Ticket size={16} className="text-blue-500 shrink-0" />
+                  <span className="font-mono font-bold">{availableCount ?? '—'}</span>
+                  <span className="text-zinc-500 dark:text-zinc-400 hidden sm:inline">disponibles</span>
+                </div>
+                <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-800 shrink-0" />
+                <div className="flex items-center gap-2 text-sm">
+                  <DollarSign size={16} className="text-emerald-500 shrink-0" />
+                  <span className="font-mono font-bold">${raffle.price_per_ticket}</span>
+                  <span className="text-zinc-500 dark:text-zinc-400 hidden sm:inline">c/u</span>
+                </div>
+                <div className="w-px h-5 bg-zinc-200 dark:bg-zinc-800 shrink-0" />
+                <div className="flex items-center gap-2 text-sm whitespace-nowrap">
+                  <CalendarDays size={16} className="text-violet-500 shrink-0" />
+                  <span className="font-semibold">{formatDrawDate(raffle.draw_date)}</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={clearSelection}
+                  title="Vaciar selección"
+                  className="p-2.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-colors shrink-0"
+                >
+                  <Trash2 size={18} />
+                </button>
+                <div className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
+                  {selectedNumbers.size} boleto{selectedNumbers.size === 1 ? '' : 's'} seleccionado{selectedNumbers.size === 1 ? '' : 's'}
+                </div>
+                <button
+                  onClick={() => { setPurchaseStatus(''); setShowReserveModal(true); }}
+                  className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 whitespace-nowrap"
+                >
+                  <ShoppingBag size={16} /> Tomar números
+                </button>
+              </>
+            )}
           </div>
-          <button
-            onClick={() => { setPurchaseStatus(''); setShowReserveModal(true); }}
-            className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 whitespace-nowrap"
-          >
-            <ShoppingBag size={16} /> Tomar números
-          </button>
         </div>
-      </div>
+      )}
 
       {/* Modal Desplegable Premium */}
       {showReserveModal && !isEnded && (

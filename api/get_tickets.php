@@ -28,12 +28,18 @@ try {
     $stmt->execute();
     $tickets = $stmt->fetchAll();
 
+    // Conteo global (no solo de la página actual) para la barra flotante
+    $countStmt = $pdo->prepare("SELECT COUNT(CASE WHEN status = 'available' THEN 1 END) AS available_count FROM tickets WHERE raffle_id = ?");
+    $countStmt->execute([$id]);
+    $availableCount = (int)$countStmt->fetchColumn();
+
     echo json_encode([
         'success' => true,
         'raffle' => $raffle,
         'tickets' => $tickets,
         'offset' => $offset,
-        'limit' => $limit
+        'limit' => $limit,
+        'available_count' => $availableCount
     ]);
 
 } catch (Exception $e) {
