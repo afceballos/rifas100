@@ -13,6 +13,7 @@ try {
             r.price_per_ticket,
             r.draw_date,
             r.total_tickets,
+            r.is_published,
             r.created_at,
             COUNT(CASE WHEN t.status = 'reserved' THEN 1 END) AS reserved_count,
             COUNT(CASE WHEN t.status = 'paid' THEN 1 END) AS paid_count
