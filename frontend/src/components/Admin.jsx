@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ThemeToggle from './ThemeToggle';
 import { DollarSign, Ticket, Clock, CheckCircle2, LayoutDashboard, LogOut } from 'lucide-react';
-import { apiGet, apiPost, getToken, setToken, clearToken } from '../api';
 
 export default function Admin() {
-  const [isLoggedIn, setIsLoggedIn] = useState(!!getToken());
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
@@ -14,58 +14,52 @@ export default function Admin() {
   const [buyers, setBuyers] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    if (getToken()) fetchDashboard();
-  }, []);
+
+  useEffect(() => { fetchDashboard(); }, []);
 
   const fetchDashboard = async () => {
     try {
-      const data = await apiGet('/api/admin_dashboard.php');
+      const res = await fetch('/api/admin_dashboard.php');
+      const data = await res.json();
+
       if (data.success) {
         setIsLoggedIn(true);
         setStats(data.stats);
         setMoney(data.money);
         setBuyers(data.buyers);
-      } else {
-        clearToken();
-        setIsLoggedIn(false);
-      }
-    } catch (err) {
-      console.error(err);
-      clearToken();
-      setIsLoggedIn(false);
-    }
+
+      } else { setIsLoggedIn(false); }
+    } catch (err) { console.error(err); }
   };
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const data = await apiPost('/api/login.php', { username, password });
-      if (data.success && data.token) {
-        setToken(data.token);
-        setLoginError('');
-        setIsLoggedIn(true);
-        fetchDashboard();
-      } else {
-        setLoginError(data.message || 'Usuario o contraseña incorrectos');
-      }
-    } catch (err) {
-      setLoginError('Error de conexión');
-    }
-    setLoading(false);
-  };
 
-  const handleLogout = async () => {
-    try { await apiPost('/api/logout.php', {}); } catch (err) { /* ignorar */ }
-    clearToken();
-    setIsLoggedIn(false);
+      const res = await fetch('/api/login.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLoginError('');
+        fetchDashboard();
+      } else { setLoginError(data.message); }
+    } catch (err) { setLoginError('Error de conexión'); }
+    setLoading(false);
   };
 
   const markAsPaid = async (ticketNumber) => {
     if (!window.confirm(`¿Confirmar pago del boleto #${ticketNumber}?`)) return;
     try {
-      const data = await apiPost('/api/admin_mark_paid.php', { ticket_number: ticketNumber, new_status: 'paid' });
+      const res = await fetch('/api/admin_mark_paid.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticket_number: ticketNumber })
+      });
+      const data = await res.json();
       if (data.success) fetchDashboard();
       else alert(data.error || 'Error al actualizar');
     } catch (err) { alert('Error de conexión'); }
@@ -82,8 +76,9 @@ export default function Admin() {
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-center mb-8 text-zinc-900 dark:text-white">Acceso Operativo</h2>
 
+          
           {loginError && <div className="mb-6 text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-3 rounded-xl text-center text-sm font-medium">{loginError}</div>}
-
+          
           <form onSubmit={handleLogin} className="space-y-5">
             <div>
               <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Usuario</label>
@@ -107,6 +102,7 @@ export default function Admin() {
   // --- DASHBOARD VIEW ---
   return (
     <div className="min-h-screen font-sans pb-12">
+      {/* Sidebar / Topnav */}
       <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex justify-between items-center">
           <div className="flex items-center gap-2 font-bold text-lg text-zinc-900 dark:text-white">
@@ -114,7 +110,9 @@ export default function Admin() {
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <button onClick={handleLogout} className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors">
+
+            <button onClick={() => setIsLoggedIn(false)} className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors">
+
               <LogOut size={16} /> Salir
             </button>
           </div>
@@ -122,6 +120,8 @@ export default function Admin() {
       </nav>
 
       <div className="max-w-6xl mx-auto px-6 mt-10">
+
+        {/* Tarjetas SaaS Modernas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {[
             { title: 'Recaudado (Pagos)', val: `$${money}`, icon: <DollarSign size={24}/>, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
@@ -139,6 +139,7 @@ export default function Admin() {
           ))}
         </div>
 
+        {/* Tabla Minimalista */}
         <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
           <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800">
             <h3 className="font-bold text-lg text-zinc-900 dark:text-white">Gestión de Boletos Operados</h3>
