@@ -4,6 +4,7 @@ import Landing from './components/Landing'
 import TicketGrid from './components/TicketGrid'
 import Admin from './components/Admin'
 import AdminRaffle from './components/AdminRaffle'
+import NotFound from './components/NotFound'
 import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )

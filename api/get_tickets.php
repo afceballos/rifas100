@@ -5,12 +5,17 @@ require_once 'db.php';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 try {
-    $stmt = $pdo->prepare("SELECT id, title, price_per_ticket, draw_date, total_tickets FROM raffles WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, title, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
     $stmt->execute([$id]);
     $raffle = $stmt->fetch();
 
     if (!$raffle) {
-        echo json_encode(['success' => false, 'error' => 'Rifa no encontrada.']);
+        echo json_encode(['success' => false, 'code' => 'not_found', 'error' => 'Rifa no encontrada.']);
+        exit;
+    }
+
+    if ((int)$raffle['is_published'] !== 1) {
+        echo json_encode(['success' => false, 'code' => 'unpublished', 'error' => 'Esta rifa no está disponible.']);
         exit;
     }
 
@@ -25,5 +30,5 @@ try {
     ]);
 
 } catch (Exception $e) {
-    echo json_encode(['success' => false, 'error' => 'Error de base de datos']);
+    echo json_encode(['success' => false, 'code' => 'server_error', 'error' => 'Error de base de datos']);
 }

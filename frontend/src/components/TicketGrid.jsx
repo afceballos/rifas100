@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ThemeToggle from './ThemeToggle';
+import NotFound from './NotFound';
 import { ShieldCheck, Ticket } from 'lucide-react';
 
 gsap.registerPlugin(useGSAP);
@@ -26,10 +27,11 @@ export default function TicketGrid() {
   const [raffle, setRaffle] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notFoundVariant, setNotFoundVariant] = useState(null);
 
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
   const [purchaseStatus, setPurchaseStatus] = useState('');
-  
+
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [isEnded, setIsEnded] = useState(false);
 
@@ -40,10 +42,18 @@ export default function TicketGrid() {
         if(data.success) {
           setTickets(data.tickets);
           setRaffle(data.raffle);
+          setNotFoundVariant(null);
+        } else {
+          setRaffle(null);
+          setNotFoundVariant(data.code === 'unpublished' ? 'unpublished' : 'not_found');
         }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setRaffle(null);
+        setNotFoundVariant('not_found');
+        setLoading(false);
+      });
   };
 
   useEffect(() => { loadTickets(); }, [id]);
@@ -125,7 +135,7 @@ export default function TicketGrid() {
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center font-sans bg-zinc-50 dark:bg-zinc-950"><div className="animate-pulse flex items-center gap-2"><Ticket className="animate-spin text-blue-500" /> Cargando bóveda...</div></div>;
-  if (!raffle) return <div className="min-h-screen flex items-center justify-center font-sans bg-zinc-50 dark:bg-zinc-950 text-xl font-bold">Rifa no encontrada</div>;
+  if (!raffle) return <NotFound variant={notFoundVariant || 'not_found'} />;
 
   return (
     <div className="min-h-screen relative font-sans" ref={containerRef}>
