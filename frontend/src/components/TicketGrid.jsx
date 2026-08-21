@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ThemeToggle from './ThemeToggle';
@@ -7,6 +8,7 @@ import { ShieldCheck, Ticket } from 'lucide-react';
 gsap.registerPlugin(useGSAP);
 
 export default function TicketGrid() {
+  const { id } = useParams();
   const containerRef = useRef();
   const [tickets, setTickets] = useState([]);
   const [raffle, setRaffle] = useState(null);
@@ -17,7 +19,7 @@ export default function TicketGrid() {
   const [purchaseStatus, setPurchaseStatus] = useState('');
 
   const loadTickets = () => {
-    fetch('/api/get_tickets.php')
+    fetch(`/api/get_tickets.php?id=${id}`)
       .then(res => res.json())
       .then(data => {
         if(data.success) {
