@@ -9,6 +9,7 @@ export default function AdminRaffle() {
   const [stats, setStats] = useState({ available: 0, reserved: 0, paid: 0 });
   const [money, setMoney] = useState(0);
   const [buyers, setBuyers] = useState([]);
+  const [raffle, setRaffle] = useState(null);
 
   useEffect(() => { if (getToken()) fetchDashboard(); }, [id]);
 
@@ -16,6 +17,7 @@ export default function AdminRaffle() {
     try {
       const data = await apiGet(`/api/admin_dashboard.php?id=${id}`);
       if (data.success) {
+        setRaffle(data.raffle);
         setStats(data.stats);
         setMoney(data.money);
         setBuyers(data.buyers);
@@ -86,7 +88,7 @@ export default function AdminRaffle() {
               <tbody className="text-sm">
                 {buyers.length === 0 ? <tr><td colSpan="4" className="px-6 py-12 text-center text-zinc-500">Sin operaciones recientes.</td></tr> : buyers.map(b => (
                   <tr key={b.ticket_number} className="border-b border-zinc-100 dark:border-zinc-800/50">
-                    <td className="px-6 py-4 font-mono font-bold text-blue-500">#{b.ticket_number.toString().padStart(3, '0')}</td>
+                    <td className="px-6 py-4 font-mono font-bold text-blue-500">#{b.ticket_number.toString().padStart(Number(raffle?.digits || 3), '0')}</td>
                     <td className="px-6 py-4 font-medium">{b.buyer_name} <span className="block text-xs font-normal text-zinc-500">{b.buyer_phone}</span></td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${b.status === 'paid' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400'}`}>

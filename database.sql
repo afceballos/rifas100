@@ -25,9 +25,12 @@ CREATE TABLE raffles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tenant_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
     price_per_ticket DECIMAL(10,2) NOT NULL,
     draw_date DATETIME NOT NULL,
+    digits TINYINT NOT NULL DEFAULT 2,
     total_tickets INT NOT NULL,
+    status ENUM('draft', 'published') NOT NULL DEFAULT 'draft',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 );
@@ -49,5 +52,5 @@ CREATE TABLE tickets (
 
 -- INSERCIÓN DE PRUEBA
 INSERT INTO tenants (name) VALUES ('Rifas MVP 1');
-INSERT INTO raffles (tenant_id, title, price_per_ticket, draw_date, total_tickets) 
-VALUES (1, 'Gran Sorteo de Fin de Año', 10.00, '2026-12-31 23:59:59', 100);
+INSERT INTO raffles (tenant_id, title, description, price_per_ticket, draw_date, digits, total_tickets, status) 
+VALUES (1, 'Gran Sorteo de Fin de Año', 'Participa y reserva tu boleto para el sorteo.', 10.00, '2026-12-31 23:59:59', 2, 100, 'published');

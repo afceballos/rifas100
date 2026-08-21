@@ -5,9 +5,11 @@ require_once 'db.php';
 $data = json_decode(file_get_contents('php://input'), true);
 
 $title           = trim($data['title'] ?? '');
+$description     = trim($data['description'] ?? '');
 $price_per_ticket = $data['price_per_ticket'] ?? null;
 $draw_date       = trim($data['draw_date'] ?? '');
 $digits          = (int)($data['digits'] ?? 0);
+$draw_date       = str_replace('T', ' ', $draw_date);
 
 if ($title === '' || !is_numeric($price_per_ticket) || $draw_date === '' || !in_array($digits, [2, 3, 4])) {
     echo json_encode(['success' => false, 'error' => 'Datos inválidos']);
@@ -21,8 +23,8 @@ try {
     $pdo->beginTransaction();
 
     // Insertar la rifa (tenant_id 1 = admin único en MVP)
-    $stmt = $pdo->prepare("INSERT INTO raffles (tenant_id, title, price_per_ticket, draw_date, total_tickets) VALUES (1, ?, ?, ?, ?)");
-    $stmt->execute([$title, $price_per_ticket, $draw_date, $total_tickets]);
+    $stmt = $pdo->prepare("INSERT INTO raffles (tenant_id, title, description, price_per_ticket, draw_date, digits, total_tickets, status) VALUES (1, ?, ?, ?, ?, ?, ?, 'draft')");
+    $stmt->execute([$title, $description, $price_per_ticket, $draw_date, $digits, $total_tickets]);
     $raffle_id = $pdo->lastInsertId();
 
     // Generar boletos masivamente en bloques para no saturar la conexión

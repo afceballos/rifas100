@@ -3,8 +3,14 @@ header('Content-Type: application/json');
 require_once 'db.php';
 
 try {
-    // Obtener la rifa activa (asumimos la primera para el MVP)
-    $stmt = $pdo->query("SELECT id, title, price_per_ticket, draw_date, total_tickets FROM raffles LIMIT 1");
+    $raffle_id = (int)($_GET['id'] ?? 0);
+    if ($raffle_id < 1) {
+        echo json_encode(['success' => false, 'error' => 'Falta la rifa']);
+        exit;
+    }
+
+    $stmt = $pdo->prepare("SELECT id, title, description, price_per_ticket, draw_date, digits, total_tickets FROM raffles WHERE id = ? AND status = 'published'");
+    $stmt->execute([$raffle_id]);
     $raffle = $stmt->fetch();
 
     if (!$raffle) {
@@ -23,7 +29,7 @@ try {
     if ($ticketCount == 0) {
         $pdo->beginTransaction();
         $insertStmt = $pdo->prepare("INSERT INTO tickets (raffle_id, ticket_number, status) VALUES (?, ?, 'available')");
-        for ($i = 1; $i <= $raffle['total_tickets']; $i++) {
+        for ($i = 0; $i < $raffle['total_tickets']; $i++) {
             $insertStmt->execute([$raffle_id, $i]);
         }
         $pdo->commit();

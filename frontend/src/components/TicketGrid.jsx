@@ -1,4 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { Link, useParams } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ThemeToggle from './ThemeToggle';
@@ -19,6 +20,7 @@ const TimeBlock = ({ value, label }) => (
 );
 
 export default function TicketGrid() {
+  const { id } = useParams();
   const containerRef = useRef();
   const [tickets, setTickets] = useState([]);
   const [raffle, setRaffle] = useState(null);
@@ -32,7 +34,7 @@ export default function TicketGrid() {
   const [isEnded, setIsEnded] = useState(false);
 
   const loadTickets = () => {
-    fetch('/api/get_tickets.php')
+    fetch(`/api/get_tickets.php?id=${id}`)
       .then(res => res.json())
       .then(data => {
         if(data.success) {
@@ -141,6 +143,7 @@ export default function TicketGrid() {
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-b from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500">
           {raffle.title}
         </h1>
+        {raffle.description && <p className="max-w-2xl mx-auto mb-6 text-zinc-500 dark:text-zinc-400">{raffle.description}</p>}
         
         <div className="inline-flex items-center gap-2 px-6 py-2 mb-8 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md shadow-sm">
           <span className="text-zinc-500 dark:text-zinc-400 font-medium">Inversión por acceso:</span>
@@ -181,7 +184,7 @@ export default function TicketGrid() {
               disabled={!isAv || isEnded}
               className={`ticket-item h-12 sm:h-14 flex items-center justify-center rounded-xl font-mono text-base sm:text-lg font-bold transition-all duration-300 ${bgClass}`}
             >
-              {t.number.toString().padStart(3, '0')}
+              {t.number.toString().padStart(Number(raffle.digits || 3), '0')}
             </button>
           );
         })}
@@ -196,7 +199,7 @@ export default function TicketGrid() {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Reservar Acceso</h2>
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Boleto seleccionado: <span className="font-mono text-blue-500 font-bold">#{selectedTicket.number.toString().padStart(3, '0')}</span></p>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Boleto seleccionado: <span className="font-mono text-blue-500 font-bold">#{selectedTicket.number.toString().padStart(Number(raffle.digits || 3), '0')}</span></p>
               </div>
             </div>
             

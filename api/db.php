@@ -24,6 +24,18 @@ try {
             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
     ");
+
+    // Migra instalaciones existentes de la tabla de rifas.
+    $raffleColumns = $pdo->query("SHOW COLUMNS FROM raffles")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('description', $raffleColumns, true)) {
+        $pdo->exec("ALTER TABLE raffles ADD description TEXT NULL AFTER title");
+    }
+    if (!in_array('digits', $raffleColumns, true)) {
+        $pdo->exec("ALTER TABLE raffles ADD digits TINYINT NOT NULL DEFAULT 2 AFTER draw_date");
+    }
+    if (!in_array('status', $raffleColumns, true)) {
+        $pdo->exec("ALTER TABLE raffles ADD status ENUM('draft', 'published') NOT NULL DEFAULT 'published' AFTER total_tickets");
+    }
 } catch (\PDOException $e) {
     header('HTTP/1.1 500 Internal Server Error');
     echo json_encode(['error' => 'Database connection failed']);
