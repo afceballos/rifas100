@@ -6,6 +6,17 @@ const mysqlToDatetimeLocal = (value) => {
   return value.replace(' ', 'T').slice(0, 16);
 };
 
+const pad2 = n => String(n).padStart(2, '0');
+
+// Primer día habilitado en el selector: mañana a las 00:00 (hora local),
+// para que solo se puedan elegir fechas posteriores a hoy.
+const getMinDrawDate = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  d.setHours(0, 0, 0, 0);
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+};
+
 export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAlert }) {
   const isEdit = mode === 'edit';
 
@@ -131,11 +142,15 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
             value={form.price_per_ticket} onChange={e => setForm({ ...form, price_per_ticket: e.target.value })}
           />
 
-          <input
-            type="datetime-local" required
-            className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent"
-            value={form.draw_date} onChange={e => setForm({ ...form, draw_date: e.target.value })}
-          />
+          <div>
+            <label className="block text-sm mb-2 text-zinc-500">Fecha y hora del sorteo</label>
+            <input
+              type="datetime-local" required
+              min={getMinDrawDate()}
+              className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent"
+              value={form.draw_date} onChange={e => setForm({ ...form, draw_date: e.target.value })}
+            />
+          </div>
 
           {isEdit ? (
             <div className="text-sm text-zinc-500 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3">
