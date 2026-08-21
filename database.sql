@@ -25,6 +25,8 @@ CREATE TABLE raffles (
     id INT AUTO_INCREMENT PRIMARY KEY,
     tenant_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
+    description TEXT NULL,
+    background_image VARCHAR(255) NULL,
     price_per_ticket DECIMAL(10,2) NOT NULL,
     draw_date DATETIME NOT NULL,
     total_tickets INT NOT NULL,
@@ -35,6 +37,8 @@ CREATE TABLE raffles (
 
 -- Migración para bases de datos existentes:
 -- ALTER TABLE raffles ADD COLUMN is_published TINYINT(1) NOT NULL DEFAULT 1;
+-- ALTER TABLE raffles ADD COLUMN description TEXT NULL;
+-- ALTER TABLE raffles ADD COLUMN background_image VARCHAR(255) NULL;
 
 -- 4. Boletos (Grilla)
 CREATE TABLE tickets (

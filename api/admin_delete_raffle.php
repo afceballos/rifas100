@@ -14,9 +14,20 @@ if ($raffle_id <= 0) {
 }
 
 try {
+    $stmtImg = $pdo->prepare("SELECT background_image FROM raffles WHERE id = ?");
+    $stmtImg->execute([$raffle_id]);
+    $row = $stmtImg->fetch();
+
     // ON DELETE CASCADE en tickets elimina los boletos automáticamente
     $stmt = $pdo->prepare("DELETE FROM raffles WHERE id = ?");
     $stmt->execute([$raffle_id]);
+
+    if ($row && $row['background_image']) {
+        $path = __DIR__ . '/../' . ltrim($row['background_image'], '/');
+        if (is_file($path)) {
+            @unlink($path);
+        }
+    }
 
     echo json_encode(['success' => true]);
 } catch (Exception $e) {

@@ -2,11 +2,12 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { Draggable } from 'gsap/Draggable';
 import ThemeToggle from './ThemeToggle';
 import NotFound from './NotFound';
-import { ShieldCheck, Ticket } from 'lucide-react';
+import { ShieldCheck, Ticket, ChevronLeft, ChevronRight } from 'lucide-react';
 
-gsap.registerPlugin(useGSAP);
+gsap.registerPlugin(useGSAP, Draggable);
 
 const TimeBlock = ({ value, label }) => (
   <div className="flex flex-col items-center">
@@ -23,6 +24,8 @@ const TimeBlock = ({ value, label }) => (
 export default function TicketGrid() {
   const { id } = useParams();
   const containerRef = useRef();
+  const trackRef = useRef(null);
+  const handleRef = useRef(null);
   const [tickets, setTickets] = useState([]);
   const [raffle, setRaffle] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
@@ -34,6 +37,14 @@ export default function TicketGrid() {
 
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [isEnded, setIsEnded] = useState(false);
+
+  // Ventana de visualización: cuando hay más de WINDOW_SIZE boletos
+  // se muestra una página de 100 a la vez, navegable por slider.
+  const WINDOW_SIZE = 100;
+  const [rangeStart, setRangeStart] = useState(0);
+
+  // Resetear el rango cuando cambia la rifa
+  useEffect(() => { setRangeStart(0); }, [id]);
 
   const loadTickets = () => {
     fetch(`/api/get_tickets.php?id=${id}`)
@@ -86,12 +97,58 @@ export default function TicketGrid() {
 
   useGSAP(() => {
     if (tickets.length > 0 && !loading) {
-      gsap.fromTo('.ticket-item', 
-        { y: 40, opacity: 0, scale: 0.9 }, 
+      gsap.fromTo('.ticket-item',
+        { y: 40, opacity: 0, scale: 0.9 },
         { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.015, ease: 'back.out(1.2)' }
       );
     }
-  }, { dependencies: [tickets, loading], scope: containerRef });
+  }, { dependencies: [tickets, loading, rangeStart], scope: containerRef });
+
+  // --- Lógica de la ventana de boletos ---
+  const pad = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : 3;
+  const showSlider = tickets.length > WINDOW_SIZE;
+  const maxStart = Math.max(0, tickets.length - WINDOW_SIZE);
+  const rangeEnd = Math.min(rangeStart + WINDOW_SIZE, tickets.length);
+  const visibleTickets = showSlider ? tickets.slice(rangeStart, rangeEnd) : tickets;
+
+  const shiftWindow = (delta) => {
+    setRangeStart(prev => Math.min(Math.max(prev + delta, 0), maxStart));
+  };
+
+  // Slider arrastrable (track + handle) para navegar entre ventanas de 100 boletos
+  useGSAP(() => {
+    if (!showSlider || !trackRef.current || !handleRef.current) return;
+
+    const track = trackRef.current;
+    const handle = handleRef.current;
+    const localMaxStart = Math.max(0, tickets.length - WINDOW_SIZE);
+
+    const [instance] = Draggable.create(handle, {
+      type: 'x',
+      bounds: track,
+      inertia: false,
+      onDragEnd: function () {
+        const maxX = Math.max(1, track.offsetWidth - handle.offsetWidth);
+        const fraction = Math.min(1, Math.max(0, this.x / maxX));
+        const snapped = Math.round((fraction * localMaxStart) / WINDOW_SIZE) * WINDOW_SIZE;
+        setRangeStart(Math.min(Math.max(snapped, 0), localMaxStart));
+      },
+    });
+
+    return () => instance.kill();
+  }, { dependencies: [showSlider, tickets.length], scope: containerRef });
+
+  // Sincroniza la posición del handle cuando la ventana cambia por los botones prev/next
+  useGSAP(() => {
+    if (!showSlider || !trackRef.current || !handleRef.current) return;
+
+    const track = trackRef.current;
+    const handle = handleRef.current;
+    const maxX = Math.max(1, track.offsetWidth - handle.offsetWidth);
+    const targetX = maxStart > 0 ? (rangeStart / maxStart) * maxX : 0;
+
+    gsap.to(handle, { x: targetX, duration: 0.4, ease: 'power2.out' });
+  }, { dependencies: [rangeStart, showSlider, tickets.length], scope: containerRef });
 
   const handleSelect = (ticket, element) => {
     if (ticket.status !== 'available' || isEnded) return;
@@ -139,6 +196,17 @@ export default function TicketGrid() {
 
   return (
     <div className="min-h-screen relative font-sans" ref={containerRef}>
+      {/* Fondo con imagen desenfocada, adaptado a claro/oscuro */}
+      {raffle.background_image && (
+        <div className="fixed inset-0 -z-10 overflow-hidden">
+          <div
+            className="absolute inset-0 bg-cover bg-center scale-110 blur-3xl opacity-30 dark:opacity-20"
+            style={{ backgroundImage: `url(${raffle.background_image})` }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-zinc-50/70 via-zinc-50/90 to-zinc-50 dark:from-[#09090b]/70 dark:via-[#09090b]/90 dark:to-[#09090b]" />
+        </div>
+      )}
+
       {/* Navbar Minimalista */}
       <nav className="w-full p-4 flex justify-between items-center max-w-6xl mx-auto">
         <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
@@ -153,7 +221,13 @@ export default function TicketGrid() {
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-b from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500">
           {raffle.title}
         </h1>
-        
+
+        {raffle.description && (
+          <p className="max-w-xl mx-auto text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
+            {raffle.description}
+          </p>
+        )}
+
         <div className="inline-flex items-center gap-2 px-6 py-2 mb-8 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md shadow-sm">
           <span className="text-zinc-500 dark:text-zinc-400 font-medium">Inversión por acceso:</span>
           <span className="font-mono text-xl font-bold text-emerald-600 dark:text-emerald-400">${raffle.price_per_ticket}</span>
@@ -176,9 +250,44 @@ export default function TicketGrid() {
         </div>
       </div>
 
+      {/* Slider de navegación entre ventanas de 100 boletos */}
+      {showSlider && (
+        <div className={`max-w-2xl mx-auto px-4 mb-8 ${isEnded ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div className="flex items-center justify-between mb-2 px-1 text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+            <span>Mostrando {rangeStart.toString().padStart(pad, '0')}–{(rangeEnd - 1).toString().padStart(pad, '0')}</span>
+            <span>{tickets.length} boletos</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => shiftWindow(-WINDOW_SIZE)}
+              disabled={rangeStart === 0}
+              className="shrink-0 p-2 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+            >
+              <ChevronLeft size={18} />
+            </button>
+
+            <div ref={trackRef} className="relative flex-1 h-3 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
+              <div
+                ref={handleRef}
+                className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500 shadow-md cursor-grab active:cursor-grabbing touch-none"
+                style={{ width: `${Math.max(6, (WINDOW_SIZE / tickets.length) * 100)}%` }}
+              />
+            </div>
+
+            <button
+              onClick={() => shiftWindow(WINDOW_SIZE)}
+              disabled={rangeStart >= maxStart}
+              className="shrink-0 p-2 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Grilla Interactiva */}
       <div className={`grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3 max-w-5xl mx-auto px-4 pb-20 ${isEnded ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
-        {tickets.map((t) => {
+        {visibleTickets.map((t) => {
           const isAv = t.status === 'available';
           const bgClass = isAv 
             ? 'bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:shadow-blue-500/20 hover:border-blue-500 dark:hover:border-blue-400 text-zinc-900 dark:text-zinc-100' 
@@ -193,7 +302,7 @@ export default function TicketGrid() {
               disabled={!isAv || isEnded}
               className={`ticket-item h-12 sm:h-14 flex items-center justify-center rounded-xl font-mono text-base sm:text-lg font-bold transition-all duration-300 ${bgClass}`}
             >
-              {t.number.toString().padStart(3, '0')}
+              {t.number.toString().padStart(pad, '0')}
             </button>
           );
         })}
@@ -208,7 +317,7 @@ export default function TicketGrid() {
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Reservar Acceso</h2>
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Boleto seleccionado: <span className="font-mono text-blue-500 font-bold">#{selectedTicket.number.toString().padStart(3, '0')}</span></p>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Boleto seleccionado: <span className="font-mono text-blue-500 font-bold">#{selectedTicket.number.toString().padStart(pad, '0')}</span></p>
               </div>
             </div>
             

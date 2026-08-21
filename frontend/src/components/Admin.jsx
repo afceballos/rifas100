@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
 import Dialog from './Dialog';
-import { LayoutDashboard, LogOut, PlusCircle, ArrowRight, Trash2, EyeOff, Eye } from 'lucide-react';
+import RaffleFormModal from './RaffleFormModal';
+import { LayoutDashboard, LogOut, PlusCircle, ArrowRight, Trash2, EyeOff, Eye, Pencil } from 'lucide-react';
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -11,10 +12,9 @@ export default function Admin() {
   const [loading, setLoading] = useState(false);
   const [raffles, setRaffles] = useState([]);
 
-  // Modal State for New Raffle
+  // Modal State for New/Edit Raffle
   const [showCreate, setShowCreate] = useState(false);
-  const [newRaffle, setNewRaffle] = useState({ title: '', price_per_ticket: '', digits: '2', draw_date: '' });
-  const [creating, setCreating] = useState(false);
+  const [editingRaffle, setEditingRaffle] = useState(null);
 
   // Dialog state
   const [dialog, setDialog] = useState({ open: false });
@@ -57,26 +57,6 @@ export default function Admin() {
       else showAlert('Acceso denegado', data.message, 'alert');
     } catch (err) { showAlert('Error', 'Error de conexión con el servidor.', 'alert'); }
     setLoading(false);
-  };
-
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    setCreating(true);
-    try {
-      const res = await fetch('/api/admin_create_raffle.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(newRaffle),
-      });
-      const data = await res.json();
-      if (data.success) {
-        setShowCreate(false);
-        setNewRaffle({ title: '', price_per_ticket: '', digits: '2', draw_date: '' });
-        checkAuth();
-      } else showAlert('Error al crear', data.error, 'alert');
-    } catch (err) { showAlert('Error', 'Error al crear el sorteo.', 'alert'); }
-    setCreating(false);
   };
 
   const handleLogout = async () => {
@@ -171,15 +151,24 @@ export default function Admin() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {raffles.map(r => (
-            <div key={r.id} className={`bg-white dark:bg-zinc-900 p-6 rounded-3xl border shadow-sm flex flex-col justify-between transition-opacity ${r.is_published ? 'border-zinc-200 dark:border-zinc-800' : 'border-zinc-300 dark:border-zinc-700 opacity-60'}`}>
-              <div>
+            <div key={r.id} className={`bg-white dark:bg-zinc-900 rounded-3xl border shadow-sm flex flex-col justify-between overflow-hidden transition-opacity ${r.is_published ? 'border-zinc-200 dark:border-zinc-800' : 'border-zinc-300 dark:border-zinc-700 opacity-60'}`}>
+              {r.background_image && (
+                <div className="relative h-24 shrink-0">
+                  <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${r.background_image})` }} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-zinc-900 to-transparent" />
+                </div>
+              )}
+              <div className="p-6 pb-0">
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <h3 className="text-xl font-bold">{r.title}</h3>
                   {!r.is_published && (
                     <span className="shrink-0 text-xs font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 px-2 py-0.5 rounded-full">Oculto</span>
                   )}
                 </div>
-                <p className="text-zinc-500 text-sm mb-4">Creado: {new Date(r.created_at).toLocaleDateString()}</p>
+                <p className="text-zinc-500 text-sm mb-1">Creado: {new Date(r.created_at).toLocaleDateString()}</p>
+                {r.description && (
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-4 line-clamp-2">{r.description}</p>
+                )}
                 <div className="flex gap-4 mb-6">
                   <div>
                     <p className="text-xs text-zinc-400">Boletos</p>
@@ -192,7 +181,7 @@ export default function Admin() {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 p-6 pt-0">
                 <Link to={`/admin/raffle/${r.id}`} className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold transition-colors">
                   Abrir Panel <ArrowRight size={18} />
                 </Link>
@@ -204,7 +193,15 @@ export default function Admin() {
                     {r.is_published ? <><EyeOff size={15} /> Despublicar</> : <><Eye size={15} /> Publicar</>}
                   </button>
                   <button
+                    onClick={() => setEditingRaffle(r)}
+                    title="Editar sorteo"
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    <Pencil size={15} />
+                  </button>
+                  <button
                     onClick={() => handleDeleteRaffle(r)}
+                    title="Eliminar sorteo"
                     className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                   >
                     <Trash2 size={15} />
@@ -218,28 +215,22 @@ export default function Admin() {
       </div>
 
       {showCreate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full border border-zinc-200 dark:border-zinc-800">
-            <h2 className="text-2xl font-bold mb-6">Nuevo Sorteo</h2>
-            <form onSubmit={handleCreate} className="space-y-4">
-              <input type="text" placeholder="Nombre del Sorteo" required className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent" value={newRaffle.title} onChange={e => setNewRaffle({...newRaffle, title: e.target.value})} />
-              <input type="number" step="0.01" placeholder="Precio por boleto ($)" required className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent" value={newRaffle.price_per_ticket} onChange={e => setNewRaffle({...newRaffle, price_per_ticket: e.target.value})} />
-              <input type="datetime-local" required className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent" value={newRaffle.draw_date} onChange={e => setNewRaffle({...newRaffle, draw_date: e.target.value})} />
-              <div>
-                <label className="block text-sm mb-2 text-zinc-500">Cantidad de Cifras (Boletos)</label>
-                <select className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent" value={newRaffle.digits} onChange={e => setNewRaffle({...newRaffle, digits: e.target.value})}>
-                  <option value="2">2 Cifras (100 boletos: 00-99)</option>
-                  <option value="3">3 Cifras (1,000 boletos: 000-999)</option>
-                  <option value="4">4 Cifras (10,000 boletos: 0000-9999)</option>
-                </select>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button type="button" onClick={() => setShowCreate(false)} className="flex-1 py-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl font-bold">Cancelar</button>
-                <button type="submit" disabled={creating} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">{creating ? 'Generando...' : 'Crear Bóveda'}</button>
-              </div>
-            </form>
-          </div>
-        </div>
+        <RaffleFormModal
+          mode="create"
+          onClose={() => setShowCreate(false)}
+          onSaved={checkAuth}
+          showAlert={showAlert}
+        />
+      )}
+
+      {editingRaffle && (
+        <RaffleFormModal
+          mode="edit"
+          raffle={editingRaffle}
+          onClose={() => setEditingRaffle(null)}
+          onSaved={checkAuth}
+          showAlert={showAlert}
+        />
       )}
 
       <Dialog {...dialog} />

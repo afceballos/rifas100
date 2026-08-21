@@ -13,6 +13,16 @@ if ($raffle_id <= 0) {
 }
 
 try {
+    // Datos de la rifa
+    $stmtRaffle = $pdo->prepare("SELECT id, title, description, background_image, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
+    $stmtRaffle->execute([$raffle_id]);
+    $raffle = $stmtRaffle->fetch();
+
+    if (!$raffle) {
+        echo json_encode(['success' => false, 'error' => 'Sorteo no encontrado']);
+        exit;
+    }
+
     // Stats de boletos
     $stmt = $pdo->prepare("
         SELECT
@@ -46,6 +56,7 @@ try {
 
     echo json_encode([
         'success' => true,
+        'raffle'  => $raffle,
         'stats'   => $stats,
         'money'   => $money,
         'buyers'  => $buyers,

@@ -5,7 +5,7 @@ require_once 'db.php';
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 try {
-    $stmt = $pdo->prepare("SELECT id, title, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, title, description, background_image, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
     $stmt->execute([$id]);
     $raffle = $stmt->fetch();
 

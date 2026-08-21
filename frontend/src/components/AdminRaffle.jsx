@@ -1,14 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
 import Dialog from './Dialog';
-import { DollarSign, Ticket, Clock, CheckCircle2, ArrowLeft, Trash2 } from 'lucide-react';
+import RaffleFormModal from './RaffleFormModal';
+import { DollarSign, Ticket, Clock, CheckCircle2, ArrowLeft, Trash2, Pencil, EyeOff, Eye } from 'lucide-react';
 
 export default function AdminRaffle() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [raffle, setRaffle] = useState(null);
   const [stats, setStats] = useState({ available: 0, reserved: 0, paid: 0 });
   const [money, setMoney] = useState(0);
   const [buyers, setBuyers] = useState([]);
+  const [editing, setEditing] = useState(false);
 
   // Dialog state
   const [dialog, setDialog] = useState({ open: false });
@@ -30,11 +34,57 @@ export default function AdminRaffle() {
       const res = await fetch(`/api/admin_dashboard.php?id=${id}`, { credentials: 'include' });
       const data = await res.json();
       if (data.success) {
+        setRaffle(data.raffle);
         setStats(data.stats);
         setMoney(data.money);
         setBuyers(data.buyers);
       }
     } catch (err) { console.error(err); }
+  };
+
+  const handleTogglePublish = async () => {
+    const action = raffle.is_published ? 'despublicar' : 'publicar';
+    const confirmed = await showConfirm(
+      `¿${raffle.is_published ? 'Despublicar' : 'Publicar'} sorteo?`,
+      `El sorteo "${raffle.title}" quedará ${raffle.is_published ? 'invisible para el público' : 'visible para el público'}.`,
+      'confirm',
+      raffle.is_published ? 'Despublicar' : 'Publicar'
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/admin_toggle_raffle.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: raffle.id }),
+      });
+      const data = await res.json();
+      if (data.success) fetchDashboard();
+      else showAlert('Error', `No se pudo ${action} el sorteo.`, 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
+  };
+
+  const handleDeleteRaffle = async () => {
+    const confirmed = await showConfirm(
+      'Eliminar sorteo permanentemente',
+      `¿Estás seguro? Se eliminarán el sorteo "${raffle.title}" y todos sus boletos. Esta acción no se puede deshacer.`,
+      'danger',
+      'Eliminar definitivamente'
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/admin_delete_raffle.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: raffle.id }),
+      });
+      const data = await res.json();
+      if (data.success) navigate('/admin');
+      else showAlert('Error', data.error, 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
   };
 
   const toggleStatus = async (ticketNumber, currentStatus) => {
@@ -98,6 +148,52 @@ export default function AdminRaffle() {
       </nav>
 
       <div className="max-w-6xl mx-auto px-6 mt-10">
+        {raffle && (
+          <div className="relative bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden mb-10">
+            {raffle.background_image && (
+              <div className="relative h-28">
+                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${raffle.background_image})` }} />
+                <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-zinc-900 to-transparent" />
+              </div>
+            )}
+            <div className="p-6 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h2 className="text-2xl font-bold">{raffle.title}</h2>
+                  {!raffle.is_published && (
+                    <span className="text-xs font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 px-2 py-0.5 rounded-full">Oculto</span>
+                  )}
+                </div>
+                {raffle.description && (
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm max-w-xl">{raffle.description}</p>
+                )}
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={handleTogglePublish}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  {raffle.is_published ? <><EyeOff size={15} /> Despublicar</> : <><Eye size={15} /> Publicar</>}
+                </button>
+                <button
+                  onClick={() => setEditing(true)}
+                  title="Editar sorteo"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                >
+                  <Pencil size={15} />
+                </button>
+                <button
+                  onClick={handleDeleteRaffle}
+                  title="Eliminar sorteo"
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                >
+                  <Trash2 size={15} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
           {[
             { title: 'Recaudado (Pagos)', val: `$${money}`, icon: <DollarSign size={24}/>, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
@@ -173,6 +269,16 @@ export default function AdminRaffle() {
           </div>
         </div>
       </div>
+
+      {editing && raffle && (
+        <RaffleFormModal
+          mode="edit"
+          raffle={raffle}
+          onClose={() => setEditing(false)}
+          onSaved={fetchDashboard}
+          showAlert={showAlert}
+        />
+      )}
 
       <Dialog {...dialog} />
     </div>

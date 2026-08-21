@@ -10,6 +10,8 @@ try {
         SELECT 
             r.id,
             r.title,
+            r.description,
+            r.background_image,
             r.price_per_ticket,
             r.draw_date,
             r.total_tickets,
