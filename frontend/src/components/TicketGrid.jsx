@@ -1,6 +1,8 @@
 import React, { useRef, useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import ThemeToggle from './ThemeToggle';
+import { ShieldCheck, Ticket } from 'lucide-react';
 
 gsap.registerPlugin(useGSAP);
 
@@ -11,11 +13,9 @@ export default function TicketGrid() {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Form state
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
   const [purchaseStatus, setPurchaseStatus] = useState('');
 
-  // Fetch real data from DB
   const loadTickets = () => {
     fetch('/api/get_tickets.php')
       .then(res => res.json())
@@ -26,21 +26,17 @@ export default function TicketGrid() {
         }
         setLoading(false);
       })
-      .catch(err => {
-        console.error("Error fetching tickets:", err);
-        setLoading(false);
-      });
+      .catch(() => setLoading(false));
   };
 
-  useEffect(() => {
-    loadTickets();
-  }, []);
+  useEffect(() => { loadTickets(); }, []);
 
   useGSAP(() => {
     if (tickets.length > 0 && !loading) {
-      gsap.from('.ticket-item', {
-        y: 30, opacity: 0, duration: 0.4, stagger: 0.01, ease: 'power2.out',
-      });
+      gsap.fromTo('.ticket-item', 
+        { y: 40, opacity: 0, scale: 0.9 }, 
+        { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.015, ease: 'back.out(1.2)' }
+      );
     }
   }, { dependencies: [tickets, loading], scope: containerRef });
 
@@ -58,8 +54,7 @@ export default function TicketGrid() {
 
   const handlePurchase = async (e) => {
     e.preventDefault();
-    setPurchaseStatus('Procesando...');
-
+    setPurchaseStatus('Procesando reserva...');
     try {
       const res = await fetch('/api/reserve_ticket.php', {
         method: 'POST',
@@ -73,46 +68,59 @@ export default function TicketGrid() {
         })
       });
       const data = await res.json();
-      
       if(data.success) {
-        setPurchaseStatus('¡Boleto reservado con éxito!');
+        setPurchaseStatus('¡Boleto bloqueado a tu nombre!');
         setTimeout(() => {
           setSelectedTicket(null);
           setFormData({ name: '', phone: '', email: '' });
-          loadTickets(); // Refresh grid
+          loadTickets();
         }, 2000);
       } else {
         setPurchaseStatus(data.message || 'Error al reservar.');
       }
-    } catch(err) {
-      setPurchaseStatus('Error de conexión.');
-    }
+    } catch(err) { setPurchaseStatus('Error de conexión.'); }
   };
 
-  if (loading) return <div className="min-h-screen bg-[#0F172A] text-white flex items-center justify-center">Cargando bóveda...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-sans"><div className="animate-pulse flex items-center gap-2"><Ticket className="animate-spin text-blue-500" /> Cargando bóveda...</div></div>;
 
   return (
-    <div className="min-h-screen bg-[#0F172A] p-8 text-white font-inter" ref={containerRef}>
-      <div className="text-center mb-12">
-        <h1 className="text-4xl font-space font-bold mb-4">{raffle ? raffle.title : 'Gran Sorteo'}</h1>
-        <div className="text-[#38BDF8] text-xl font-space border border-[#1E293B] p-4 inline-block rounded-xl mb-4">
-          Precio por boleto: ${raffle ? raffle.price_per_ticket : '0.00'}
+    <div className="min-h-screen relative font-sans" ref={containerRef}>
+      {/* Navbar Minimalista */}
+      <nav className="w-full p-4 flex justify-between items-center max-w-6xl mx-auto">
+        <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
+          <ShieldCheck className="text-blue-500" />
+          <span>Ticket<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-violet-500">Vault</span></span>
+        </div>
+        <ThemeToggle />
+      </nav>
+
+      {/* Header Central */}
+      <div className="text-center mt-8 mb-16 px-4">
+        <h1 className="text-5xl font-extrabold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-b from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500">
+          {raffle ? raffle.title : 'Gran Sorteo'}
+        </h1>
+        <div className="inline-flex items-center gap-2 px-6 py-2 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md shadow-sm">
+          <span className="text-zinc-500 dark:text-zinc-400 font-medium">Inversión por acceso:</span>
+          <span className="font-mono text-xl font-bold text-blue-600 dark:text-blue-400">${raffle ? raffle.price_per_ticket : '0.00'}</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-5 md:grid-cols-10 gap-3 max-w-4xl mx-auto">
+      {/* Grilla Interactiva */}
+      <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-3 max-w-5xl mx-auto px-4 pb-20">
         {tickets.map((t) => {
-          const isAvailable = t.status === 'available';
-          const bgClass = isAvailable 
-            ? 'bg-[#1E293B] hover:bg-[#38BDF8] hover:text-slate-900 border-[#334155]' 
-            : t.status === 'paid' ? 'bg-[#10B981] opacity-50 cursor-not-allowed' : 'bg-[#334155] opacity-50 cursor-not-allowed';
+          const isAv = t.status === 'available';
+          const bgClass = isAv 
+            ? 'bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:shadow-blue-500/20 hover:border-blue-500 dark:hover:border-blue-400 text-zinc-900 dark:text-zinc-100' 
+            : t.status === 'paid' 
+              ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-500 opacity-60 cursor-not-allowed' 
+              : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 opacity-50 cursor-not-allowed';
 
           return (
             <button
               key={t.number}
               onClick={(e) => handleSelect(t, e.currentTarget)}
-              disabled={!isAvailable}
-              className={`ticket-item h-12 flex items-center justify-center rounded border font-space text-lg transition-colors ${bgClass}`}
+              disabled={!isAv}
+              className={`ticket-item h-14 flex items-center justify-center rounded-xl font-mono text-lg font-bold transition-all duration-300 ${bgClass}`}
             >
               {t.number.toString().padStart(3, '0')}
             </button>
@@ -120,39 +128,47 @@ export default function TicketGrid() {
         })}
       </div>
 
+      {/* Modal Desplegable Premium */}
       {selectedTicket && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-          <div className="bg-[#1E293B] p-8 rounded-xl max-w-md w-full shadow-2xl border border-[#334155]">
-            <h2 className="text-2xl font-space font-bold text-[#38BDF8] mb-6">Reservar Boleto #{selectedTicket.number.toString().padStart(3, '0')}</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => setSelectedTicket(null)}></div>
+          <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 transform transition-all">
+            
+            <div className="flex justify-between items-start mb-6">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Reservar Acceso</h2>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">Boleto seleccionado: <span className="font-mono text-blue-500 font-bold">#{selectedTicket.number.toString().padStart(3, '0')}</span></p>
+              </div>
+            </div>
             
             {purchaseStatus && (
-              <div className="mb-4 p-3 bg-slate-800 text-center rounded border border-slate-600">
+              <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 rounded-2xl border border-blue-100 dark:border-blue-900/50 text-center text-sm font-medium">
                 {purchaseStatus}
               </div>
             )}
 
             <form onSubmit={handlePurchase} className="space-y-4">
               <div>
-                <label className="block text-sm mb-1 text-slate-300">Nombre Completo *</label>
-                <input required type="text" className="w-full bg-[#0F172A] border border-slate-600 rounded p-2 text-white outline-none focus:border-[#38BDF8]" 
-                  value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Nombre Completo <span className="text-blue-500">*</span></label>
+                <input required type="text" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all" 
+                  value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej. Juan Pérez" />
               </div>
               <div>
-                <label className="block text-sm mb-1 text-slate-300">Teléfono Celular *</label>
-                <input required type="tel" className="w-full bg-[#0F172A] border border-slate-600 rounded p-2 text-white outline-none focus:border-[#38BDF8]" 
-                  value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+                <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Teléfono Celular <span className="text-blue-500">*</span></label>
+                <input required type="tel" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all" 
+                  value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+00 0000000" />
               </div>
               <div>
-                <label className="block text-sm mb-1 text-slate-300">Correo Electrónico (Opcional)</label>
-                <input type="email" className="w-full bg-[#0F172A] border border-slate-600 rounded p-2 text-white outline-none focus:border-[#38BDF8]" 
-                  value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Correo Electrónico (Opcional)</label>
+                <input type="email" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all" 
+                  value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="tu@correo.com" />
               </div>
               
-              <div className="flex justify-end gap-3 mt-6">
-                <button type="button" className="px-4 py-2 rounded text-slate-400 hover:text-white transition-colors"
+              <div className="pt-4 flex gap-3">
+                <button type="button" className="flex-1 px-4 py-3 rounded-xl text-zinc-600 dark:text-zinc-400 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                   onClick={() => setSelectedTicket(null)}>Cancelar</button>
-                <button type="submit" className="px-6 py-2 bg-[#38BDF8] text-slate-900 font-bold rounded hover:bg-sky-300 transition-colors">
-                  Confirmar Reserva
+                <button type="submit" className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95">
+                  Confirmar
                 </button>
               </div>
             </form>
