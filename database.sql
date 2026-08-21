@@ -28,9 +28,13 @@ CREATE TABLE raffles (
     price_per_ticket DECIMAL(10,2) NOT NULL,
     draw_date DATETIME NOT NULL,
     total_tickets INT NOT NULL,
+    is_published TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 );
+
+-- Migración para bases de datos existentes:
+-- ALTER TABLE raffles ADD COLUMN is_published TINYINT(1) NOT NULL DEFAULT 1;
 
 -- 4. Boletos (Grilla)
 CREATE TABLE tickets (

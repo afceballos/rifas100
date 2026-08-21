@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
-import { LayoutDashboard, LogOut, PlusCircle, ArrowRight } from 'lucide-react';
+import Dialog from './Dialog';
+import { LayoutDashboard, LogOut, PlusCircle, ArrowRight, Trash2, EyeOff, Eye } from 'lucide-react';
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -14,6 +15,19 @@ export default function Admin() {
   const [showCreate, setShowCreate] = useState(false);
   const [newRaffle, setNewRaffle] = useState({ title: '', price_per_ticket: '', digits: '2', draw_date: '' });
   const [creating, setCreating] = useState(false);
+
+  // Dialog state
+  const [dialog, setDialog] = useState({ open: false });
+
+  const showAlert = (title, message, type = 'alert') =>
+    new Promise(resolve =>
+      setDialog({ open: true, type, title, message, onConfirm: () => { setDialog({ open: false }); resolve(true); }, onCancel: () => { setDialog({ open: false }); resolve(false); } })
+    );
+
+  const showConfirm = (title, message, type = 'danger', confirmText = 'Confirmar') =>
+    new Promise(resolve =>
+      setDialog({ open: true, type, title, message, confirmText, onConfirm: () => { setDialog({ open: false }); resolve(true); }, onCancel: () => { setDialog({ open: false }); resolve(false); } })
+    );
 
   useEffect(() => { checkAuth(); }, []);
 
@@ -40,8 +54,8 @@ export default function Admin() {
       });
       const data = await res.json();
       if (data.success) checkAuth();
-      else alert(data.message);
-    } catch (err) { alert('Error de conexión'); }
+      else showAlert('Acceso denegado', data.message, 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión con el servidor.', 'alert'); }
     setLoading(false);
   };
 
@@ -58,9 +72,10 @@ export default function Admin() {
       const data = await res.json();
       if (data.success) {
         setShowCreate(false);
+        setNewRaffle({ title: '', price_per_ticket: '', digits: '2', draw_date: '' });
         checkAuth();
-      } else alert(data.error);
-    } catch (err) { alert('Error al crear'); }
+      } else showAlert('Error al crear', data.error, 'alert');
+    } catch (err) { showAlert('Error', 'Error al crear el sorteo.', 'alert'); }
     setCreating(false);
   };
 
@@ -69,8 +84,53 @@ export default function Admin() {
       await fetch('/api/logout.php', { credentials: 'include' });
       setIsLoggedIn(false);
     } catch (err) {
-      console.error("Error logging out", err);
+      console.error('Error logging out', err);
     }
+  };
+
+  const handleTogglePublish = async (raffle) => {
+    const action = raffle.is_published ? 'despublicar' : 'publicar';
+    const confirmed = await showConfirm(
+      `¿${raffle.is_published ? 'Despublicar' : 'Publicar'} sorteo?`,
+      `El sorteo "${raffle.title}" quedará ${raffle.is_published ? 'invisible para el público' : 'visible para el público'}.`,
+      'confirm',
+      raffle.is_published ? 'Despublicar' : 'Publicar'
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/admin_toggle_raffle.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: raffle.id }),
+      });
+      const data = await res.json();
+      if (data.success) checkAuth();
+      else showAlert('Error', `No se pudo ${action} el sorteo.`, 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
+  };
+
+  const handleDeleteRaffle = async (raffle) => {
+    const confirmed = await showConfirm(
+      'Eliminar sorteo permanentemente',
+      `¿Estás seguro? Se eliminarán el sorteo "${raffle.title}" y todos sus boletos. Esta acción no se puede deshacer.`,
+      'danger',
+      'Eliminar definitivamente'
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/admin_delete_raffle.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: raffle.id }),
+      });
+      const data = await res.json();
+      if (data.success) checkAuth();
+      else showAlert('Error', data.error, 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
   };
 
   if (!isLoggedIn) {
@@ -84,6 +144,7 @@ export default function Admin() {
             <button type="submit" className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-xl mt-4">{loading ? '...' : 'Entrar'}</button>
           </form>
         </div>
+        <Dialog {...dialog} />
       </div>
     );
   }
@@ -110,9 +171,14 @@ export default function Admin() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {raffles.map(r => (
-            <div key={r.id} className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col justify-between">
+            <div key={r.id} className={`bg-white dark:bg-zinc-900 p-6 rounded-3xl border shadow-sm flex flex-col justify-between transition-opacity ${r.is_published ? 'border-zinc-200 dark:border-zinc-800' : 'border-zinc-300 dark:border-zinc-700 opacity-60'}`}>
               <div>
-                <h3 className="text-xl font-bold mb-2">{r.title}</h3>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="text-xl font-bold">{r.title}</h3>
+                  {!r.is_published && (
+                    <span className="shrink-0 text-xs font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 px-2 py-0.5 rounded-full">Oculto</span>
+                  )}
+                </div>
                 <p className="text-zinc-500 text-sm mb-4">Creado: {new Date(r.created_at).toLocaleDateString()}</p>
                 <div className="flex gap-4 mb-6">
                   <div>
@@ -125,9 +191,26 @@ export default function Admin() {
                   </div>
                 </div>
               </div>
-              <Link to={`/admin/raffle/${r.id}`} className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold transition-colors">
-                Abrir Panel <ArrowRight size={18} />
-              </Link>
+
+              <div className="flex flex-col gap-2">
+                <Link to={`/admin/raffle/${r.id}`} className="w-full flex items-center justify-center gap-2 py-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white rounded-xl hover:bg-zinc-200 dark:hover:bg-zinc-700 font-bold transition-colors">
+                  Abrir Panel <ArrowRight size={18} />
+                </Link>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleTogglePublish(r)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    {r.is_published ? <><EyeOff size={15} /> Despublicar</> : <><Eye size={15} /> Publicar</>}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteRaffle(r)}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
             </div>
           ))}
           {raffles.length === 0 && <div className="col-span-full text-center text-zinc-500 py-12">No hay sorteos creados.</div>}
@@ -158,6 +241,8 @@ export default function Admin() {
           </div>
         </div>
       )}
+
+      <Dialog {...dialog} />
     </div>
   );
 }
