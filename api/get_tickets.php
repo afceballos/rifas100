@@ -3,27 +3,34 @@ header('Content-Type: application/json');
 require_once 'db.php';
 
 try {
-    // Obtener la rifa activa (asumimos la primera para el MVP)
-    $stmt = $pdo->query("SELECT id, title, price_per_ticket, draw_date, total_tickets FROM raffles LIMIT 1");
+    // Obtener la rifa publicada (la única visible al público).
+    $stmt = $pdo->query("
+      SELECT id, title, description, price_per_ticket, draw_date, digits, total_tickets
+      FROM raffles
+      WHERE status = 'published' AND deleted_at IS NULL
+      ORDER BY updated_at DESC
+      LIMIT 1
+    ");
     $raffle = $stmt->fetch();
 
     if (!$raffle) {
-        echo json_encode(['error' => 'No hay rifas configuradas.']);
+        echo json_encode(['success' => true, 'raffle' => null, 'tickets' => []]);
         exit;
     }
 
-    $raffle_id = $raffle['id'];
+    $raffle_id = (int)$raffle['id'];
+    $digits = (int)$raffle['digits'];
+    $total = (int)$raffle['total_tickets'];
 
-    // Verificar si los boletos ya fueron generados
+    // Generar boletos si la tabla está vacía para esta rifa
     $stmt = $pdo->prepare("SELECT COUNT(*) FROM tickets WHERE raffle_id = ?");
     $stmt->execute([$raffle_id]);
-    $ticketCount = $stmt->fetchColumn();
+    $ticketCount = (int)$stmt->fetchColumn();
 
-    // Si no existen, los generamos automáticamente (Setup inicial)
-    if ($ticketCount == 0) {
+    if ($ticketCount === 0) {
         $pdo->beginTransaction();
         $insertStmt = $pdo->prepare("INSERT INTO tickets (raffle_id, ticket_number, status) VALUES (?, ?, 'available')");
-        for ($i = 1; $i <= $raffle['total_tickets']; $i++) {
+        for ($i = 1; $i <= $total; $i++) {
             $insertStmt->execute([$raffle_id, $i]);
         }
         $pdo->commit();
@@ -34,6 +41,9 @@ try {
     $stmt->execute([$raffle_id]);
     $tickets = $stmt->fetchAll();
 
+    // Exponer digits al frontend para el padding
+    $raffle['digits'] = $digits;
+
     echo json_encode([
         'success' => true,
         'raffle' => $raffle,
@@ -41,5 +51,6 @@ try {
     ]);
 
 } catch (Exception $e) {
+    http_response_code(500);
     echo json_encode(['error' => 'Error de base de datos: ' . $e->getMessage()]);
 }

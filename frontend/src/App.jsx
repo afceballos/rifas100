@@ -1,13 +1,13 @@
 import React from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import TicketGrid from './components/TicketGrid'
+import Landing from './components/Landing'
 import Admin from './components/Admin'
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<TicketGrid />} />
+        <Route path="/" element={<Landing />} />
         <Route path="/admin" element={<Admin />} />
       </Routes>
     </BrowserRouter>
