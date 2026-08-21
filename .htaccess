@@ -1,0 +1,16 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # 1. Las peticiones a /api se manejan directamente por PHP (No se redirigen a React)
+  RewriteRule ^api/ - [L]
+
+  # 2. Forzar HTTPS (Opcional, pero recomendado en Hostinger)
+  # RewriteCond %{HTTPS} off
+  # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 3. Redirigir todas las demás rutas al index.html de React para que React Router funcione
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ index.html [QSA,L]
+</IfModule>
