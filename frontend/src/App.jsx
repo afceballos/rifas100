@@ -4,6 +4,7 @@ import Landing from './components/Landing'
 import TicketGrid from './components/TicketGrid'
 import Admin from './components/Admin'
 import AdminRaffle from './components/AdminRaffle'
+import AdminRaffleSettings from './components/AdminRaffleSettings'
 import NotFound from './components/NotFound'
 import ProtectedRoute from './components/ProtectedRoute'
 
@@ -19,6 +20,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminRaffle />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/raffle/:id/ajustes"
+          element={
+            <ProtectedRoute>
+              <AdminRaffleSettings />
             </ProtectedRoute>
           }
         />

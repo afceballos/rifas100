@@ -1,0 +1,247 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import ThemeToggle from './ThemeToggle';
+import Dialog from './Dialog';
+import AdminRaffleSidebar from './AdminRaffleSidebar';
+import RaffleFormModal from './RaffleFormModal';
+import PaymentMethodModal from './PaymentMethodModal';
+import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet } from 'lucide-react';
+
+const parsePaymentInfo = (raw) => {
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+};
+
+const formatDrawDate = (value) => {
+  if (!value) return '';
+  const d = new Date(value.replace(/-/g, '/'));
+  return d.toLocaleString('es-ES', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+export default function AdminRaffleSettings() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [raffle, setRaffle] = useState(null);
+  const [editingRaffle, setEditingRaffle] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(false);
+
+  const [dialog, setDialog] = useState({ open: false });
+
+  const showAlert = (title, message, type = 'alert') =>
+    new Promise(resolve =>
+      setDialog({ open: true, type, title, message, onConfirm: () => { setDialog({ open: false }); resolve(true); }, onCancel: () => { setDialog({ open: false }); resolve(false); } })
+    );
+
+  const showConfirm = (title, message, type = 'danger', confirmText = 'Confirmar') =>
+    new Promise(resolve =>
+      setDialog({ open: true, type, title, message, confirmText, onConfirm: () => { setDialog({ open: false }); resolve(true); }, onCancel: () => { setDialog({ open: false }); resolve(false); } })
+    );
+
+  useEffect(() => { fetchRaffle(); }, [id]);
+
+  const fetchRaffle = async () => {
+    try {
+      const res = await fetch(`/api/admin_dashboard.php?id=${id}`, { credentials: 'include' });
+      const data = await res.json();
+      if (data.success) setRaffle(data.raffle);
+    } catch (err) { console.error(err); }
+  };
+
+  const handleTogglePublish = async () => {
+    const action = raffle.is_published ? 'despublicar' : 'publicar';
+    const confirmed = await showConfirm(
+      `¿${raffle.is_published ? 'Despublicar' : 'Publicar'} sorteo?`,
+      `El sorteo "${raffle.title}" quedará ${raffle.is_published ? 'invisible para el público' : 'visible para el público'}.`,
+      'confirm',
+      raffle.is_published ? 'Despublicar' : 'Publicar'
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/admin_toggle_raffle.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: raffle.id }),
+      });
+      const data = await res.json();
+      if (data.success) fetchRaffle();
+      else showAlert('Error', `No se pudo ${action} el sorteo.`, 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
+  };
+
+  const handleDeleteRaffle = async () => {
+    const confirmed = await showConfirm(
+      'Eliminar sorteo permanentemente',
+      `¿Estás seguro? Se eliminarán el sorteo "${raffle.title}" y todos sus boletos. Esta acción no se puede deshacer.`,
+      'danger',
+      'Eliminar definitivamente'
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/admin_delete_raffle.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: raffle.id }),
+      });
+      const data = await res.json();
+      if (data.success) navigate('/admin');
+      else showAlert('Error', data.error, 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
+  };
+
+  const digits = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : null;
+  const paymentInfo = raffle ? parsePaymentInfo(raffle.payment_info) : null;
+
+  return (
+    <div className="min-h-screen font-sans pb-12">
+      <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-6xl mx-auto px-6 h-16 flex justify-between items-center">
+          <Link to="/admin" className="flex items-center gap-2 font-bold text-lg text-zinc-500 hover:text-blue-500">
+            <ArrowLeft /> Volver al Inicio
+          </Link>
+          <ThemeToggle />
+        </div>
+      </nav>
+
+      <div className="max-w-6xl mx-auto px-6 mt-10 flex flex-col md:flex-row gap-6">
+        <AdminRaffleSidebar id={id} raffle={raffle} activeSection="settings" />
+
+        {raffle && (
+          <div className="flex-1 min-w-0 space-y-6 max-w-2xl">
+            {/* Datos de la rifa */}
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+              {raffle.background_image && (
+                <div className="relative h-28">
+                  <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${raffle.background_image})` }} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-zinc-900 to-transparent" />
+                </div>
+              )}
+              <div className="p-6">
+                <div className="flex items-start justify-between gap-4 mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-bold text-lg">Datos de la rifa</h3>
+                      {!raffle.is_published && (
+                        <span className="text-[10px] font-bold bg-zinc-200 dark:bg-zinc-700 text-zinc-600 dark:text-zinc-300 px-2 py-0.5 rounded-full">Oculto</span>
+                      )}
+                    </div>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-sm">Título, precio, fecha, descripción e imagen de fondo.</p>
+                  </div>
+                  <button
+                    onClick={() => setEditingRaffle(true)}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+                  >
+                    <Pencil size={15} /> Editar
+                  </button>
+                </div>
+
+                <dl className="grid grid-cols-2 gap-4 text-sm mb-4">
+                  <div>
+                    <dt className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-0.5">Título</dt>
+                    <dd className="font-semibold truncate">{raffle.title}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-0.5">Precio por boleto</dt>
+                    <dd className="font-mono font-semibold text-emerald-600 dark:text-emerald-400">${raffle.price_per_ticket}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-0.5">Fecha del sorteo</dt>
+                    <dd className="font-semibold">{formatDrawDate(raffle.draw_date)}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-0.5">Cifras</dt>
+                    <dd className="font-mono font-semibold">{digits} ({raffle.total_tickets} boletos)</dd>
+                  </div>
+                </dl>
+
+                {raffle.description && (
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">{raffle.description}</p>
+                )}
+
+                <div className="flex gap-2 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                  <button
+                    onClick={handleTogglePublish}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    {raffle.is_published ? <><EyeOff size={15} /> Despublicar</> : <><Eye size={15} /> Publicar</>}
+                  </button>
+                  <button
+                    onClick={handleDeleteRaffle}
+                    className="flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-xl border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <Trash2 size={15} /> Eliminar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Método de pago */}
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="font-bold text-lg mb-1">Método de pago</h3>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm">Instrucciones de pago que verán los compradores.</p>
+                </div>
+                <button
+                  onClick={() => setEditingPayment(true)}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+                >
+                  <Pencil size={15} /> {paymentInfo ? 'Editar' : 'Configurar'}
+                </button>
+              </div>
+
+              {paymentInfo ? (
+                <div className="flex items-start gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
+                  <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 shrink-0">
+                    <Wallet size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-semibold">
+                      {paymentInfo.method}{paymentInfo.institution ? ` · ${paymentInfo.institution}` : ''}
+                    </p>
+                    {paymentInfo.details?.length > 0 && (
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+                        {paymentInfo.details.map(d => `${d.type}: ${d.value}`).join(' · ')}
+                      </p>
+                    )}
+                    {paymentInfo.description && (
+                      <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">{paymentInfo.description}</p>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-dashed border-zinc-200 dark:border-zinc-800 text-sm text-zinc-500 dark:text-zinc-400 text-center">
+                  Aún no configuraste un método de pago.
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {editingRaffle && raffle && (
+        <RaffleFormModal
+          mode="edit"
+          raffle={raffle}
+          onClose={() => setEditingRaffle(false)}
+          onSaved={fetchRaffle}
+          showAlert={showAlert}
+        />
+      )}
+
+      {editingPayment && raffle && (
+        <PaymentMethodModal
+          raffle={raffle}
+          onClose={() => setEditingPayment(false)}
+          onSaved={fetchRaffle}
+          showAlert={showAlert}
+        />
+      )}
+
+      <Dialog {...dialog} />
+    </div>
+  );
+}

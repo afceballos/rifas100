@@ -27,6 +27,7 @@ CREATE TABLE raffles (
     title VARCHAR(255) NOT NULL,
     description TEXT NULL,
     background_image VARCHAR(255) NULL,
+    payment_info TEXT NULL,
     price_per_ticket DECIMAL(10,2) NOT NULL,
     draw_date DATETIME NOT NULL,
     total_tickets INT NOT NULL,
@@ -39,6 +40,7 @@ CREATE TABLE raffles (
 -- ALTER TABLE raffles ADD COLUMN is_published TINYINT(1) NOT NULL DEFAULT 1;
 -- ALTER TABLE raffles ADD COLUMN description TEXT NULL;
 -- ALTER TABLE raffles ADD COLUMN background_image VARCHAR(255) NULL;
+-- ALTER TABLE raffles ADD COLUMN payment_info TEXT NULL;
 
 -- 4. Boletos (Grilla)
 CREATE TABLE tickets (

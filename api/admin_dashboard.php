@@ -14,7 +14,7 @@ if ($raffle_id <= 0) {
 
 try {
     // Datos de la rifa
-    $stmtRaffle = $pdo->prepare("SELECT id, title, description, background_image, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
+    $stmtRaffle = $pdo->prepare("SELECT id, title, description, background_image, payment_info, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
     $stmtRaffle->execute([$raffle_id]);
     $raffle = $stmtRaffle->fetch();
 
