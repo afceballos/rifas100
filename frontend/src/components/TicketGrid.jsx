@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ThemeToggle from './ThemeToggle';
 import NotFound from './NotFound';
-import { ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, LayoutGrid, Dices, X, RotateCcw } from 'lucide-react';
+import { ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw } from 'lucide-react';
 
 const RANDOM_PRESETS = [1, 2, 3, 5];
 
@@ -57,6 +57,7 @@ export default function TicketGrid() {
   const [loading, setLoading] = useState(true);
   const [pageLoading, setPageLoading] = useState(false);
   const [notFoundVariant, setNotFoundVariant] = useState(null);
+  const [onlyAvailable, setOnlyAvailable] = useState(false);
 
   // Selección al azar
   const [showRandomModal, setShowRandomModal] = useState(false);
@@ -217,7 +218,8 @@ export default function TicketGrid() {
   const viewAvailableNumbers = () => {
     // Refresca los boletos de la página actual en tiempo real (sin recargar el
     // navegador) para reflejar lo que otros compradores hayan tomado mientras
-    // tanto, y desplaza hasta la grilla.
+    // tanto, activa el filtro de "solo disponibles" y desplaza hasta la grilla.
+    setOnlyAvailable(true);
     loadTickets(page);
     gridSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -259,6 +261,7 @@ export default function TicketGrid() {
   const sortedSelection = [...selectedNumbers].sort((a, b) => a - b);
   const selectionTotal = raffle ? (sortedSelection.length * parseFloat(raffle.price_per_ticket)) : 0;
   const randomTotal = raffle ? (randomNumbers.length * parseFloat(raffle.price_per_ticket)) : 0;
+  const visibleGridTickets = onlyAvailable ? tickets.filter(t => t.status === 'available') : tickets;
 
   const handlePurchase = async (e) => {
     e.preventDefault();
@@ -363,10 +366,14 @@ export default function TicketGrid() {
         {!isEnded && (
           <div className="flex items-center justify-center gap-3 mt-10 flex-wrap">
             <button
-              onClick={viewAvailableNumbers}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              onClick={onlyAvailable ? () => setOnlyAvailable(false) : viewAvailableNumbers}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm border transition-colors backdrop-blur-md ${
+                onlyAvailable
+                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/70 dark:bg-blue-500/10'
+                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 bg-white/50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+              }`}
             >
-              <LayoutGrid size={16} /> Ver números disponibles
+              {onlyAvailable ? <><FilterX size={16} /> Mostrar todos</> : <><Filter size={16} /> Ver números disponibles</>}
             </button>
             <button
               onClick={openRandomModal}
@@ -427,8 +434,13 @@ export default function TicketGrid() {
             <Loader2 className="animate-spin text-blue-500" size={28} />
           </div>
         )}
+        {onlyAvailable && visibleGridTickets.length === 0 && !pageLoading && (
+          <div className="text-center py-16 text-zinc-500 dark:text-zinc-400">
+            No quedan boletos disponibles en esta página.
+          </div>
+        )}
         <div className={`grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3 transition-opacity duration-200 ${isEnded ? 'opacity-50 pointer-events-none grayscale' : ''} ${pageLoading ? 'opacity-30 pointer-events-none' : ''}`}>
-          {tickets.map((t) => {
+          {visibleGridTickets.map((t) => {
             const isAv = t.status === 'available';
             const isSelected = isAv && selectedNumbers.has(t.number);
             const bgClass = isSelected
