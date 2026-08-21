@@ -3,6 +3,8 @@ header('Content-Type: application/json');
 require_once 'db.php';
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$offset = isset($_GET['offset']) ? max(0, (int)$_GET['offset']) : 0;
+$limit = isset($_GET['limit']) ? min(200, max(1, (int)$_GET['limit'])) : 100;
 
 try {
     $stmt = $pdo->prepare("SELECT id, title, description, background_image, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
@@ -19,14 +21,19 @@ try {
         exit;
     }
 
-    $stmt = $pdo->prepare("SELECT ticket_number as number, status FROM tickets WHERE raffle_id = ? ORDER BY ticket_number ASC");
-    $stmt->execute([$id]);
+    $stmt = $pdo->prepare("SELECT ticket_number as number, status FROM tickets WHERE raffle_id = ? ORDER BY ticket_number ASC LIMIT ? OFFSET ?");
+    $stmt->bindValue(1, $id, PDO::PARAM_INT);
+    $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+    $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+    $stmt->execute();
     $tickets = $stmt->fetchAll();
 
     echo json_encode([
         'success' => true,
         'raffle' => $raffle,
-        'tickets' => $tickets
+        'tickets' => $tickets,
+        'offset' => $offset,
+        'limit' => $limit
     ]);
 
 } catch (Exception $e) {

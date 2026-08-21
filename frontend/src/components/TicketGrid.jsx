@@ -2,12 +2,26 @@ import React, { useRef, useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-import { Draggable } from 'gsap/Draggable';
 import ThemeToggle from './ThemeToggle';
 import NotFound from './NotFound';
-import { ShieldCheck, Ticket, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 
-gsap.registerPlugin(useGSAP, Draggable);
+gsap.registerPlugin(useGSAP);
+
+// Construye la lista de botones de página con elipsis para no saturar la UI
+// cuando hay muchas páginas (p.ej. una rifa de 4 cifras tiene 100 páginas).
+const buildPageList = (current, total) => {
+  const keep = new Set([0, total - 1, current - 1, current, current + 1]);
+  const pages = [...keep].filter(p => p >= 0 && p < total).sort((a, b) => a - b);
+  const result = [];
+  let prev = null;
+  for (const p of pages) {
+    if (prev !== null && p - prev > 1) result.push({ type: 'ellipsis', key: `e${p}` });
+    result.push({ type: 'page', value: p });
+    prev = p;
+  }
+  return result;
+};
 
 const TimeBlock = ({ value, label }) => (
   <div className="flex flex-col items-center">
@@ -24,12 +38,11 @@ const TimeBlock = ({ value, label }) => (
 export default function TicketGrid() {
   const { id } = useParams();
   const containerRef = useRef();
-  const trackRef = useRef(null);
-  const handleRef = useRef(null);
   const [tickets, setTickets] = useState([]);
   const [raffle, setRaffle] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [pageLoading, setPageLoading] = useState(false);
   const [notFoundVariant, setNotFoundVariant] = useState(null);
 
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
@@ -38,16 +51,17 @@ export default function TicketGrid() {
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [isEnded, setIsEnded] = useState(false);
 
-  // Ventana de visualización: cuando hay más de WINDOW_SIZE boletos
-  // se muestra una página de 100 a la vez, navegable por slider.
-  const WINDOW_SIZE = 100;
-  const [rangeStart, setRangeStart] = useState(0);
+  // Paginación: cuando la rifa tiene más de PAGE_SIZE boletos, se piden
+  // al servidor de a PAGE_SIZE por vez (carga diferida por página).
+  const PAGE_SIZE = 100;
+  const [page, setPage] = useState(0);
 
-  // Resetear el rango cuando cambia la rifa
-  useEffect(() => { setRangeStart(0); }, [id]);
+  // Resetear la página cuando cambia la rifa
+  useEffect(() => { setPage(0); }, [id]);
 
-  const loadTickets = () => {
-    fetch(`/api/get_tickets.php?id=${id}`)
+  const loadTickets = (targetPage) => {
+    setPageLoading(true);
+    fetch(`/api/get_tickets.php?id=${id}&offset=${targetPage * PAGE_SIZE}&limit=${PAGE_SIZE}`)
       .then(res => res.json())
       .then(data => {
         if(data.success) {
@@ -59,15 +73,17 @@ export default function TicketGrid() {
           setNotFoundVariant(data.code === 'unpublished' ? 'unpublished' : 'not_found');
         }
         setLoading(false);
+        setPageLoading(false);
       })
       .catch(() => {
         setRaffle(null);
         setNotFoundVariant('not_found');
         setLoading(false);
+        setPageLoading(false);
       });
   };
 
-  useEffect(() => { loadTickets(); }, [id]);
+  useEffect(() => { loadTickets(page); }, [id, page]);
 
   // Countdown Logic
   useEffect(() => {
@@ -102,53 +118,20 @@ export default function TicketGrid() {
         { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.015, ease: 'back.out(1.2)' }
       );
     }
-  }, { dependencies: [tickets, loading, rangeStart], scope: containerRef });
+  }, { dependencies: [tickets, loading], scope: containerRef });
 
-  // --- Lógica de la ventana de boletos ---
+  // --- Lógica de paginación ---
   const pad = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : 3;
-  const showSlider = tickets.length > WINDOW_SIZE;
-  const maxStart = Math.max(0, tickets.length - WINDOW_SIZE);
-  const rangeEnd = Math.min(rangeStart + WINDOW_SIZE, tickets.length);
-  const visibleTickets = showSlider ? tickets.slice(rangeStart, rangeEnd) : tickets;
+  const totalPages = raffle ? Math.max(1, Math.ceil(raffle.total_tickets / PAGE_SIZE)) : 1;
+  const showPagination = totalPages > 1;
+  const rangeStart = page * PAGE_SIZE;
+  const rangeEnd = raffle ? Math.min(rangeStart + PAGE_SIZE, raffle.total_tickets) : rangeStart;
+  const pageList = showPagination ? buildPageList(page, totalPages) : [];
 
-  const shiftWindow = (delta) => {
-    setRangeStart(prev => Math.min(Math.max(prev + delta, 0), maxStart));
+  const goToPage = (targetPage) => {
+    const clamped = Math.min(Math.max(targetPage, 0), totalPages - 1);
+    if (clamped !== page) setPage(clamped);
   };
-
-  // Slider arrastrable (track + handle) para navegar entre ventanas de 100 boletos
-  useGSAP(() => {
-    if (!showSlider || !trackRef.current || !handleRef.current) return;
-
-    const track = trackRef.current;
-    const handle = handleRef.current;
-    const localMaxStart = Math.max(0, tickets.length - WINDOW_SIZE);
-
-    const [instance] = Draggable.create(handle, {
-      type: 'x',
-      bounds: track,
-      inertia: false,
-      onDragEnd: function () {
-        const maxX = Math.max(1, track.offsetWidth - handle.offsetWidth);
-        const fraction = Math.min(1, Math.max(0, this.x / maxX));
-        const snapped = Math.round((fraction * localMaxStart) / WINDOW_SIZE) * WINDOW_SIZE;
-        setRangeStart(Math.min(Math.max(snapped, 0), localMaxStart));
-      },
-    });
-
-    return () => instance.kill();
-  }, { dependencies: [showSlider, tickets.length], scope: containerRef });
-
-  // Sincroniza la posición del handle cuando la ventana cambia por los botones prev/next
-  useGSAP(() => {
-    if (!showSlider || !trackRef.current || !handleRef.current) return;
-
-    const track = trackRef.current;
-    const handle = handleRef.current;
-    const maxX = Math.max(1, track.offsetWidth - handle.offsetWidth);
-    const targetX = maxStart > 0 ? (rangeStart / maxStart) * maxX : 0;
-
-    gsap.to(handle, { x: targetX, duration: 0.4, ease: 'power2.out' });
-  }, { dependencies: [rangeStart, showSlider, tickets.length], scope: containerRef });
 
   const handleSelect = (ticket, element) => {
     if (ticket.status !== 'available' || isEnded) return;
@@ -183,7 +166,7 @@ export default function TicketGrid() {
         setTimeout(() => {
           setSelectedTicket(null);
           setFormData({ name: '', phone: '', email: '' });
-          loadTickets();
+          loadTickets(page);
         }, 2000);
       } else {
         setPurchaseStatus(data.message || 'Error al reservar.');
@@ -250,34 +233,41 @@ export default function TicketGrid() {
         </div>
       </div>
 
-      {/* Slider de navegación entre ventanas de 100 boletos */}
-      {showSlider && (
+      {/* Paginación: cada página trae 100 boletos nuevos desde el servidor */}
+      {showPagination && (
         <div className={`max-w-2xl mx-auto px-4 mb-8 ${isEnded ? 'opacity-50 pointer-events-none' : ''}`}>
-          <div className="flex items-center justify-between mb-2 px-1 text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-            <span>Mostrando {rangeStart.toString().padStart(pad, '0')}–{(rangeEnd - 1).toString().padStart(pad, '0')}</span>
-            <span>{tickets.length} boletos</span>
+          <div className="text-center mb-3 text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+            Mostrando {rangeStart.toString().padStart(pad, '0')}–{(rangeEnd - 1).toString().padStart(pad, '0')} de {raffle.total_tickets}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center gap-1.5 flex-wrap">
             <button
-              onClick={() => shiftWindow(-WINDOW_SIZE)}
-              disabled={rangeStart === 0}
-              className="shrink-0 p-2 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+              onClick={() => goToPage(page - 1)}
+              disabled={page === 0}
+              className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
             >
               <ChevronLeft size={18} />
             </button>
 
-            <div ref={trackRef} className="relative flex-1 h-3 rounded-full bg-zinc-100 dark:bg-zinc-800 overflow-hidden">
-              <div
-                ref={handleRef}
-                className="absolute top-0 left-0 h-full rounded-full bg-gradient-to-r from-blue-500 to-violet-500 shadow-md cursor-grab active:cursor-grabbing touch-none"
-                style={{ width: `${Math.max(6, (WINDOW_SIZE / tickets.length) * 100)}%` }}
-              />
-            </div>
+            {pageList.map(item => item.type === 'ellipsis' ? (
+              <span key={item.key} className="px-1 text-zinc-400 select-none">…</span>
+            ) : (
+              <button
+                key={item.value}
+                onClick={() => goToPage(item.value)}
+                className={`min-w-[2.5rem] h-10 px-3 rounded-xl font-mono font-bold text-sm transition-colors ${
+                  item.value === page
+                    ? 'bg-gradient-to-r from-blue-500 to-violet-500 text-white shadow-md shadow-blue-500/20'
+                    : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-blue-400 dark:hover:border-blue-500'
+                }`}
+              >
+                {item.value + 1}
+              </button>
+            ))}
 
             <button
-              onClick={() => shiftWindow(WINDOW_SIZE)}
-              disabled={rangeStart >= maxStart}
-              className="shrink-0 p-2 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+              onClick={() => goToPage(page + 1)}
+              disabled={page >= totalPages - 1}
+              className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
             >
               <ChevronRight size={18} />
             </button>
@@ -286,26 +276,33 @@ export default function TicketGrid() {
       )}
 
       {/* Grilla Interactiva */}
-      <div className={`grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3 max-w-5xl mx-auto px-4 pb-20 ${isEnded ? 'opacity-50 pointer-events-none grayscale' : ''}`}>
-        {visibleTickets.map((t) => {
-          const isAv = t.status === 'available';
-          const bgClass = isAv 
-            ? 'bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:shadow-blue-500/20 hover:border-blue-500 dark:hover:border-blue-400 text-zinc-900 dark:text-zinc-100' 
-            : t.status === 'paid' 
-              ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-500 opacity-60 cursor-not-allowed' 
-              : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 opacity-50 cursor-not-allowed';
+      <div className="relative max-w-5xl mx-auto px-4 pb-20">
+        {pageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <Loader2 className="animate-spin text-blue-500" size={28} />
+          </div>
+        )}
+        <div className={`grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3 transition-opacity duration-200 ${isEnded ? 'opacity-50 pointer-events-none grayscale' : ''} ${pageLoading ? 'opacity-30 pointer-events-none' : ''}`}>
+          {tickets.map((t) => {
+            const isAv = t.status === 'available';
+            const bgClass = isAv
+              ? 'bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:shadow-blue-500/20 hover:border-blue-500 dark:hover:border-blue-400 text-zinc-900 dark:text-zinc-100'
+              : t.status === 'paid'
+                ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-500 opacity-60 cursor-not-allowed'
+                : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 opacity-50 cursor-not-allowed';
 
-          return (
-            <button
-              key={t.number}
-              onClick={(e) => handleSelect(t, e.currentTarget)}
-              disabled={!isAv || isEnded}
-              className={`ticket-item h-12 sm:h-14 flex items-center justify-center rounded-xl font-mono text-base sm:text-lg font-bold transition-all duration-300 ${bgClass}`}
-            >
-              {t.number.toString().padStart(pad, '0')}
-            </button>
-          );
-        })}
+            return (
+              <button
+                key={t.number}
+                onClick={(e) => handleSelect(t, e.currentTarget)}
+                disabled={!isAv || isEnded}
+                className={`ticket-item h-12 sm:h-14 flex items-center justify-center rounded-xl font-mono text-base sm:text-lg font-bold transition-all duration-300 ${bgClass}`}
+              >
+                {t.number.toString().padStart(pad, '0')}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Modal Desplegable Premium */}
