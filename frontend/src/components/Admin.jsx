@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ThemeToggle from './ThemeToggle';
 import { DollarSign, Ticket, Clock, CheckCircle2, LayoutDashboard, LogOut } from 'lucide-react';
+import { apiGet, apiPost, clearToken, setToken } from '../api';
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -19,8 +20,7 @@ export default function Admin() {
 
   const fetchDashboard = async () => {
     try {
-      const res = await fetch('/api/admin_dashboard.php');
-      const data = await res.json();
+      const data = await apiGet('/api/admin_dashboard.php');
 
       if (data.success) {
         setIsLoggedIn(true);
@@ -28,7 +28,10 @@ export default function Admin() {
         setMoney(data.money);
         setBuyers(data.buyers);
 
-      } else { setIsLoggedIn(false); }
+      } else {
+        clearToken();
+        setIsLoggedIn(false);
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -36,16 +39,11 @@ export default function Admin() {
     e.preventDefault();
     setLoading(true);
     try {
-
-      const res = await fetch('/api/login.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const data = await res.json();
+      const data = await apiPost('/api/login.php', { username, password });
       if (data.success) {
+        setToken(data.token);
         setLoginError('');
-        fetchDashboard();
+        await fetchDashboard();
       } else { setLoginError(data.message); }
     } catch (err) { setLoginError('Error de conexión'); }
     setLoading(false);
@@ -54,12 +52,7 @@ export default function Admin() {
   const markAsPaid = async (ticketNumber) => {
     if (!window.confirm(`¿Confirmar pago del boleto #${ticketNumber}?`)) return;
     try {
-      const res = await fetch('/api/admin_mark_paid.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ticket_number: ticketNumber })
-      });
-      const data = await res.json();
+      const data = await apiPost('/api/admin_mark_paid.php', { ticket_number: ticketNumber });
       if (data.success) fetchDashboard();
       else alert(data.error || 'Error al actualizar');
     } catch (err) { alert('Error de conexión'); }
@@ -111,7 +104,7 @@ export default function Admin() {
           <div className="flex items-center gap-4">
             <ThemeToggle />
 
-            <button onClick={() => setIsLoggedIn(false)} className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors">
+            <button onClick={() => { clearToken(); setIsLoggedIn(false); }} className="flex items-center gap-2 text-sm font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors">
 
               <LogOut size={16} /> Salir
             </button>

@@ -1,12 +1,9 @@
 <?php
 header('Content-Type: application/json');
-
-if (!isset($_SESSION['admin_id'])) {
-    echo json_encode(['success' => false, 'error' => 'No autorizado']);
-    exit;
-}
-
 require_once 'db.php';
+require_once 'auth.php';
+
+require_auth();
 
 try {
     // Estadísticas

@@ -1,13 +1,9 @@
 <?php
 header('Content-Type: application/json');
-
-
-if (!isset($_SESSION['admin_id'])) {
-    echo json_encode(['success' => false, 'error' => 'No autorizado']);
-    exit;
-}
-
 require_once 'db.php';
+require_once 'auth.php';
+
+require_auth();
 $data = json_decode(file_get_contents('php://input'), true);
 $new_status    = $data['new_status'] ?? '';
 $raffle_id     = (int)($data['raffle_id'] ?? 0);
