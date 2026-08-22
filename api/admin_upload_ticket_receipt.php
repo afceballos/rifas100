@@ -14,6 +14,8 @@ if ($raffle_id <= 0 || $ticket_number < 0) {
     exit;
 }
 
+assert_raffle_ownership($pdo, $raffle_id);
+
 $result = process_image_upload($_FILES['image'] ?? null, __DIR__ . '/../uploads/receipts', 'receipt_' . $raffle_id . '_' . $ticket_number);
 if (!$result['success']) {
     echo json_encode($result);

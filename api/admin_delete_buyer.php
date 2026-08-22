@@ -14,6 +14,8 @@ if ($raffle_id <= 0 || $ticket_number < 0) {
     exit;
 }
 
+assert_raffle_ownership($pdo, $raffle_id);
+
 try {
     // Libera el boleto: borra datos del comprador y lo devuelve a 'available'
     $stmt = $pdo->prepare("

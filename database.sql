@@ -15,10 +15,13 @@ CREATE TABLE users (
     tenant_id INT NULL, -- NULL significa Super Admin global
     role ENUM('super_admin', 'admin') DEFAULT 'admin',
     username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(150) NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 );
+
+-- ALTER TABLE users ADD COLUMN email VARCHAR(150) NULL UNIQUE;
 
 -- 3. Configuración de la Rifa
 CREATE TABLE raffles (

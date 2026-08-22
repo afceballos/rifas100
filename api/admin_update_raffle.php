@@ -13,6 +13,8 @@ if ($raffle_id <= 0 || empty($data['title']) || empty($data['price_per_ticket'])
     exit;
 }
 
+assert_raffle_ownership($pdo, $raffle_id);
+
 $description = isset($data['description']) && $data['description'] !== '' ? $data['description'] : null;
 $organizerName = isset($data['organizer_name']) && $data['organizer_name'] !== '' ? trim($data['organizer_name']) : null;
 

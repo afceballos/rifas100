@@ -14,12 +14,14 @@ if($stmt->fetchColumn() == 0) {
     $pdo->query("INSERT INTO users (username, password_hash, role) VALUES ('admin', '$hash', 'super_admin')");
 }
 
-$stmt = $pdo->prepare("SELECT id, password_hash FROM users WHERE username = ?");
+$stmt = $pdo->prepare("SELECT id, password_hash, tenant_id, role FROM users WHERE username = ?");
 $stmt->execute([$user]);
 $row = $stmt->fetch();
 
 if ($row && password_verify($pass, $row['password_hash'])) {
     $_SESSION['admin_id'] = $row['id'];
+    $_SESSION['tenant_id'] = $row['tenant_id'];
+    $_SESSION['role'] = $row['role'];
     echo json_encode(['success' => true, 'message' => 'Login exitoso']);
 } else {
     echo json_encode(['success' => false, 'message' => 'Usuario o contraseña incorrectos']);

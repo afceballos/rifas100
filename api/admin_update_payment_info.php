@@ -14,6 +14,8 @@ if ($raffle_id <= 0) {
     exit;
 }
 
+assert_raffle_ownership($pdo, $raffle_id);
+
 $clean = [];
 foreach ($methods as $entry) {
     if (!is_array($entry)) continue;

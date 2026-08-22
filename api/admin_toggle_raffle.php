@@ -13,6 +13,8 @@ if ($raffle_id <= 0) {
     exit;
 }
 
+assert_raffle_ownership($pdo, $raffle_id);
+
 try {
     // Alterna entre publicado (1) y despublicado (0)
     $stmt = $pdo->prepare("UPDATE raffles SET is_published = NOT is_published WHERE id = ?");

@@ -6,8 +6,9 @@ header('Content-Type: application/json');
 require_auth();
 
 try {
-    $stmt = $pdo->prepare("
-        SELECT 
+    $scoped = !is_super_admin();
+    $sql = "
+        SELECT
             r.id,
             r.title,
             r.description,
@@ -21,10 +22,12 @@ try {
             COUNT(CASE WHEN t.status = 'paid' THEN 1 END) AS paid_count
         FROM raffles r
         LEFT JOIN tickets t ON t.raffle_id = r.id
+        " . ($scoped ? "WHERE r.tenant_id = ?" : "") . "
         GROUP BY r.id
         ORDER BY r.created_at DESC
-    ");
-    $stmt->execute();
+    ";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($scoped ? [current_tenant_id()] : []);
     $raffles = $stmt->fetchAll();
 
     echo json_encode(['success' => true, 'raffles' => $raffles]);

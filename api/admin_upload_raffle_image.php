@@ -16,6 +16,8 @@ if ($raffle_id <= 0) {
     exit;
 }
 
+assert_raffle_ownership($pdo, $raffle_id);
+
 $result = process_image_upload($_FILES['image'] ?? null, __DIR__ . '/../uploads/raffles', $prefix . '_' . $raffle_id);
 if (!$result['success']) {
     echo json_encode($result);

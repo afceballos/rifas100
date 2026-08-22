@@ -13,6 +13,8 @@ if ($raffle_id <= 0) {
     exit;
 }
 
+assert_raffle_ownership($pdo, $raffle_id);
+
 try {
     $stmtImg = $pdo->prepare("SELECT background_image FROM raffles WHERE id = ?");
     $stmtImg->execute([$raffle_id]);

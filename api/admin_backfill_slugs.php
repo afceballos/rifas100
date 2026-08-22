@@ -10,8 +10,10 @@ header('Content-Type: application/json');
 require_auth();
 
 try {
-    $stmt = $pdo->prepare("SELECT id FROM raffles WHERE slug IS NULL OR slug = ''");
-    $stmt->execute();
+    $scoped = !is_super_admin();
+    $sql = "SELECT id FROM raffles WHERE (slug IS NULL OR slug = '')" . ($scoped ? " AND tenant_id = ?" : "");
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($scoped ? [current_tenant_id()] : []);
     $rows = $stmt->fetchAll();
 
     $updateStmt = $pdo->prepare("UPDATE raffles SET slug = ? WHERE id = ?");

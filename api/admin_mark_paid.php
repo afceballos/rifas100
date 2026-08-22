@@ -18,6 +18,8 @@ if (!in_array($data['new_status'], $allowed_statuses)) {
     exit;
 }
 
+assert_raffle_ownership($pdo, (int)$data['raffle_id']);
+
 try {
     // Permite cambiar entre 'reserved' (apartado), 'reviewing' (revisando) y 'paid' (validado)
     $stmt = $pdo->prepare("UPDATE tickets SET status = ? WHERE raffle_id = ? AND ticket_number = ? AND status != 'available'");

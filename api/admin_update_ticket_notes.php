@@ -15,6 +15,8 @@ if ($raffle_id <= 0 || $ticket_number < 0) {
     exit;
 }
 
+assert_raffle_ownership($pdo, $raffle_id);
+
 try {
     $stmt = $pdo->prepare("UPDATE tickets SET admin_notes = ? WHERE raffle_id = ? AND ticket_number = ?");
     $stmt->execute([$notes !== '' ? $notes : null, $raffle_id, $ticket_number]);
