@@ -29,9 +29,10 @@ export default function PaymentInfoModal({ raffle, onClose }) {
   const methods = parsePaymentMethods(raffle?.payment_info);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <div className="fixed inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative min-h-full flex items-center justify-center p-4">
+      <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 my-8">
         <div className="flex justify-between items-start mb-6">
           <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Pagos</h2>
           <button onClick={onClose} className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors">
@@ -85,6 +86,7 @@ export default function PaymentInfoModal({ raffle, onClose }) {
             ${raffle?.price_per_ticket}
           </p>
         </div>
+      </div>
       </div>
     </div>
   );

@@ -589,9 +589,10 @@ export default function TicketGrid() {
 
       {/* Modal Desplegable Premium */}
       {showReserveModal && !isEnded && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => !submitting && setShowReserveModal(false)}></div>
-          <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 transform transition-all max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => !submitting && setShowReserveModal(false)}></div>
+          <div className="relative min-h-full flex items-center justify-center p-4">
+          <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 transform transition-all my-8">
 
             <div className="flex justify-between items-start mb-4">
               <div>
@@ -653,14 +654,16 @@ export default function TicketGrid() {
               </div>
             </form>
           </div>
+          </div>
         </div>
       )}
 
       {/* Modal de selección al azar */}
       {showRandomModal && !isEnded && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => !randomLoading && setShowRandomModal(false)}></div>
-          <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 transform transition-all max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="fixed inset-0 bg-zinc-900/40 dark:bg-black/60 backdrop-blur-sm" onClick={() => !randomLoading && setShowRandomModal(false)}></div>
+          <div className="relative min-h-full flex items-center justify-center p-4">
+          <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 transform transition-all my-8">
 
             <div className="flex justify-between items-start mb-6">
               <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Seleccionar números</h2>
@@ -750,6 +753,7 @@ export default function TicketGrid() {
                 </div>
               </>
             )}
+          </div>
           </div>
         </div>
       )}
