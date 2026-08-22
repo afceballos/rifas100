@@ -152,29 +152,40 @@ export default function AdminRaffle() {
         <AdminRaffleSidebar id={id} raffle={raffle} activeSection="admin" />
 
         <div className="flex-1 min-w-0">
-          <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm mb-6 flex flex-col sm:flex-row items-center gap-6">
-            <CircularProgress percent={raffle && raffle.total_tickets ? ((stats.reserved + stats.reviewing + stats.paid) / raffle.total_tickets) * 100 : 0} />
-            <div className="flex-1 text-center sm:text-left">
-              <h3 className="font-bold text-lg mb-1">Progreso del sorteo</h3>
-              <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-4">
-                {stats.reserved + stats.reviewing + stats.paid} de {raffle?.total_tickets ?? 0} boletos vendidos
-              </p>
-              <div className="flex gap-5 justify-center sm:justify-start text-sm font-medium">
-                <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
-                  <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-blue-500 to-violet-500" />
-                  Vendidos: {stats.reserved + stats.reviewing + stats.paid}
-                </span>
-                <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
-                  <span className="w-2.5 h-2.5 rounded-full bg-zinc-200 dark:bg-zinc-700" />
-                  Disponibles: {stats.available}
-                </span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex flex-col sm:flex-row items-center gap-6">
+              <CircularProgress percent={raffle && raffle.total_tickets ? ((stats.reserved + stats.reviewing + stats.paid) / raffle.total_tickets) * 100 : 0} />
+              <div className="flex-1 text-center sm:text-left min-w-0">
+                <h3 className="font-bold text-lg mb-1">Progreso del sorteo</h3>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-4">
+                  {stats.reserved + stats.reviewing + stats.paid} de {raffle?.total_tickets ?? 0} boletos vendidos
+                </p>
+                <div className="flex flex-wrap gap-5 justify-center sm:justify-start text-sm font-medium">
+                  <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
+                    <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-blue-500 to-violet-500" />
+                    Vendidos: {stats.reserved + stats.reviewing + stats.paid}
+                  </span>
+                  <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
+                    <span className="w-2.5 h-2.5 rounded-full bg-zinc-200 dark:bg-zinc-700" />
+                    Disponibles: {stats.available}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm flex items-center gap-5">
+              <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 shrink-0">
+                <DollarSign size={28} />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-zinc-500 dark:text-zinc-400 text-sm font-medium mb-1">Recaudado (Pagos)</h3>
+                <p className="text-3xl font-bold font-mono tracking-tight truncate">${money}</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
             {[
-              { title: 'Recaudado (Pagos)', val: `$${money}`, icon: <DollarSign size={24}/>, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10' },
               { title: 'Disponibles',        val: stats.available, icon: <Ticket size={24}/>,       color: 'text-blue-500',   bg: 'bg-blue-50 dark:bg-blue-500/10' },
               { title: 'Apartados',          val: stats.reserved,  icon: <Clock size={24}/>,       color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-500/10' },
               { title: 'Revisando',          val: stats.reviewing, icon: <EyeIcon size={24}/>,     color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10' },
