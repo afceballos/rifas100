@@ -6,7 +6,8 @@ import ThemeToggle from './ThemeToggle';
 import NotFound from './NotFound';
 import TicketQRCode from './TicketQRCode';
 import PaymentInfoModal from './PaymentInfoModal';
-import { ShieldCheck, Ticket, Copy, Check, CreditCard, ArrowUpRight, Download, Loader2 } from 'lucide-react';
+import AccountMenuSection from './AccountMenuSection';
+import { ShieldCheck, Ticket, Copy, Check, CreditCard, ArrowUpRight, Download, Loader2, Menu } from 'lucide-react';
 
 gsap.registerPlugin(useGSAP);
 
@@ -45,6 +46,8 @@ export default function TicketPage() {
   const [copied, setCopied] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [me, setMe] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -58,6 +61,13 @@ export default function TicketPage() {
       })
       .catch(() => { setNotFound(true); setLoading(false); });
   }, [code]);
+
+  useEffect(() => {
+    fetch('/api/me.php', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setMe(data.success ? data : null))
+      .catch(() => setMe(null));
+  }, []);
 
   const ticketUrl = typeof window !== 'undefined' ? `${window.location.origin}/ticket/${code}` : '';
 
@@ -119,7 +129,30 @@ export default function TicketPage() {
           <ShieldCheck className="text-blue-500" />
           <span>Ticket<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-violet-500">Vault</span></span>
         </Link>
-        <ThemeToggle />
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+
+          {me && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(prev => !prev)}
+                className="p-2 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+                title="Más opciones"
+              >
+                <Menu size={20} />
+              </button>
+
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                  <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden py-1.5">
+                    <AccountMenuSection me={me} raffleSlug={ticket?.raffle?.slug} onClose={() => setShowMenu(false)} onLoggedOut={() => setMe(null)} />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
       </nav>
 
       <div className="max-w-md mx-auto px-4 pb-16 pt-4">

@@ -7,6 +7,7 @@ import NotFound from './NotFound';
 import OrganizerModal from './OrganizerModal';
 import VerifyParticipationModal from './VerifyParticipationModal';
 import PaymentInfoModal from './PaymentInfoModal';
+import AccountMenuSection from './AccountMenuSection';
 import {
   ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
   Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink,
@@ -65,12 +66,20 @@ export default function TicketGrid() {
   const [notFoundVariant, setNotFoundVariant] = useState(null);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
 
-  // Menú hamburguesa (compartir / organizador / verificar / pagos)
+  // Menú hamburguesa (compartir / organizador / verificar / pagos / cuenta)
   const [showMenu, setShowMenu] = useState(false);
   const [showOrganizerModal, setShowOrganizerModal] = useState(false);
   const [showVerifyModal, setShowVerifyModal] = useState(false);
   const [showPaymentInfoModal, setShowPaymentInfoModal] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [me, setMe] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/me.php', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setMe(data.success ? data : null))
+      .catch(() => setMe(null));
+  }, []);
 
   // Selección al azar
   const [showRandomModal, setShowRandomModal] = useState(false);
@@ -398,6 +407,8 @@ export default function TicketGrid() {
                   >
                     <Search size={16} /> Verificar participación
                   </button>
+
+                  <AccountMenuSection me={me} raffleSlug={id} onClose={() => setShowMenu(false)} onLoggedOut={() => setMe(null)} />
                 </div>
               </>
             )}

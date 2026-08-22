@@ -1,9 +1,20 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
-import { ShieldCheck, ChevronRight, Zap, Target, Lock } from 'lucide-react';
+import AccountMenuSection from './AccountMenuSection';
+import { ShieldCheck, ChevronRight, Zap, Target, Lock, Menu } from 'lucide-react';
 
 export default function Landing() {
+  const [showMenu, setShowMenu] = useState(false);
+  const [me, setMe] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/me.php', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => setMe(data.success ? data : null))
+      .catch(() => setMe(null));
+  }, []);
+
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 font-sans text-zinc-900 dark:text-zinc-50 flex flex-col">
       <nav className="w-full p-6 flex justify-between items-center max-w-6xl mx-auto">
@@ -13,6 +24,28 @@ export default function Landing() {
         </div>
         <div className="flex items-center gap-4">
           <ThemeToggle />
+
+          {me && (
+            <div className="relative">
+              <button
+                onClick={() => setShowMenu(prev => !prev)}
+                className="p-2 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+                title="Más opciones"
+              >
+                <Menu size={20} />
+              </button>
+
+              {showMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                  <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden py-1.5">
+                    <AccountMenuSection me={me} onClose={() => setShowMenu(false)} onLoggedOut={() => setMe(null)} />
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
           <Link to="/admin" className="px-5 py-2 rounded-full text-sm font-semibold bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors">
             Acceso Operativo
           </Link>
