@@ -358,6 +358,14 @@ export default function TicketGrid() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
 
+          <button
+            onClick={() => setShowPaymentInfoModal(true)}
+            className="p-2 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 text-white shadow-sm shadow-blue-500/30 hover:shadow-md hover:shadow-blue-500/40 transition-all active:scale-95"
+            title="Pagos"
+          >
+            <Wallet size={20} />
+          </button>
+
           <div className="relative">
             <button
               onClick={() => setShowMenu(prev => !prev)}
@@ -389,12 +397,6 @@ export default function TicketGrid() {
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                   >
                     <Search size={16} /> Verificar participación
-                  </button>
-                  <button
-                    onClick={() => { setShowMenu(false); setShowPaymentInfoModal(true); }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
-                  >
-                    <Wallet size={16} /> Pagos
                   </button>
                 </div>
               </>
