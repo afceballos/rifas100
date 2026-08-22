@@ -6,7 +6,7 @@ import ThemeToggle from './ThemeToggle';
 import NotFound from './NotFound';
 import TicketQRCode from './TicketQRCode';
 import PaymentInfoModal from './PaymentInfoModal';
-import { ShieldCheck, Ticket, Copy, Check, CreditCard, ArrowUpRight } from 'lucide-react';
+import { ShieldCheck, Ticket, Copy, Check, CreditCard, ArrowUpRight, Download, Loader2 } from 'lucide-react';
 
 gsap.registerPlugin(useGSAP);
 
@@ -21,11 +21,13 @@ const Divider = () => <div className="border-t-2 border-dashed border-zinc-200 d
 export default function TicketPage() {
   const { code } = useParams();
   const containerRef = useRef();
+  const cardRef = useRef(null);
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -48,6 +50,26 @@ export default function TicketPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* clipboard no disponible */ }
+  };
+
+  const handleDownloadPdf = async () => {
+    if (!cardRef.current || downloadingPdf) return;
+    setDownloadingPdf(true);
+    try {
+      // Carga diferida: jsPDF/html2canvas solo se descargan si de verdad se usa el botón.
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas-pro'),
+        import('jspdf'),
+      ]);
+      const canvas = await html2canvas(cardRef.current, { backgroundColor: '#ffffff', scale: 2 });
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] });
+      pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`comprobante-boleto-${ticket.ticket_number.toString().padStart(pad, '0')}.pdf`);
+    } catch (err) {
+      console.error(err);
+    }
+    setDownloadingPdf(false);
   };
 
   useGSAP(() => {
@@ -84,7 +106,7 @@ export default function TicketPage() {
       </nav>
 
       <div className="max-w-md mx-auto px-4 pb-16 pt-4">
-        <div className="ticket-card relative">
+        <div className="ticket-card relative" ref={cardRef}>
           {/* Encabezado degradado */}
           <div className="relative bg-gradient-to-br from-blue-500 to-violet-500 rounded-t-3xl px-8 pt-8 pb-10 text-center overflow-hidden">
             <p className="text-white font-extrabold text-lg tracking-tight uppercase">{ticket.raffle.title}</p>
@@ -183,6 +205,15 @@ export default function TicketPage() {
               className="ticket-reveal w-full flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white font-bold rounded-2xl shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all active:scale-95"
             >
               <CreditCard size={18} /> Pagar
+            </button>
+
+            <button
+              onClick={handleDownloadPdf}
+              disabled={downloadingPdf}
+              className="ticket-reveal w-full flex items-center justify-center gap-2 mt-2.5 py-2.5 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors disabled:opacity-50"
+            >
+              {downloadingPdf ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+              {downloadingPdf ? 'Generando PDF...' : 'Descargar comprobante (PDF)'}
             </button>
 
             <Divider />
