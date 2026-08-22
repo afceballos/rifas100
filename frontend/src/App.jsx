@@ -13,7 +13,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
-        <Route path="/sorteo/:id" element={<TicketGrid />} />
+        <Route path="/sorteo/:slug" element={<TicketGrid />} />
         <Route path="/admin" element={<Admin />} />
         <Route
           path="/admin/raffle/:id"

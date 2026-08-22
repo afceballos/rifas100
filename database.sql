@@ -23,6 +23,7 @@ CREATE TABLE users (
 -- 3. Configuración de la Rifa
 CREATE TABLE raffles (
     id INT AUTO_INCREMENT PRIMARY KEY,
+    slug VARCHAR(32) NULL,
     tenant_id INT NOT NULL,
     title VARCHAR(255) NOT NULL,
     description TEXT NULL,
@@ -35,10 +36,15 @@ CREATE TABLE raffles (
     total_tickets INT NOT NULL,
     is_published TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_slug (slug),
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 );
 
 -- Migración para bases de datos existentes:
+-- ALTER TABLE raffles ADD COLUMN slug VARCHAR(32) NULL;
+-- ALTER TABLE raffles ADD UNIQUE INDEX unique_slug (slug);
+-- Después de aplicar lo anterior, entra una vez (ya logueado) a
+-- /api/admin_backfill_slugs.php para generarle slug a las rifas existentes.
 -- ALTER TABLE raffles ADD COLUMN is_published TINYINT(1) NOT NULL DEFAULT 1;
 -- ALTER TABLE raffles ADD COLUMN description TEXT NULL;
 -- ALTER TABLE raffles ADD COLUMN background_image VARCHAR(255) NULL;

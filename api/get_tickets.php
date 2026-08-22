@@ -2,13 +2,18 @@
 header('Content-Type: application/json');
 require_once 'db.php';
 
-$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
 $offset = isset($_GET['offset']) ? max(0, (int)$_GET['offset']) : 0;
 $limit = isset($_GET['limit']) ? min(1000, max(1, (int)$_GET['limit'])) : 1000;
 
+if ($slug === '') {
+    echo json_encode(['success' => false, 'code' => 'not_found', 'error' => 'Rifa no encontrada.']);
+    exit;
+}
+
 try {
-    $stmt = $pdo->prepare("SELECT id, title, description, background_image, payment_info, organizer_name, organizer_photo, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
-    $stmt->execute([$id]);
+    $stmt = $pdo->prepare("SELECT id, slug, title, description, background_image, payment_info, organizer_name, organizer_photo, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE slug = ?");
+    $stmt->execute([$slug]);
     $raffle = $stmt->fetch();
 
     if (!$raffle) {
@@ -21,8 +26,10 @@ try {
         exit;
     }
 
+    $raffleId = (int)$raffle['id'];
+
     $stmt = $pdo->prepare("SELECT ticket_number as number, status FROM tickets WHERE raffle_id = ? ORDER BY ticket_number ASC LIMIT ? OFFSET ?");
-    $stmt->bindValue(1, $id, PDO::PARAM_INT);
+    $stmt->bindValue(1, $raffleId, PDO::PARAM_INT);
     $stmt->bindValue(2, $limit, PDO::PARAM_INT);
     $stmt->bindValue(3, $offset, PDO::PARAM_INT);
     $stmt->execute();
@@ -30,7 +37,7 @@ try {
 
     // Conteo global (no solo de la página actual) para la barra flotante
     $countStmt = $pdo->prepare("SELECT COUNT(CASE WHEN status = 'available' THEN 1 END) AS available_count FROM tickets WHERE raffle_id = ?");
-    $countStmt->execute([$id]);
+    $countStmt->execute([$raffleId]);
     $availableCount = (int)$countStmt->fetchColumn();
 
     echo json_encode([

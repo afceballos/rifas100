@@ -21,7 +21,11 @@ export default function AdminRaffleSidebar({ id, raffle, activeSection }) {
       </div>
 
       <nav className="flex md:flex-col gap-1.5 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
-        <a href={`/sorteo/${id}`} target="_blank" rel="noreferrer" className={itemClass(false)}>
+        <a
+          href={raffle?.slug ? `/sorteo/${raffle.slug}` : '#'}
+          target="_blank" rel="noreferrer"
+          className={`${itemClass(false)} ${raffle?.slug ? '' : 'opacity-50 pointer-events-none'}`}
+        >
           <ExternalLink size={16} /> Ver sorteo
         </a>
 

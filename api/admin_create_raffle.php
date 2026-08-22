@@ -1,6 +1,7 @@
 <?php
 require_once 'auth.php';
 require_once 'db.php';
+require_once 'slug_helper.php';
 header('Content-Type: application/json');
 
 require_auth();
@@ -21,12 +22,13 @@ if (!in_array($digits, [2, 3, 4])) {
 $total_tickets = pow(10, $digits);
 $description = isset($data['description']) && $data['description'] !== '' ? $data['description'] : null;
 $organizerName = isset($data['organizer_name']) && $data['organizer_name'] !== '' ? trim($data['organizer_name']) : null;
+$slug = generate_raffle_slug($pdo);
 
 try {
     $pdo->beginTransaction();
     // Insertar la rifa (asumimos tenant_id 1 por ahora para el admin único)
-    $stmt = $pdo->prepare("INSERT INTO raffles (tenant_id, title, description, organizer_name, price_per_ticket, draw_date, total_tickets) VALUES (1, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$data['title'], $description, $organizerName, $data['price_per_ticket'], $data['draw_date'], $total_tickets]);
+    $stmt = $pdo->prepare("INSERT INTO raffles (slug, tenant_id, title, description, organizer_name, price_per_ticket, draw_date, total_tickets) VALUES (?, 1, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$slug, $data['title'], $description, $organizerName, $data['price_per_ticket'], $data['draw_date'], $total_tickets]);
     $raffle_id = $pdo->lastInsertId();
 
     // Generar boletos masivamente (Se hace en bloques para no saturar si son 10,000)
@@ -49,7 +51,7 @@ try {
     }
 
     $pdo->commit();
-    echo json_encode(['success' => true, 'raffle_id' => $raffle_id]);
+    echo json_encode(['success' => true, 'raffle_id' => $raffle_id, 'slug' => $slug]);
 } catch (Exception $e) {
     $pdo->rollBack();
     echo json_encode(['success' => false, 'error' => $e->getMessage()]);

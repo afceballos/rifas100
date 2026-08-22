@@ -51,7 +51,7 @@ const TimeBlock = ({ value, label }) => (
 );
 
 export default function TicketGrid() {
-  const { id } = useParams();
+  const { slug: id } = useParams();
   const containerRef = useRef();
   const gridSectionRef = useRef(null);
   const [tickets, setTickets] = useState([]);
@@ -133,7 +133,7 @@ export default function TicketGrid() {
 
   const loadTickets = (targetPage) => {
     setPageLoading(true);
-    fetch(`/api/get_tickets.php?id=${id}&offset=${targetPage * PAGE_SIZE}&limit=${PAGE_SIZE}`)
+    fetch(`/api/get_tickets.php?slug=${encodeURIComponent(id)}&offset=${targetPage * PAGE_SIZE}&limit=${PAGE_SIZE}`)
       .then(res => res.json())
       .then(data => {
         if(data.success) {
