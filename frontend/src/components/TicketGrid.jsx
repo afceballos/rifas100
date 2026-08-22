@@ -252,6 +252,14 @@ export default function TicketGrid() {
 
   const clearSelection = () => setSelectedNumbers(new Set());
 
+  const removeSelectedNumber = (num) => {
+    setSelectedNumbers(prev => {
+      const next = new Set(prev);
+      next.delete(num);
+      return next;
+    });
+  };
+
   const viewAvailableNumbers = () => {
     // Refresca los boletos de la página actual en tiempo real (sin recargar el
     // navegador) para reflejar lo que otros compradores hayan tomado mientras
@@ -286,6 +294,10 @@ export default function TicketGrid() {
       setRandomError('Error de conexión.');
     }
     setRandomLoading(false);
+  };
+
+  const removeRandomNumber = (num) => {
+    setRandomNumbers(prev => prev.filter(n => n !== num));
   };
 
   const confirmRandomSelection = () => {
@@ -655,8 +667,16 @@ export default function TicketGrid() {
 
                 <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto mb-6 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
                   {sortedSelection.map(num => (
-                    <span key={num} className="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
+                    <span key={num} className="flex items-center gap-1 font-mono text-xs font-bold pl-2 pr-1 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
                       #{num.toString().padStart(pad, '0')}
+                      <button
+                        type="button"
+                        onClick={() => removeSelectedNumber(num)}
+                        title="Quitar número"
+                        className="p-0.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-zinc-400 hover:text-red-500 transition-colors"
+                      >
+                        <X size={11} />
+                      </button>
                     </span>
                   ))}
                 </div>
@@ -770,8 +790,16 @@ export default function TicketGrid() {
 
                 <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto mb-6 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
                   {randomNumbers.map(num => (
-                    <span key={num} className="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
+                    <span key={num} className="flex items-center gap-1 font-mono text-xs font-bold pl-2 pr-1 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
                       #{num.toString().padStart(pad, '0')}
+                      <button
+                        type="button"
+                        onClick={() => removeRandomNumber(num)}
+                        title="Quitar número"
+                        className="p-0.5 rounded hover:bg-red-50 dark:hover:bg-red-900/30 text-zinc-400 hover:text-red-500 transition-colors"
+                      >
+                        <X size={11} />
+                      </button>
                     </span>
                   ))}
                 </div>
@@ -798,7 +826,8 @@ export default function TicketGrid() {
                   </button>
                   <button
                     onClick={confirmRandomSelection}
-                    className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95"
+                    disabled={randomNumbers.length === 0}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                   >
                     Continuar
                   </button>
