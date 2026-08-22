@@ -115,7 +115,13 @@ export default function VerifyParticipationModal({ raffle, pad, onClose }) {
                       <div className="flex justify-between gap-3"><span className="text-zinc-500 dark:text-zinc-400 font-medium">Número</span><span className="font-mono font-semibold text-right">{result.ticket_number.toString().padStart(pad || 2, '0')}</span></div>
                       <div className="flex justify-between gap-3">
                         <span className="text-zinc-500 dark:text-zinc-400 font-medium">Estado</span>
-                        <span className={`font-bold text-right ${result.status === 'PAGADO' ? 'text-emerald-600 dark:text-emerald-400' : 'text-orange-600 dark:text-orange-400'}`}>{result.status}</span>
+                        <span className={`font-bold text-right ${
+                          result.status === 'PAGADO'
+                            ? 'text-emerald-600 dark:text-emerald-400'
+                            : result.status === 'REVISANDO'
+                              ? 'text-amber-600 dark:text-amber-400'
+                              : 'text-blue-600 dark:text-blue-400'
+                        }`}>{result.status}</span>
                       </div>
                       <div className="flex justify-between gap-3"><span className="text-zinc-500 dark:text-zinc-400 font-medium">Código</span><span className="font-mono font-semibold text-right">{result.code}</span></div>
                     </div>

@@ -29,7 +29,7 @@ function build_result($ticket, $raffle_id) {
         'buyer_name' => $ticket['buyer_name'],
         'buyer_phone' => $maskedPhone,
         'ticket_number' => (int)$ticket['ticket_number'],
-        'status' => $ticket['status'] === 'paid' ? 'PAGADO' : 'APARTADO',
+        'status' => $ticket['status'] === 'paid' ? 'PAGADO' : ($ticket['status'] === 'reviewing' ? 'REVISANDO' : 'APARTADO'),
         'updated_at' => $ticket['updated_at'],
         'code' => $maskedCode,
     ];

@@ -2,6 +2,12 @@
 header('Content-Type: application/json');
 require_once 'db.php';
 
+function ticket_status_label($status) {
+    if ($status === 'paid') return 'PAGADO';
+    if ($status === 'reviewing') return 'REVISANDO';
+    return 'APARTADO';
+}
+
 $code = isset($_GET['code']) ? trim($_GET['code']) : '';
 
 if ($code === '') {
@@ -45,7 +51,7 @@ try {
         return [
             'ticket_number' => (int)$t['ticket_number'],
             'code' => $t['ticket_code'],
-            'status' => $t['status'] === 'paid' ? 'PAGADO' : 'APARTADO',
+            'status' => ticket_status_label($t['status']),
         ];
     }, $otherRows);
 
@@ -53,7 +59,7 @@ try {
         'success' => true,
         'code' => $code,
         'ticket_number' => (int)$ticket['ticket_number'],
-        'status' => $ticket['status'] === 'paid' ? 'PAGADO' : 'APARTADO',
+        'status' => ticket_status_label($ticket['status']),
         'buyer_name' => $ticket['buyer_name'],
         'buyer_phone' => $maskedPhone,
         'updated_at' => $ticket['updated_at'],

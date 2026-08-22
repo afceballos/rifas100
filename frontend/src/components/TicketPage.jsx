@@ -18,6 +18,23 @@ const formatLongDate = (value) => {
 
 const Divider = () => <div className="border-t-2 border-dashed border-zinc-200 dark:border-zinc-800 my-6" />;
 
+// APARTADO = azul (recién reservado), REVISANDO = ámbar (comprobante en revisión), PAGADO = esmeralda (confirmado)
+const STATUS_BADGE_CLASSES = {
+  APARTADO: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400',
+  REVISANDO: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400',
+  PAGADO: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400',
+};
+const STATUS_PULSE_CLASSES = {
+  APARTADO: 'bg-blue-400',
+  REVISANDO: 'bg-amber-400',
+  PAGADO: 'bg-emerald-400',
+};
+const STATUS_CHIP_CLASSES = {
+  APARTADO: 'bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400',
+  REVISANDO: 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/50 text-amber-600 dark:text-amber-400',
+  PAGADO: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-400',
+};
+
 export default function TicketPage() {
   const { code } = useParams();
   const containerRef = useRef();
@@ -78,7 +95,7 @@ export default function TicketPage() {
     tl.fromTo('.ticket-card', { y: 40, opacity: 0, scale: 0.96 }, { y: 0, opacity: 1, scale: 1, duration: 0.6 })
       .fromTo('.ticket-reveal', { y: 14, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, stagger: 0.08 }, '-=0.3');
 
-    if (ticket.status === 'APARTADO') {
+    if (ticket.status !== 'PAGADO') {
       gsap.to('.status-pulse', { scale: 1.25, opacity: 0, duration: 1.4, repeat: -1, ease: 'sine.out' });
     }
   }, { dependencies: [ticket], scope: containerRef });
@@ -152,22 +169,23 @@ export default function TicketPage() {
                   #{ticket.ticket_number.toString().padStart(pad, '0')}
                 </span>
                 <span className="relative inline-flex">
-                  {ticket.status === 'APARTADO' && (
-                    <span className="status-pulse absolute inset-0 rounded-xl bg-orange-400" />
+                  {ticket.status !== 'PAGADO' && (
+                    <span className={`status-pulse absolute inset-0 rounded-xl ${STATUS_PULSE_CLASSES[ticket.status]}`} />
                   )}
-                  <span className={`relative font-bold text-sm px-4 py-1.5 rounded-xl ${
-                    ticket.status === 'PAGADO'
-                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
-                      : 'bg-orange-100 text-orange-700 dark:bg-orange-500/10 dark:text-orange-400'
-                  }`}>
+                  <span className={`relative font-bold text-sm px-4 py-1.5 rounded-xl ${STATUS_BADGE_CLASSES[ticket.status]}`}>
                     {ticket.status}
                   </span>
                 </span>
               </div>
 
               {ticket.status === 'APARTADO' && (
-                <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 mt-3 uppercase tracking-wide">
+                <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-3 uppercase tracking-wide">
                   Este número está reservado temporalmente.
+                </p>
+              )}
+              {ticket.status === 'REVISANDO' && (
+                <p className="text-xs font-semibold text-amber-600 dark:text-amber-400 mt-3 uppercase tracking-wide">
+                  Tu comprobante está siendo revisado por el organizador.
                 </p>
               )}
             </div>
@@ -184,11 +202,7 @@ export default function TicketPage() {
                       <Link
                         key={t.code}
                         to={`/ticket/${t.code}`}
-                        className={`flex items-center gap-1 font-mono text-xs font-bold px-2.5 py-1.5 rounded-lg border transition-colors ${
-                          t.status === 'PAGADO'
-                            ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-900/50 text-orange-600 dark:text-orange-400'
-                        }`}
+                        className={`flex items-center gap-1 font-mono text-xs font-bold px-2.5 py-1.5 rounded-lg border transition-colors ${STATUS_CHIP_CLASSES[t.status]}`}
                       >
                         #{t.ticket_number.toString().padStart(pad, '0')} <ArrowUpRight size={11} />
                       </Link>

@@ -28,6 +28,7 @@ try {
         SELECT
             COUNT(CASE WHEN status = 'available' THEN 1 END) AS available,
             COUNT(CASE WHEN status = 'reserved' THEN 1 END) AS reserved,
+            COUNT(CASE WHEN status = 'reviewing' THEN 1 END) AS reviewing,
             COUNT(CASE WHEN status = 'paid' THEN 1 END) AS paid
         FROM tickets WHERE raffle_id = ?
     ");
@@ -46,7 +47,7 @@ try {
 
     // Listado de compradores (boletos reservados o pagados)
     $stmt3 = $pdo->prepare("
-        SELECT ticket_number, buyer_name, buyer_phone, status
+        SELECT ticket_number, ticket_code, buyer_name, buyer_phone, buyer_email, status, receipt_image, admin_notes, created_at
         FROM tickets
         WHERE raffle_id = ? AND status != 'available'
         ORDER BY ticket_number ASC

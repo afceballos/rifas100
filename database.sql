@@ -58,10 +58,12 @@ CREATE TABLE tickets (
     raffle_id INT NOT NULL,
     ticket_number INT NOT NULL,
     ticket_code VARCHAR(32) NULL,
-    status ENUM('available', 'reserved', 'paid') DEFAULT 'available',
+    status ENUM('available', 'reserved', 'reviewing', 'paid') DEFAULT 'available',
     buyer_name VARCHAR(150),
     buyer_phone VARCHAR(20),
     buyer_email VARCHAR(150),
+    receipt_image VARCHAR(255) NULL,
+    admin_notes TEXT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_ticket (raffle_id, ticket_number),
@@ -71,6 +73,9 @@ CREATE TABLE tickets (
 
 -- ALTER TABLE tickets ADD COLUMN ticket_code VARCHAR(32) NULL;
 -- ALTER TABLE tickets ADD UNIQUE INDEX unique_ticket_code (ticket_code);
+-- ALTER TABLE tickets MODIFY COLUMN status ENUM('available', 'reserved', 'reviewing', 'paid') DEFAULT 'available';
+-- ALTER TABLE tickets ADD COLUMN receipt_image VARCHAR(255) NULL;
+-- ALTER TABLE tickets ADD COLUMN admin_notes TEXT NULL;
 
 -- INSERCIÓN DE PRUEBA
 INSERT INTO tenants (name) VALUES ('Rifas MVP 1');
