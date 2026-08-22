@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once 'db.php';
+require_once 'slug_helper.php';
 
 // Leer JSON entrante
 $data = json_decode(file_get_contents('php://input'), true);
@@ -55,15 +56,24 @@ try {
 
     $updateStmt = $pdo->prepare("
         UPDATE tickets
-        SET status = 'reserved', buyer_name = ?, buyer_phone = ?, buyer_email = ?
+        SET status = 'reserved', buyer_name = ?, buyer_phone = ?, buyer_email = ?, ticket_code = ?
         WHERE raffle_id = ? AND ticket_number = ?
     ");
+
+    $tickets = [];
     foreach ($ticketNumbers as $num) {
-        $updateStmt->execute([$name, $phone, $email, $raffle_id, $num]);
+        $code = generate_ticket_code($pdo);
+        $updateStmt->execute([$name, $phone, $email, $code, $raffle_id, $num]);
+        $tickets[] = ['number' => $num, 'code' => $code];
     }
 
     $pdo->commit();
-    echo json_encode(['success' => true, 'message' => 'Boletos reservados exitosamente.', 'ticket_numbers' => $ticketNumbers]);
+    echo json_encode([
+        'success' => true,
+        'message' => 'Boletos reservados exitosamente.',
+        'ticket_numbers' => $ticketNumbers,
+        'tickets' => $tickets,
+    ]);
 
 } catch (Exception $e) {
     $pdo->rollBack();

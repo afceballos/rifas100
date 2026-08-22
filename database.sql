@@ -57,6 +57,7 @@ CREATE TABLE tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     raffle_id INT NOT NULL,
     ticket_number INT NOT NULL,
+    ticket_code VARCHAR(32) NULL,
     status ENUM('available', 'reserved', 'paid') DEFAULT 'available',
     buyer_name VARCHAR(150),
     buyer_phone VARCHAR(20),
@@ -64,8 +65,12 @@ CREATE TABLE tickets (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_ticket (raffle_id, ticket_number),
+    UNIQUE KEY unique_ticket_code (ticket_code),
     FOREIGN KEY (raffle_id) REFERENCES raffles(id) ON DELETE CASCADE
 );
+
+-- ALTER TABLE tickets ADD COLUMN ticket_code VARCHAR(32) NULL;
+-- ALTER TABLE tickets ADD UNIQUE INDEX unique_ticket_code (ticket_code);
 
 -- INSERCIÓN DE PRUEBA
 INSERT INTO tenants (name) VALUES ('Rifas MVP 1');

@@ -9,7 +9,7 @@ import VerifyParticipationModal from './VerifyParticipationModal';
 import PaymentInfoModal from './PaymentInfoModal';
 import {
   ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
-  Menu, Share2, UserCircle2, Search, Wallet, Check,
+  Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink,
 } from 'lucide-react';
 
 const RANDOM_PRESETS = [1, 2, 3, 5];
@@ -83,6 +83,7 @@ export default function TicketGrid() {
   const [formData, setFormData] = useState({ name: '', phone: '', email: '' });
   const [purchaseStatus, setPurchaseStatus] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [purchasedTickets, setPurchasedTickets] = useState(null);
 
   const [timeLeft, setTimeLeft] = useState({ d: 0, h: 0, m: 0, s: 0 });
   const [isEnded, setIsEnded] = useState(false);
@@ -282,6 +283,7 @@ export default function TicketGrid() {
     setSelectedNumbers(prev => new Set([...prev, ...randomNumbers]));
     setShowRandomModal(false);
     setPurchaseStatus('');
+    setPurchasedTickets(null);
     setShowReserveModal(true);
   };
 
@@ -308,14 +310,12 @@ export default function TicketGrid() {
       });
       const data = await res.json();
       if(data.success) {
-        setPurchaseStatus('¡Boletos bloqueados a tu nombre!');
-        setTimeout(() => {
-          setShowReserveModal(false);
-          setSelectedNumbers(new Set());
-          setFormData({ name: '', phone: '', email: '' });
-          setPurchaseStatus('');
-          loadTickets(page);
-        }, 2000);
+        setPurchasedTickets(data.tickets);
+        setSelectedNumbers(new Set());
+        setFormData({ name: '', phone: '', email: '' });
+        setPurchaseStatus('');
+        setSubmitting(false);
+        loadTickets(page);
       } else {
         if (Array.isArray(data.unavailable) && data.unavailable.length > 0) {
           const stale = new Set(data.unavailable);
@@ -573,10 +573,10 @@ export default function TicketGrid() {
                   <Trash2 size={18} />
                 </button>
                 <div className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
-                  {selectedNumbers.size} boleto{selectedNumbers.size === 1 ? '' : 's'} 
+                  {selectedNumbers.size} boleto{selectedNumbers.size === 1 ? '' : 's'} seleccionado{selectedNumbers.size === 1 ? '' : 's'}
                 </div>
                 <button
-                  onClick={() => { setPurchaseStatus(''); setShowReserveModal(true); }}
+                  onClick={() => { setPurchaseStatus(''); setPurchasedTickets(null); setShowReserveModal(true); }}
                   className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 whitespace-nowrap"
                 >
                   <ShoppingBag size={16} /> Tomar números
@@ -594,65 +594,104 @@ export default function TicketGrid() {
           <div className="relative min-h-full flex items-center justify-center p-4">
           <div className="relative bg-white dark:bg-zinc-900 p-8 rounded-3xl max-w-md w-full shadow-2xl border border-zinc-200 dark:border-zinc-800 transform transition-all my-8">
 
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Reservar Acceso</h2>
-                <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
-                  {sortedSelection.length} boleto{sortedSelection.length === 1 ? '' : 's'} seleccionado{sortedSelection.length === 1 ? '' : 's'}
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto mb-6 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
-              {sortedSelection.map(num => (
-                <span key={num} className="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
-                  #{num.toString().padStart(pad, '0')}
-                </span>
-              ))}
-            </div>
-
-            {purchaseStatus && (
-              <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 rounded-2xl border border-blue-100 dark:border-blue-900/50 text-center text-sm font-medium">
-                {purchaseStatus}
-              </div>
-            )}
-
-            <form onSubmit={handlePurchase} className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Nombre Completo <span className="text-blue-500">*</span></label>
-                <input required type="text" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-                  value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej. Juan Pérez" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Teléfono Celular <span className="text-blue-500">*</span></label>
-                <input required type="tel" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-                  value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+00 0000000" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Correo Electrónico (Opcional)</label>
-                <input type="email" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
-                  value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="tu@correo.com" />
-              </div>
-
-              <div className="flex items-center justify-between px-1 pt-2 border-t border-zinc-100 dark:border-zinc-800">
-                <div>
-                  <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Cantidad</p>
-                  <p className="font-mono font-bold text-lg">{sortedSelection.length}</p>
+            {purchasedTickets ? (
+              <>
+                <div className="text-center mb-6">
+                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 mb-3">
+                    <CheckCircle2 size={28} />
+                  </div>
+                  <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">¡Boletos reservados!</h2>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
+                    Guarda el enlace de cada boleto — es tu comprobante digital.
+                  </p>
                 </div>
-                <div className="text-right">
-                  <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Total</p>
-                  <p className="font-mono font-bold text-lg text-emerald-600 dark:text-emerald-400">${selectionTotal.toFixed(2)}</p>
-                </div>
-              </div>
 
-              <div className="pt-4 flex gap-3">
-                <button type="button" disabled={submitting} className="flex-1 px-4 py-3 rounded-xl text-zinc-600 dark:text-zinc-400 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
-                  onClick={() => setShowReserveModal(false)}>Cancelar</button>
-                <button type="submit" disabled={submitting || sortedSelection.length === 0} className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50">
-                  Reservar
+                <div className="space-y-2 max-h-64 overflow-y-auto mb-6">
+                  {purchasedTickets.map(t => (
+                    <a
+                      key={t.code}
+                      href={`/ticket/${t.code}`}
+                      target="_blank" rel="noreferrer"
+                      className="flex items-center justify-between gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+                    >
+                      <span className="font-mono font-bold text-blue-500">#{t.number.toString().padStart(pad, '0')}</span>
+                      <span className="flex items-center gap-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
+                        Ver boleto <ExternalLink size={12} />
+                      </span>
+                    </a>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => { setShowReserveModal(false); setPurchasedTickets(null); }}
+                  className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95"
+                >
+                  Listo
                 </button>
-              </div>
-            </form>
+              </>
+            ) : (
+              <>
+                <div className="flex justify-between items-start mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">Reservar Acceso</h2>
+                    <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
+                      {sortedSelection.length} boleto{sortedSelection.length === 1 ? '' : 's'} seleccionado{sortedSelection.length === 1 ? '' : 's'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto mb-6 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
+                  {sortedSelection.map(num => (
+                    <span key={num} className="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
+                      #{num.toString().padStart(pad, '0')}
+                    </span>
+                  ))}
+                </div>
+
+                {purchaseStatus && (
+                  <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 rounded-2xl border border-blue-100 dark:border-blue-900/50 text-center text-sm font-medium">
+                    {purchaseStatus}
+                  </div>
+                )}
+
+                <form onSubmit={handlePurchase} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Nombre Completo <span className="text-blue-500">*</span></label>
+                    <input required type="text" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                      value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej. Juan Pérez" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Teléfono Celular <span className="text-blue-500">*</span></label>
+                    <input required type="tel" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                      value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+00 0000000" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Correo Electrónico (Opcional)</label>
+                    <input type="email" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                      value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="tu@correo.com" />
+                  </div>
+
+                  <div className="flex items-center justify-between px-1 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                    <div>
+                      <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Cantidad</p>
+                      <p className="font-mono font-bold text-lg">{sortedSelection.length}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Total</p>
+                      <p className="font-mono font-bold text-lg text-emerald-600 dark:text-emerald-400">${selectionTotal.toFixed(2)}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 flex gap-3">
+                    <button type="button" disabled={submitting} className="flex-1 px-4 py-3 rounded-xl text-zinc-600 dark:text-zinc-400 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
+                      onClick={() => setShowReserveModal(false)}>Cancelar</button>
+                    <button type="submit" disabled={submitting || sortedSelection.length === 0} className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50">
+                      Reservar
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
           </div>
         </div>

@@ -17,9 +17,13 @@ function build_result($ticket, $raffle_id) {
         ? str_repeat('•', strlen($phone) - 3) . substr($phone, -3)
         : $phone;
 
-    // Código de referencia enmascarado (no tiene uso funcional más allá de mostrarse)
-    $code = strtoupper(substr(md5($raffle_id . '|' . $ticket['ticket_number'] . '|' . $ticket['id']), 0, 10));
-    $maskedCode = str_repeat('•', max(0, strlen($code) - 4)) . substr($code, -4);
+    // Mismo código único que identifica el boleto (/ticket/:code); se muestra
+    // enmascarado aquí porque el número de boleto es fácil de adivinar y no
+    // queremos que cualquiera pueda reconstruir enlaces ajenos por fuerza bruta.
+    $code = (string)$ticket['ticket_code'];
+    $maskedCode = strlen($code) > 4
+        ? str_repeat('•', strlen($code) - 4) . substr($code, -4)
+        : $code;
 
     return [
         'buyer_name' => $ticket['buyer_name'],
@@ -37,11 +41,11 @@ try {
             echo json_encode(['success' => true, 'results' => []]);
             exit;
         }
-        $stmt = $pdo->prepare("SELECT id, ticket_number, status, buyer_name, buyer_phone, updated_at FROM tickets WHERE raffle_id = ? AND ticket_number = ? AND status != 'available'");
+        $stmt = $pdo->prepare("SELECT id, ticket_number, ticket_code, status, buyer_name, buyer_phone, updated_at FROM tickets WHERE raffle_id = ? AND ticket_number = ? AND status != 'available'");
         $stmt->execute([$raffle_id, (int)$query]);
         $rows = $stmt->fetchAll();
     } elseif ($type === 'email') {
-        $stmt = $pdo->prepare("SELECT id, ticket_number, status, buyer_name, buyer_phone, updated_at FROM tickets WHERE raffle_id = ? AND status != 'available' AND LOWER(buyer_email) = LOWER(?) ORDER BY ticket_number ASC LIMIT 200");
+        $stmt = $pdo->prepare("SELECT id, ticket_number, ticket_code, status, buyer_name, buyer_phone, updated_at FROM tickets WHERE raffle_id = ? AND status != 'available' AND LOWER(buyer_email) = LOWER(?) ORDER BY ticket_number ASC LIMIT 200");
         $stmt->execute([$raffle_id, $query]);
         $rows = $stmt->fetchAll();
     } else { // phone
@@ -51,7 +55,7 @@ try {
             echo json_encode(['success' => true, 'results' => []]);
             exit;
         }
-        $stmt = $pdo->prepare("SELECT id, ticket_number, status, buyer_name, buyer_phone, updated_at FROM tickets WHERE raffle_id = ? AND status != 'available' AND buyer_phone IS NOT NULL LIMIT 2000");
+        $stmt = $pdo->prepare("SELECT id, ticket_number, ticket_code, status, buyer_name, buyer_phone, updated_at FROM tickets WHERE raffle_id = ? AND status != 'available' AND buyer_phone IS NOT NULL LIMIT 2000");
         $stmt->execute([$raffle_id]);
         $rows = array_values(array_filter($stmt->fetchAll(), function ($t) use ($digitsQuery) {
             return preg_replace('/\D/', '', (string)$t['buyer_phone']) === $digitsQuery;
