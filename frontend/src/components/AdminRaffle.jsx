@@ -50,7 +50,7 @@ const STATUS_PILL = {
   paid: { label: 'VALIDADO', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' },
 };
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 const BULK_STATUS_OPTIONS = [
   { value: 'reserved', label: 'Apartado', cls: 'bg-blue-600 hover:bg-blue-700' },
@@ -68,6 +68,7 @@ export default function AdminRaffle() {
 
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(PAGE_SIZE_OPTIONS[0]);
   const [statusFilter, setStatusFilter] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [bulkWorking, setBulkWorking] = useState(false);
@@ -139,8 +140,8 @@ export default function AdminRaffle() {
       b.ticket_number.toString().padStart(pad, '0').includes(q)
     );
   });
-  const pageCount = Math.max(1, Math.ceil(filteredBuyers.length / PAGE_SIZE));
-  const visibleBuyers = filteredBuyers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const pageCount = Math.max(1, Math.ceil(filteredBuyers.length / pageSize));
+  const visibleBuyers = filteredBuyers.slice(page * pageSize, (page + 1) * pageSize);
 
   const handleSearchChange = (value) => {
     setSearch(value);
@@ -156,6 +157,12 @@ export default function AdminRaffle() {
 
   const goToPage = (p) => {
     setPage(p);
+    setSelectedIds(new Set());
+  };
+
+  const handlePageSizeChange = (size) => {
+    setPageSize(size);
+    setPage(0);
     setSelectedIds(new Set());
   };
 
@@ -421,10 +428,35 @@ export default function AdminRaffle() {
               </table>
             </div>
 
-            {filteredBuyers.length > PAGE_SIZE && (
-              <div className="flex items-center justify-between px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 text-sm">
-                <span className="text-zinc-500 dark:text-zinc-400">Página {page + 1} de {pageCount}</span>
-                <div className="flex gap-2">
+            {filteredBuyers.length > 0 && (
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-4 border-t border-zinc-200 dark:border-zinc-800 text-sm">
+                <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
+                  <span>Mostrar</span>
+                  <select
+                    value={pageSize}
+                    onChange={e => handlePageSizeChange(Number(e.target.value))}
+                    className="px-2 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 font-medium"
+                  >
+                    {PAGE_SIZE_OPTIONS.map(size => (
+                      <option key={size} value={size}>{size}</option>
+                    ))}
+                  </select>
+                  <span>por página · {filteredBuyers.length} en total</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-zinc-500 dark:text-zinc-400">Página</span>
+                  <select
+                    value={page}
+                    onChange={e => goToPage(Number(e.target.value))}
+                    className="px-2 py-1.5 rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 text-zinc-700 dark:text-zinc-300 font-medium"
+                  >
+                    {Array.from({ length: pageCount }, (_, i) => (
+                      <option key={i} value={i}>{i + 1}</option>
+                    ))}
+                  </select>
+                  <span className="text-zinc-500 dark:text-zinc-400">de {pageCount}</span>
+
                   <button
                     onClick={() => goToPage(Math.max(0, page - 1))}
                     disabled={page === 0}
