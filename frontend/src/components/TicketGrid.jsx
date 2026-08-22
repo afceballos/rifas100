@@ -4,7 +4,13 @@ import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ThemeToggle from './ThemeToggle';
 import NotFound from './NotFound';
-import { ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw } from 'lucide-react';
+import OrganizerModal from './OrganizerModal';
+import VerifyParticipationModal from './VerifyParticipationModal';
+import PaymentInfoModal from './PaymentInfoModal';
+import {
+  ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
+  Menu, Share2, UserCircle2, Search, Wallet, Check,
+} from 'lucide-react';
 
 const RANDOM_PRESETS = [1, 2, 3, 5];
 
@@ -58,6 +64,13 @@ export default function TicketGrid() {
   const [pageLoading, setPageLoading] = useState(false);
   const [notFoundVariant, setNotFoundVariant] = useState(null);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
+
+  // Menú hamburguesa (compartir / organizador / verificar / pagos)
+  const [showMenu, setShowMenu] = useState(false);
+  const [showOrganizerModal, setShowOrganizerModal] = useState(false);
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
+  const [showPaymentInfoModal, setShowPaymentInfoModal] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Selección al azar
   const [showRandomModal, setShowRandomModal] = useState(false);
@@ -213,6 +226,20 @@ export default function TicketGrid() {
     });
   };
 
+  const shareRaffle = async () => {
+    setShowMenu(false);
+    const shareData = { title: raffle?.title || 'Sorteo', url: window.location.href };
+    if (navigator.share) {
+      try { await navigator.share(shareData); } catch { /* usuario canceló */ }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch { /* clipboard no disponible */ }
+  };
+
   const clearSelection = () => setSelectedNumbers(new Set());
 
   const viewAvailableNumbers = () => {
@@ -322,12 +349,58 @@ export default function TicketGrid() {
       )}
 
       {/* Navbar Minimalista */}
-      <nav className="w-full p-4 flex justify-between items-center max-w-6xl mx-auto">
+      <nav className="w-full p-4 flex justify-between items-center max-w-6xl mx-auto relative">
         <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
           <ShieldCheck className="text-blue-500" />
           <span>Ticket<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-violet-500">Vault</span></span>
         </Link>
-        <ThemeToggle />
+
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+
+          <div className="relative">
+            <button
+              onClick={() => setShowMenu(prev => !prev)}
+              className="p-2 rounded-full bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 hover:bg-zinc-300 dark:hover:bg-zinc-700 transition-colors"
+              title="Más opciones"
+            >
+              <Menu size={20} />
+            </button>
+
+            {showMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
+                <div className="absolute right-0 top-full mt-2 z-50 w-64 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden py-1.5">
+                  <button
+                    onClick={shareRaffle}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    {linkCopied ? <Check size={16} className="text-emerald-500" /> : <Share2 size={16} />}
+                    {linkCopied ? '¡Enlace copiado!' : 'Compartir'}
+                  </button>
+                  <button
+                    onClick={() => { setShowMenu(false); setShowOrganizerModal(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    <UserCircle2 size={16} /> Ver el organizador
+                  </button>
+                  <button
+                    onClick={() => { setShowMenu(false); setShowVerifyModal(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    <Search size={16} /> Verificar participación
+                  </button>
+                  <button
+                    onClick={() => { setShowMenu(false); setShowPaymentInfoModal(true); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                  >
+                    <Wallet size={16} /> Pagos
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </nav>
 
       {/* Header Central con Countdown */}
@@ -679,6 +752,18 @@ export default function TicketGrid() {
             )}
           </div>
         </div>
+      )}
+
+      {showOrganizerModal && (
+        <OrganizerModal raffle={raffle} onClose={() => setShowOrganizerModal(false)} />
+      )}
+
+      {showVerifyModal && (
+        <VerifyParticipationModal raffle={raffle} pad={pad} onClose={() => setShowVerifyModal(false)} />
+      )}
+
+      {showPaymentInfoModal && (
+        <PaymentInfoModal raffle={raffle} onClose={() => setShowPaymentInfoModal(false)} />
       )}
     </div>
   );

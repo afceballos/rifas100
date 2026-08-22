@@ -7,7 +7,7 @@ $offset = isset($_GET['offset']) ? max(0, (int)$_GET['offset']) : 0;
 $limit = isset($_GET['limit']) ? min(1000, max(1, (int)$_GET['limit'])) : 1000;
 
 try {
-    $stmt = $pdo->prepare("SELECT id, title, description, background_image, payment_info, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT id, title, description, background_image, payment_info, organizer_name, organizer_photo, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
     $stmt->execute([$id]);
     $raffle = $stmt->fetch();
 

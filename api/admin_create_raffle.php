@@ -20,12 +20,13 @@ if (!in_array($digits, [2, 3, 4])) {
 }
 $total_tickets = pow(10, $digits);
 $description = isset($data['description']) && $data['description'] !== '' ? $data['description'] : null;
+$organizerName = isset($data['organizer_name']) && $data['organizer_name'] !== '' ? trim($data['organizer_name']) : null;
 
 try {
     $pdo->beginTransaction();
     // Insertar la rifa (asumimos tenant_id 1 por ahora para el admin único)
-    $stmt = $pdo->prepare("INSERT INTO raffles (tenant_id, title, description, price_per_ticket, draw_date, total_tickets) VALUES (1, ?, ?, ?, ?, ?)");
-    $stmt->execute([$data['title'], $description, $data['price_per_ticket'], $data['draw_date'], $total_tickets]);
+    $stmt = $pdo->prepare("INSERT INTO raffles (tenant_id, title, description, organizer_name, price_per_ticket, draw_date, total_tickets) VALUES (1, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$data['title'], $description, $organizerName, $data['price_per_ticket'], $data['draw_date'], $total_tickets]);
     $raffle_id = $pdo->lastInsertId();
 
     // Generar boletos masivamente (Se hace en bloques para no saturar si son 10,000)

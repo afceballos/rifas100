@@ -14,23 +14,32 @@ if ($raffle_id <= 0 || empty($data['title']) || empty($data['price_per_ticket'])
 }
 
 $description = isset($data['description']) && $data['description'] !== '' ? $data['description'] : null;
+$organizerName = isset($data['organizer_name']) && $data['organizer_name'] !== '' ? trim($data['organizer_name']) : null;
+
+function remove_raffle_photo($pdo, $raffle_id, $column) {
+    $stmt = $pdo->prepare("SELECT $column FROM raffles WHERE id = ?");
+    $stmt->execute([$raffle_id]);
+    $row = $stmt->fetch();
+    if ($row && $row[$column]) {
+        $path = __DIR__ . '/../' . ltrim($row[$column], '/');
+        if (is_file($path)) {
+            @unlink($path);
+        }
+    }
+    $stmt2 = $pdo->prepare("UPDATE raffles SET $column = NULL WHERE id = ?");
+    $stmt2->execute([$raffle_id]);
+}
 
 try {
-    $stmt = $pdo->prepare("UPDATE raffles SET title = ?, price_per_ticket = ?, draw_date = ?, description = ? WHERE id = ?");
-    $stmt->execute([$data['title'], $data['price_per_ticket'], $data['draw_date'], $description, $raffle_id]);
+    $stmt = $pdo->prepare("UPDATE raffles SET title = ?, price_per_ticket = ?, draw_date = ?, description = ?, organizer_name = ? WHERE id = ?");
+    $stmt->execute([$data['title'], $data['price_per_ticket'], $data['draw_date'], $description, $organizerName, $raffle_id]);
 
     if (!empty($data['remove_image'])) {
-        $stmt2 = $pdo->prepare("SELECT background_image FROM raffles WHERE id = ?");
-        $stmt2->execute([$raffle_id]);
-        $row = $stmt2->fetch();
-        if ($row && $row['background_image']) {
-            $path = __DIR__ . '/../' . ltrim($row['background_image'], '/');
-            if (is_file($path)) {
-                @unlink($path);
-            }
-        }
-        $stmt3 = $pdo->prepare("UPDATE raffles SET background_image = NULL WHERE id = ?");
-        $stmt3->execute([$raffle_id]);
+        remove_raffle_photo($pdo, $raffle_id, 'background_image');
+    }
+
+    if (!empty($data['remove_organizer_photo'])) {
+        remove_raffle_photo($pdo, $raffle_id, 'organizer_photo');
     }
 
     echo json_encode(['success' => true]);

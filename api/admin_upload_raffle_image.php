@@ -6,6 +6,9 @@ header('Content-Type: application/json');
 require_auth();
 
 $raffle_id = isset($_POST['raffle_id']) ? (int)$_POST['raffle_id'] : 0;
+$target = isset($_POST['target']) && $_POST['target'] === 'organizer' ? 'organizer' : 'background';
+$column = $target === 'organizer' ? 'organizer_photo' : 'background_image';
+$prefix = $target === 'organizer' ? 'organizer' : 'raffle';
 
 if ($raffle_id <= 0) {
     echo json_encode(['success' => false, 'error' => 'ID de sorteo inválido']);
@@ -85,7 +88,7 @@ if (!is_dir($uploadDir)) {
     mkdir($uploadDir, 0755, true);
 }
 
-$filename = 'raffle_' . $raffle_id . '_' . uniqid() . '.webp';
+$filename = $prefix . '_' . $raffle_id . '_' . uniqid() . '.webp';
 $destPath = $uploadDir . '/' . $filename;
 
 if (!imagewebp($src, $destPath, 82)) {
@@ -98,21 +101,21 @@ imagedestroy($src);
 $publicPath = '/uploads/raffles/' . $filename;
 
 try {
-    $stmt = $pdo->prepare("SELECT background_image FROM raffles WHERE id = ?");
+    $stmt = $pdo->prepare("SELECT $column FROM raffles WHERE id = ?");
     $stmt->execute([$raffle_id]);
     $row = $stmt->fetch();
 
-    $stmt2 = $pdo->prepare("UPDATE raffles SET background_image = ? WHERE id = ?");
+    $stmt2 = $pdo->prepare("UPDATE raffles SET $column = ? WHERE id = ?");
     $stmt2->execute([$publicPath, $raffle_id]);
 
-    if ($row && $row['background_image'] && $row['background_image'] !== $publicPath) {
-        $oldPath = __DIR__ . '/../' . ltrim($row['background_image'], '/');
+    if ($row && $row[$column] && $row[$column] !== $publicPath) {
+        $oldPath = __DIR__ . '/../' . ltrim($row[$column], '/');
         if (is_file($oldPath)) {
             @unlink($oldPath);
         }
     }
 
-    echo json_encode(['success' => true, 'background_image' => $publicPath]);
+    echo json_encode(['success' => true, $column => $publicPath]);
 } catch (Exception $e) {
     @unlink($destPath);
     echo json_encode(['success' => false, 'error' => 'Error al guardar la imagen']);

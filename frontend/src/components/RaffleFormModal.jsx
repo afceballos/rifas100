@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ImagePlus, X } from 'lucide-react';
+import { ImagePlus, X, UserCircle2 } from 'lucide-react';
 
 const mysqlToDatetimeLocal = (value) => {
   if (!value) return '';
@@ -26,10 +26,14 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
     draw_date: isEdit ? mysqlToDatetimeLocal(raffle?.draw_date) : '',
     digits: '2',
     description: raffle?.description || '',
+    organizer_name: raffle?.organizer_name || '',
   });
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(raffle?.background_image || null);
   const [removeImage, setRemoveImage] = useState(false);
+  const [organizerFile, setOrganizerFile] = useState(null);
+  const [organizerPreview, setOrganizerPreview] = useState(raffle?.organizer_photo || null);
+  const [removeOrganizerPhoto, setRemoveOrganizerPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const digitsLabel = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : null;
@@ -48,10 +52,25 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
     setRemoveImage(true);
   };
 
-  const uploadImage = async (raffleId) => {
+  const handleOrganizerPhotoPick = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setOrganizerFile(file);
+    setRemoveOrganizerPhoto(false);
+    setOrganizerPreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveOrganizerPhoto = () => {
+    setOrganizerFile(null);
+    setOrganizerPreview(null);
+    setRemoveOrganizerPhoto(true);
+  };
+
+  const uploadImage = async (raffleId, file, target = 'background') => {
     const fd = new FormData();
     fd.append('raffle_id', raffleId);
-    fd.append('image', imageFile);
+    fd.append('image', file);
+    fd.append('target', target);
     const res = await fetch('/api/admin_upload_raffle_image.php', {
       method: 'POST',
       credentials: 'include',
@@ -75,7 +94,9 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
             price_per_ticket: form.price_per_ticket,
             draw_date: form.draw_date,
             description: form.description,
+            organizer_name: form.organizer_name,
             remove_image: removeImage,
+            remove_organizer_photo: removeOrganizerPhoto,
           }),
         });
         const data = await res.json();
@@ -85,9 +106,15 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
           return;
         }
         if (imageFile) {
-          const imgData = await uploadImage(raffle.id);
+          const imgData = await uploadImage(raffle.id, imageFile, 'background');
           if (!imgData.success) {
             showAlert?.('Sorteo actualizado, pero falló la imagen', imgData.error, 'alert');
+          }
+        }
+        if (organizerFile) {
+          const orgData = await uploadImage(raffle.id, organizerFile, 'organizer');
+          if (!orgData.success) {
+            showAlert?.('Sorteo actualizado, pero falló la foto del organizador', orgData.error, 'alert');
           }
         }
       } else {
@@ -104,9 +131,15 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
           return;
         }
         if (imageFile) {
-          const imgData = await uploadImage(data.raffle_id);
+          const imgData = await uploadImage(data.raffle_id, imageFile, 'background');
           if (!imgData.success) {
             showAlert?.('Sorteo creado, pero falló la imagen', imgData.error, 'alert');
+          }
+        }
+        if (organizerFile) {
+          const orgData = await uploadImage(data.raffle_id, organizerFile, 'organizer');
+          if (!orgData.success) {
+            showAlert?.('Sorteo creado, pero falló la foto del organizador', orgData.error, 'alert');
           }
         }
       }
@@ -194,6 +227,42 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
                 <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleImagePick} />
               </label>
             )}
+          </div>
+
+          <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3">
+            <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">Organizador</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 -mt-2">Se muestra en el popup "Ver el organizador" del sorteo público.</p>
+            <div className="flex items-center gap-3">
+              <div className="relative shrink-0">
+                {organizerPreview ? (
+                  <img src={organizerPreview} alt="Organizador" className="w-14 h-14 rounded-full object-cover border border-zinc-200 dark:border-zinc-800" />
+                ) : (
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white">
+                    <UserCircle2 size={26} />
+                  </div>
+                )}
+                {organizerPreview && (
+                  <button
+                    type="button" onClick={handleRemoveOrganizerPhoto}
+                    className="absolute -top-1 -right-1 p-1 bg-white dark:bg-zinc-900 rounded-full text-red-500 hover:text-red-700 shadow-sm border border-zinc-200 dark:border-zinc-800"
+                    title="Quitar foto"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <input
+                  type="text" placeholder="Nombre del organizador"
+                  className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent"
+                  value={form.organizer_name} onChange={e => setForm({ ...form, organizer_name: e.target.value })}
+                />
+                <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-500 cursor-pointer hover:text-blue-600">
+                  <ImagePlus size={14} /> {organizerPreview ? 'Cambiar foto' : 'Subir foto'}
+                  <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleOrganizerPhotoPick} />
+                </label>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-3 pt-4">

@@ -5,12 +5,8 @@ import Dialog from './Dialog';
 import AdminRaffleSidebar from './AdminRaffleSidebar';
 import RaffleFormModal from './RaffleFormModal';
 import PaymentMethodModal from './PaymentMethodModal';
-import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet } from 'lucide-react';
-
-const parsePaymentInfo = (raw) => {
-  if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
-};
+import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2 } from 'lucide-react';
+import { parsePaymentMethods } from '../utils/paymentInfo';
 
 const formatDrawDate = (value) => {
   if (!value) return '';
@@ -93,7 +89,7 @@ export default function AdminRaffleSettings() {
   };
 
   const digits = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : null;
-  const paymentInfo = raffle ? parsePaymentInfo(raffle.payment_info) : null;
+  const paymentMethods = raffle ? parsePaymentMethods(raffle.payment_info) : [];
 
   return (
     <div className="min-h-screen font-sans pb-12">
@@ -161,6 +157,20 @@ export default function AdminRaffleSettings() {
                   <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-4">{raffle.description}</p>
                 )}
 
+                <div className="flex items-center gap-2.5 mb-4 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
+                  {raffle.organizer_photo ? (
+                    <img src={raffle.organizer_photo} alt="Organizador" className="w-9 h-9 rounded-full object-cover" />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white shrink-0">
+                      <UserCircle2 size={18} />
+                    </div>
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Organizador</p>
+                    <p className="text-sm font-semibold truncate">{raffle.organizer_name || 'Sin especificar'}</p>
+                  </div>
+                </div>
+
                 <div className="flex gap-2 pt-4 border-t border-zinc-100 dark:border-zinc-800">
                   <button
                     onClick={handleTogglePublish}
@@ -178,43 +188,47 @@ export default function AdminRaffleSettings() {
               </div>
             </div>
 
-            {/* Método de pago */}
+            {/* Métodos de pago */}
             <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
-                  <h3 className="font-bold text-lg mb-1">Método de pago</h3>
+                  <h3 className="font-bold text-lg mb-1">Métodos de pago</h3>
                   <p className="text-zinc-500 dark:text-zinc-400 text-sm">Instrucciones de pago que verán los compradores.</p>
                 </div>
                 <button
                   onClick={() => setEditingPayment(true)}
                   className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
                 >
-                  <Pencil size={15} /> {paymentInfo ? 'Editar' : 'Configurar'}
+                  <Pencil size={15} /> {paymentMethods.length ? 'Editar' : 'Configurar'}
                 </button>
               </div>
 
-              {paymentInfo ? (
-                <div className="flex items-start gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
-                  <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 shrink-0">
-                    <Wallet size={18} />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="font-semibold">
-                      {paymentInfo.method}{paymentInfo.institution ? ` · ${paymentInfo.institution}` : ''}
-                    </p>
-                    {paymentInfo.details?.length > 0 && (
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
-                        {paymentInfo.details.map(d => `${d.type}: ${d.value}`).join(' · ')}
-                      </p>
-                    )}
-                    {paymentInfo.description && (
-                      <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">{paymentInfo.description}</p>
-                    )}
-                  </div>
+              {paymentMethods.length > 0 ? (
+                <div className="space-y-2">
+                  {paymentMethods.map((pm, i) => (
+                    <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
+                      <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 shrink-0">
+                        <Wallet size={18} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold">
+                          {pm.method}{pm.institution ? ` · ${pm.institution}` : ''}
+                        </p>
+                        {pm.details?.length > 0 && (
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">
+                            {pm.details.map(d => `${d.type}: ${d.value}`).join(' · ')}
+                          </p>
+                        )}
+                        {pm.description && (
+                          <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1">{pm.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : (
                 <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-dashed border-zinc-200 dark:border-zinc-800 text-sm text-zinc-500 dark:text-zinc-400 text-center">
-                  Aún no configuraste un método de pago.
+                  Aún no configuraste ningún método de pago.
                 </div>
               )}
             </div>
