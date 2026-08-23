@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sitemap estático de las páginas públicas fijas del sitio.
+  Las rifas individuales (/sorteo/:slug) son dinámicas y por tenant:
+  para indexarlas hace falta un endpoint backend que las liste
+  (por ejemplo un sitemap.php que consulte `raffles` con is_public/is_active)
+  y sea referenciado aquí como un <sitemap> adicional si se agrega un
+  sitemap index. Fuera del alcance de este rediseño del home.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://ticketvault.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://ticketvault.app/registro</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>
