@@ -890,7 +890,7 @@ export default function TicketGrid() {
                       value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="tu@correo.com" />
                   </div>
 
-                  {raffle.allow_seller_selection  && (
+                  {raffle.allow_seller_selection && sellers.length > 0 && (
                     <div>
                       <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">¿Quién te atendió? (Opcional)</label>
                       <select
