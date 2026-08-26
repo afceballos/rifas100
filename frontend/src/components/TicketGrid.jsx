@@ -530,70 +530,58 @@ export default function TicketGrid() {
         </div>
       </nav>
 
-      {/* Póster de la rifa: imagen grande, sello del organizador sobre la línea
-          perforada, título, fecha y descripción completa — todo con espacio
-          de sobra para que una descripción larga nunca quede apretada. */}
+      {/* Encabezado de la rifa: título, fecha y descripción completa, con la
+          imagen de fondo difuminada (mismo tratamiento y tarjeta que el resto
+          del sitio) para que una descripción larga nunca quede apretada. */}
       <div className="max-w-6xl mx-auto px-4 pt-2">
-        <div className="hero-panel relative bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-900/5 overflow-hidden">
-          <div className="hero-image-el relative h-56 sm:h-72 md:h-80 overflow-hidden">
-            {raffle.background_image ? (
-              <img src={raffle.background_image} alt={raffle.title} className="absolute inset-0 w-full h-full object-cover" />
-            ) : (
-              <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }} />
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
-          </div>
+        <div className="hero-panel relative bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+          {raffle.background_image && (
+            <div className="absolute inset-0 overflow-hidden">
+              <div
+                className="hero-image-el absolute inset-0 bg-cover bg-center scale-110 blur-2xl opacity-40 dark:opacity-25"
+                style={{ backgroundImage: `url(${raffle.background_image})` }}
+              />
+              <div className="absolute inset-0" style={{ backgroundColor: 'var(--raffle-bg)', opacity: 0.85 }} />
+            </div>
+          )}
 
-          {/* Línea perforada, como el talón de un boleto físico */}
-          <div className="ticket-perforation h-3 text-zinc-200 dark:text-zinc-800" />
-
-          <div className="relative px-6 sm:px-10 pb-8 sm:pb-10">
+          <div className="relative px-6 sm:px-8 py-7 sm:py-9">
             {raffle.organizer_name && (
               <button
                 type="button"
                 onClick={() => setShowOrganizerModal(true)}
-                title="Ver información del organizador"
-                className="absolute -top-8 left-6 sm:left-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-4 ring-white dark:ring-zinc-900 shadow-lg transition-transform hover:scale-105 active:scale-95"
+                className="flex items-center gap-2.5 mb-4 group"
               >
                 {raffle.organizer_photo ? (
-                  <img src={raffle.organizer_photo} alt={raffle.organizer_name} className="w-full h-full object-cover" />
+                  <img src={raffle.organizer_photo} alt={raffle.organizer_name} className="w-9 h-9 rounded-full object-cover shadow-sm" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}>
-                    <UserCircle2 size={28} />
+                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white shadow-sm shrink-0" style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}>
+                    <UserCircle2 size={18} />
                   </div>
                 )}
+                <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
+                  Organiza {raffle.organizer_name}
+                </span>
               </button>
             )}
 
-            <div className="pt-12 sm:pt-14">
-              {raffle.organizer_name && (
-                <button
-                  type="button"
-                  onClick={() => setShowOrganizerModal(true)}
-                  className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
-                >
-                  Organiza {raffle.organizer_name}
-                </button>
-              )}
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white leading-tight">
+              {raffle.title}
+            </h1>
 
-              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-zinc-900 dark:text-white leading-[1.08] mt-1">
-                {raffle.title}
-              </h1>
-
-              <div
-                className="inline-flex items-center gap-2 mt-4 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800"
-                style={{ color: 'var(--theme-c1)' }}
-              >
-                <CalendarDays size={15} />
-                {formatDrawDateFull(raffle.draw_date)}
-              </div>
-
-              {raffle.description && (
-                <p className="mt-5 max-w-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                  {raffle.description}
-                </p>
-              )}
+            <div
+              className="inline-flex items-center gap-2 mt-4 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-white/70 dark:bg-black/20 border border-zinc-200/70 dark:border-zinc-700/50 backdrop-blur-sm"
+              style={{ color: 'var(--theme-c1)' }}
+            >
+              <CalendarDays size={15} />
+              {formatDrawDateFull(raffle.draw_date)}
             </div>
+
+            {raffle.description && (
+              <p className="mt-5 max-w-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                {raffle.description}
+              </p>
+            )}
           </div>
         </div>
       </div>
