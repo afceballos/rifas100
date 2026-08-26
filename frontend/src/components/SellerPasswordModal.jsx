@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Copy, Check } from 'lucide-react';
 
 export default function SellerPasswordModal({ raffleId, seller, onClose, onSaved, showAlert }) {
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+
+  const portalUrl = `${window.location.origin}/vendedor/login`;
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(portalUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch { /* clipboard no disponible */ }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,10 +51,22 @@ export default function SellerPasswordModal({ raffleId, seller, onClose, onSaved
             <X size={20} />
           </button>
         </div>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
-          Define la contraseña de <span className="font-semibold text-zinc-700 dark:text-zinc-300">{seller.name}</span> ({seller.code}) para entrar a{' '}
-          <span className="font-mono">{window.location.origin}/vendedor/login</span>.
+        <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-3">
+          Define la contraseña de <span className="font-semibold text-zinc-700 dark:text-zinc-300">{seller.name}</span> ({seller.code}) para entrar al portal de vendedores.
         </p>
+        <div className="flex items-center gap-2 mb-6">
+          <p className="flex-1 min-w-0 text-xs text-zinc-500 dark:text-zinc-400 truncate bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2 font-mono">
+            {portalUrl}
+          </p>
+          <button
+            type="button"
+            onClick={handleCopyLink}
+            title="Copiar enlace"
+            className="shrink-0 p-2.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition-colors"
+          >
+            {linkCopied ? <Check size={15} className="text-emerald-500" /> : <Copy size={15} />}
+          </button>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text" placeholder="Nueva contraseña (mín. 6 caracteres)" required minLength={6}
