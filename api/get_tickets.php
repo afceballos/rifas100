@@ -40,9 +40,10 @@ try {
     $countStmt->execute([$raffleId]);
     $availableCount = (int)$countStmt->fetchColumn();
 
-    // Datos públicos de vendedores (sin teléfono/correo): permiten filtrar por
-    // ?seller=CODE y, si allow_seller_selection está activo, listar opciones al reservar.
-    $sellersStmt = $pdo->prepare("SELECT code, name, range_start, range_end FROM sellers WHERE raffle_id = ? ORDER BY range_start ASC");
+    // Datos públicos de vendedores: permiten filtrar por ?seller=CODE, mostrar
+    // su contacto a quien entre por su enlace, y (si allow_seller_selection
+    // está activo) listar opciones al reservar.
+    $sellersStmt = $pdo->prepare("SELECT code, name, phone, email, range_start, range_end FROM sellers WHERE raffle_id = ? ORDER BY range_start ASC");
     $sellersStmt->execute([$raffleId]);
     $sellers = $sellersStmt->fetchAll();
     foreach ($sellers as &$s) {

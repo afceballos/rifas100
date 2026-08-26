@@ -12,7 +12,7 @@ import TicketQRCode from './TicketQRCode';
 import { getRaffleTheme, getNumberStyleClass, getBgColorClass } from '../utils/raffleTheme';
 import {
   ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
-  Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink,
+  Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink, Phone, Mail,
 } from 'lucide-react';
 
 const RANDOM_PRESETS = [1, 2, 3, 5];
@@ -522,13 +522,24 @@ export default function TicketGrid() {
           {/* Columna izquierda: paginación + grilla de números */}
           <div className="order-2 lg:order-1 min-w-0">
             {activeSeller && (
-              <div className="mb-4 flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-900/50 text-sm">
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-900/50 text-sm">
                 <span className="text-blue-700 dark:text-blue-400 font-semibold truncate">
                   Números de {activeSeller.name} · {activeSeller.range_start.toString().padStart(pad, '0')}–{activeSeller.range_end.toString().padStart(pad, '0')}
                 </span>
-                <a href={window.location.pathname} className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 shrink-0 whitespace-nowrap">
-                  Ver todos
-                </a>
+                {(activeSeller.phone || activeSeller.email) && (
+                  <div className="flex items-center gap-3 shrink-0">
+                    {activeSeller.phone && (
+                      <a href={`tel:${activeSeller.phone}`} className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 whitespace-nowrap">
+                        <Phone size={13} /> {activeSeller.phone}
+                      </a>
+                    )}
+                    {activeSeller.email && (
+                      <a href={`mailto:${activeSeller.email}`} className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 whitespace-nowrap">
+                        <Mail size={13} /> Escribir
+                      </a>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             {/* Barra de acciones pegajosa: siempre a mano mientras se recorre la grilla, sin importar cuántos números tenga la rifa */}
