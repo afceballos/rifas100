@@ -69,6 +69,9 @@ export default function TicketGrid() {
   const [pageLoading, setPageLoading] = useState(false);
   const [notFoundVariant, setNotFoundVariant] = useState(null);
   const [onlyAvailable, setOnlyAvailable] = useState(false);
+  const [numberSearch, setNumberSearch] = useState('');
+  const [searchError, setSearchError] = useState('');
+  const [pendingHighlight, setPendingHighlight] = useState(null);
 
   // Menú hamburguesa (compartir / organizador / verificar / pagos / cuenta)
   const [showMenu, setShowMenu] = useState(false);
@@ -280,6 +283,36 @@ export default function TicketGrid() {
     gridSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  const handleNumberSearch = (e) => {
+    e.preventDefault();
+    if (!raffle || !numberSearch.trim()) return;
+    const num = parseInt(numberSearch, 10);
+    if (Number.isNaN(num) || num < 0 || num >= raffle.total_tickets) {
+      setSearchError(`Ingresa un número entre ${(0).toString().padStart(pad, '0')} y ${(raffle.total_tickets - 1).toString().padStart(pad, '0')}.`);
+      return;
+    }
+    setSearchError('');
+    setNumberSearch('');
+    setOnlyAvailable(false);
+    setPendingHighlight(num);
+    goToPage(Math.floor(num / PAGE_SIZE));
+  };
+
+  // Cuando hay un número pendiente por resaltar (tras una búsqueda), espera a
+  // que la página/grilla correspondiente termine de cargar y lo desplaza a la vista.
+  useEffect(() => {
+    if (pendingHighlight === null || pageLoading) return;
+    const el = document.getElementById(`ticket-${pendingHighlight}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ticket-highlight');
+      gsap.fromTo(el, { scale: 1.3 }, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' });
+      setTimeout(() => el.classList.remove('ticket-highlight'), 1600);
+    }
+    setPendingHighlight(null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tickets, onlyAvailable, pendingHighlight, pageLoading]);
+
   const openRandomModal = () => {
     setRandomStep('pick');
     setRandomQuantity(null);
@@ -457,7 +490,25 @@ export default function TicketGrid() {
           <div className="order-2 lg:order-1 min-w-0">
             {/* Barra de acciones pegajosa: siempre a mano mientras se recorre la grilla, sin importar cuántos números tenga la rifa */}
             {!isEnded && (
-              <div className="sticky top-2 z-20 mb-5 flex items-center gap-2 p-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-md">
+              <div className="sticky top-2 z-20 mb-5 p-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-md space-y-2">
+                <form onSubmit={handleNumberSearch} className="relative">
+                  <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
+                  <input
+                    type="text" inputMode="numeric" placeholder={`Buscar número (ej. ${(0).toString().padStart(pad, '0')})`}
+                    value={numberSearch}
+                    onChange={e => { setNumberSearch(e.target.value.replace(/\D/g, '')); if (searchError) setSearchError(''); }}
+                    className="w-full pl-9 pr-14 py-2.5 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all"
+                  />
+                  <button
+                    type="submit"
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-bold rounded-lg text-white transition-transform active:scale-95"
+                    style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}
+                  >
+                    Ir
+                  </button>
+                </form>
+                {searchError && <p className="text-xs text-red-500 px-1">{searchError}</p>}
+                <div className="flex items-center gap-2">
                 <button
                   onClick={openRandomModal}
                   className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-sm transition-all active:scale-95 shrink-0"
@@ -475,6 +526,7 @@ export default function TicketGrid() {
                 >
                   {onlyAvailable ? <><FilterX size={15} /> Mostrar todos</> : <><Filter size={15} /> Ver disponibles</>}
                 </button>
+                </div>
               </div>
             )}
 
@@ -546,6 +598,7 @@ export default function TicketGrid() {
                   return (
                     <button
                       key={t.number}
+                      id={`ticket-${t.number}`}
                       onClick={(e) => toggleSelect(t, e.currentTarget)}
                       disabled={!isAv || isEnded}
                       style={isSelected ? { background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' } : undefined}
@@ -677,7 +730,7 @@ export default function TicketGrid() {
                   <Trash2 size={18} />
                 </button>
                 <div className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 whitespace-nowrap">
-                  {selectedNumbers.size} boleto{selectedNumbers.size === 1 ? '' : 's'} seleccionado{selectedNumbers.size === 1 ? '' : 's'}
+                  {selectedNumbers.size} boleto{selectedNumbers.size === 1 ? '' : 's'} 
                 </div>
                 <button
                   onClick={() => { setPurchaseStatus(''); setPurchasedTickets(null); setShowReserveModal(true); }}

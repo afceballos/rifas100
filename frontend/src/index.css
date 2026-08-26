@@ -54,6 +54,12 @@
 .raffle-bg-slate { --raffle-bg: #f8fafc; background-color: var(--raffle-bg); }
 .dark .raffle-bg-slate { --raffle-bg: #12161d; }
 
+/* Resalta un número tras buscarlo con "Buscar número" en la rifa pública */
+.ticket-highlight {
+  outline: 3px solid var(--theme-c1, #3b82f6);
+  outline-offset: 2px;
+}
+
 /* Borde perforado de boleto: usado por las cards del home de rifas */
 .ticket-perforation {
   background-image: radial-gradient(circle, currentColor 1.5px, transparent 1.6px);
