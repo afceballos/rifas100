@@ -226,15 +226,13 @@ export default function TicketGrid() {
     }
   }, { dependencies: [tickets, loading], scope: containerRef });
 
-  // Entrada orquestada en dos tiempos: primero el póster/encabezado, luego
-  // la barra lateral con las acciones — refuerza que el encabezado es lo
-  // primero que se lee de la rifa.
+  // Entrada orquestada en dos tiempos: primero la tarjeta de título/fecha/
+  // descripción, luego la barra de imagen y acciones justo debajo.
   useGSAP(() => {
     if (loading || !raffle) return;
     const tl = gsap.timeline();
-    tl.fromTo('.hero-image-el', { scale: 1.12, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.9, ease: 'power2.out' })
-      .fromTo('.hero-panel', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, '-=0.6')
-      .fromTo('.side-panel', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, '-=0.35');
+    tl.fromTo('.info-panel', { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' })
+      .fromTo('.side-panel', { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power3.out' }, '-=0.3');
   }, { dependencies: [raffle?.id, loading], scope: containerRef });
 
   const activeSeller = sellerCodeParam ? sellers.find(s => s.code === sellerCodeParam) || null : null;
@@ -530,64 +528,8 @@ export default function TicketGrid() {
         </div>
       </nav>
 
-      {/* Encabezado de la rifa: título, fecha y descripción completa, con la
-          imagen de fondo difuminada (mismo tratamiento y tarjeta que el resto
-          del sitio) para que una descripción larga nunca quede apretada. */}
-      <div className="max-w-6xl mx-auto px-4 pt-2">
-        <div className="hero-panel relative bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
-          {raffle.background_image && (
-            <div className="absolute inset-0 overflow-hidden">
-              <div
-                className="hero-image-el absolute inset-0 bg-cover bg-center scale-110 blur-2xl opacity-40 dark:opacity-25"
-                style={{ backgroundImage: `url(${raffle.background_image})` }}
-              />
-              <div className="absolute inset-0" style={{ backgroundColor: 'var(--raffle-bg)', opacity: 0.85 }} />
-            </div>
-          )}
-
-          <div className="relative px-6 sm:px-8 py-7 sm:py-9">
-            {raffle.organizer_name && (
-              <button
-                type="button"
-                onClick={() => setShowOrganizerModal(true)}
-                className="flex items-center gap-2.5 mb-4 group"
-              >
-                {raffle.organizer_photo ? (
-                  <img src={raffle.organizer_photo} alt={raffle.organizer_name} className="w-9 h-9 rounded-full object-cover shadow-sm" />
-                ) : (
-                  <div className="w-9 h-9 rounded-full flex items-center justify-center text-white shadow-sm shrink-0" style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}>
-                    <UserCircle2 size={18} />
-                  </div>
-                )}
-                <span className="text-sm font-semibold text-zinc-600 dark:text-zinc-300 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">
-                  Organiza {raffle.organizer_name}
-                </span>
-              </button>
-            )}
-
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white leading-tight">
-              {raffle.title}
-            </h1>
-
-            <div
-              className="inline-flex items-center gap-2 mt-4 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-white/70 dark:bg-black/20 border border-zinc-200/70 dark:border-zinc-700/50 backdrop-blur-sm"
-              style={{ color: 'var(--theme-c1)' }}
-            >
-              <CalendarDays size={15} />
-              {formatDrawDateFull(raffle.draw_date)}
-            </div>
-
-            {raffle.description && (
-              <p className="mt-5 max-w-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                {raffle.description}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-
       {/* Bóveda: números a la izquierda, información y acciones a la derecha */}
-      <div className="max-w-6xl mx-auto px-4 pb-24 pt-6">
+      <div className="max-w-6xl mx-auto px-4 pb-24 pt-2">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
 
           {/* Columna izquierda: paginación + grilla de números */}
@@ -739,8 +681,29 @@ export default function TicketGrid() {
             </div>
           </div>
 
-          {/* Columna derecha: imagen, info y acciones de la rifa */}
-          <div className="order-1 lg:order-2 lg:sticky lg:top-6">
+          {/* Columna derecha: título/fecha/descripción (no sticky) + imagen, info y acciones de la rifa (sticky) */}
+          <div className="order-1 lg:order-2 space-y-6">
+            {(raffle.description || raffle.title) && (
+              <div className="info-panel bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
+                <div className="h-1.5" style={{ background: 'linear-gradient(90deg, var(--theme-c1), var(--theme-c2))' }} />
+                <div className="p-5">
+                  <h1 className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white leading-snug">
+                    {raffle.title}
+                  </h1>
+                  <div className="flex items-center gap-1.5 mt-1.5 text-xs font-semibold" style={{ color: 'var(--theme-c1)' }}>
+                    <CalendarDays size={12} />
+                    {formatDrawDateFull(raffle.draw_date)}
+                  </div>
+                  {raffle.description && (
+                    <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">
+                      {raffle.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="lg:sticky lg:top-6">
             <div className="side-panel bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-900/5 overflow-hidden">
               <div className="relative h-52 sm:h-60 overflow-hidden">
                 {raffle.background_image ? (
@@ -748,20 +711,10 @@ export default function TicketGrid() {
                 ) : (
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }} />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <h1 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-sm leading-tight">
-                    {raffle.title}
-                  </h1>
-                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
               </div>
 
               <div className="p-5 space-y-5">
-                <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--theme-c1)' }}>
-                  <CalendarDays size={13} />
-                  {formatDrawDateFull(raffle.draw_date)}
-                </div>
-
                 {raffle.organizer_name && (
                   <button
                     type="button"
@@ -804,6 +757,7 @@ export default function TicketGrid() {
                 )}
 
               </div>
+            </div>
             </div>
           </div>
 
