@@ -112,7 +112,7 @@ CREATE TABLE tickets (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_ticket (raffle_id, ticket_number),
-    UNIQUE KEY unique_ticket_code (ticket_code),
+    KEY idx_ticket_code (ticket_code),
     FOREIGN KEY (raffle_id) REFERENCES raffles(id) ON DELETE CASCADE,
     FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE SET NULL
 );
@@ -122,6 +122,10 @@ CREATE TABLE tickets (
 -- ALTER TABLE tickets MODIFY COLUMN status ENUM('available', 'reserved', 'reviewing', 'paid') DEFAULT 'available';
 -- ALTER TABLE tickets ADD COLUMN receipt_image VARCHAR(255) NULL;
 -- ALTER TABLE tickets ADD COLUMN admin_notes TEXT NULL;
+-- A partir de ahora un ticket_code representa una COMPRA completa (puede haber
+-- varias filas/números con el mismo código), no un solo boleto:
+-- ALTER TABLE tickets DROP INDEX unique_ticket_code;
+-- ALTER TABLE tickets ADD INDEX idx_ticket_code (ticket_code);
 -- ALTER TABLE tickets: seller_id, ver migración de vendedores más arriba.
 
 -- INSERCIÓN DE PRUEBA

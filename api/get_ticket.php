@@ -16,6 +16,8 @@ if ($code === '') {
 }
 
 try {
+    // Un código de boleto ahora representa una compra completa: puede haber
+    // varias filas (una por número) compartiendo el mismo ticket_code.
     $stmt = $pdo->prepare("
         SELECT t.ticket_number, t.status, t.buyer_name, t.buyer_phone, t.updated_at,
                r.id AS raffle_id, r.slug AS raffle_slug, r.title AS raffle_title, r.draw_date,
@@ -23,29 +25,34 @@ try {
         FROM tickets t
         JOIN raffles r ON r.id = t.raffle_id
         WHERE t.ticket_code = ?
+        ORDER BY t.ticket_number ASC
     ");
     $stmt->execute([$code]);
-    $ticket = $stmt->fetch();
+    $rows = $stmt->fetchAll();
+    $rows = array_values(array_filter($rows, function ($r) { return $r['status'] !== 'available'; }));
 
-    if (!$ticket || $ticket['status'] === 'available' || (int)$ticket['is_published'] !== 1) {
+    if (empty($rows) || (int)$rows[0]['is_published'] !== 1) {
         echo json_encode(['success' => false, 'code' => 'not_found', 'error' => 'Boleto no encontrado.']);
         exit;
     }
 
+    $first = $rows[0];
+    $ticketNumbers = array_map(function ($r) { return (int)$r['ticket_number']; }, $rows);
+
     // Enmascarar teléfono: solo se muestran los últimos 3 dígitos
-    $phone = (string)$ticket['buyer_phone'];
+    $phone = (string)$first['buyer_phone'];
     $maskedPhone = strlen($phone) > 3
         ? str_repeat('•', strlen($phone) - 3) . substr($phone, -3)
         : $phone;
 
-    // Otros boletos del mismo comprador en esta rifa (mismo teléfono)
+    // Otras compras del mismo comprador en esta rifa (mismo teléfono, código distinto)
     $stmt2 = $pdo->prepare("
         SELECT ticket_number, ticket_code, status
         FROM tickets
-        WHERE raffle_id = ? AND buyer_phone = ? AND status != 'available' AND ticket_number != ?
+        WHERE raffle_id = ? AND buyer_phone = ? AND status != 'available' AND (ticket_code IS NULL OR ticket_code != ?)
         ORDER BY ticket_number ASC
     ");
-    $stmt2->execute([$ticket['raffle_id'], $ticket['buyer_phone'], $ticket['ticket_number']]);
+    $stmt2->execute([$first['raffle_id'], $first['buyer_phone'], $code]);
     $otherRows = $stmt2->fetchAll();
     $otherTickets = array_map(function ($t) {
         return [
@@ -58,21 +65,22 @@ try {
     echo json_encode([
         'success' => true,
         'code' => $code,
-        'ticket_number' => (int)$ticket['ticket_number'],
-        'status' => ticket_status_label($ticket['status']),
-        'buyer_name' => $ticket['buyer_name'],
+        'ticket_number' => $ticketNumbers[0],
+        'ticket_numbers' => $ticketNumbers,
+        'status' => ticket_status_label($first['status']),
+        'buyer_name' => $first['buyer_name'],
         'buyer_phone' => $maskedPhone,
-        'updated_at' => $ticket['updated_at'],
+        'updated_at' => $first['updated_at'],
         'other_tickets' => $otherTickets,
         'raffle' => [
-            'slug' => $ticket['raffle_slug'],
-            'title' => $ticket['raffle_title'],
-            'draw_date' => $ticket['draw_date'],
-            'price_per_ticket' => $ticket['price_per_ticket'],
-            'organizer_name' => $ticket['organizer_name'],
-            'organizer_photo' => $ticket['organizer_photo'],
-            'payment_info' => $ticket['payment_info'],
-            'total_tickets' => (int)$ticket['total_tickets'],
+            'slug' => $first['raffle_slug'],
+            'title' => $first['raffle_title'],
+            'draw_date' => $first['draw_date'],
+            'price_per_ticket' => $first['price_per_ticket'],
+            'organizer_name' => $first['organizer_name'],
+            'organizer_photo' => $first['organizer_photo'],
+            'payment_info' => $first['payment_info'],
+            'total_tickets' => (int)$first['total_tickets'],
         ],
     ]);
 } catch (Exception $e) {

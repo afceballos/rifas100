@@ -841,25 +841,25 @@ export default function TicketGrid() {
                   </div>
                   <h2 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">¡Boletos reservados!</h2>
                   <p className="text-zinc-500 dark:text-zinc-400 text-sm mt-1">
-                    Guarda el enlace de cada boleto — es tu comprobante digital.
+                    Guarda el enlace de tu boleto digital — reúne los {purchasedTickets.length} número{purchasedTickets.length === 1 ? '' : 's'} de esta compra.
                   </p>
                 </div>
 
-                <div className="space-y-2 max-h-64 overflow-y-auto mb-6">
+                <div className="flex flex-wrap gap-1.5 mb-4 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
                   {purchasedTickets.map(t => (
-                    <a
-                      key={t.code}
-                      href={`/ticket/${t.code}`}
-                      target="_blank" rel="noreferrer"
-                      className="flex items-center justify-between gap-3 p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
-                    >
-                      <span className="font-mono font-bold text-blue-500">#{t.number.toString().padStart(pad, '0')}</span>
-                      <span className="flex items-center gap-1 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
-                        Ver boleto <ExternalLink size={12} />
-                      </span>
-                    </a>
+                    <span key={t.number} className="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
+                      #{t.number.toString().padStart(pad, '0')}
+                    </span>
                   ))}
                 </div>
+
+                <a
+                  href={`/ticket/${purchasedTickets[0].code}`}
+                  target="_blank" rel="noreferrer"
+                  className="flex items-center justify-center gap-2 w-full p-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-sm hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors mb-6"
+                >
+                  Ver boleto digital <ExternalLink size={14} />
+                </a>
 
                 <button
                   onClick={() => { setShowReserveModal(false); setPurchasedTickets(null); }}

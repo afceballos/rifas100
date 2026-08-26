@@ -92,7 +92,8 @@ export default function TicketPage() {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF({ unit: 'px', format: [canvas.width, canvas.height] });
       pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
-      pdf.save(`comprobante-boleto-${ticket.ticket_number.toString().padStart(pad, '0')}.pdf`);
+      const numbersLabel = ticket.ticket_numbers.map(n => n.toString().padStart(pad, '0')).join('-');
+      pdf.save(`comprobante-boleto-${numbersLabel}.pdf`);
     } catch (err) {
       console.error(err);
     }
@@ -197,10 +198,15 @@ export default function TicketPage() {
               <p className="font-bold text-xl text-zinc-900 dark:text-white">{ticket.buyer_name}</p>
               <p className="text-xs text-zinc-400 dark:text-zinc-500 font-mono mt-0.5">Tel. {ticket.buyer_phone}</p>
 
-              <div className="flex items-center justify-center gap-3 mt-4">
-                <span className="font-mono font-extrabold text-lg px-4 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white">
-                  #{ticket.ticket_number.toString().padStart(pad, '0')}
-                </span>
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                {ticket.ticket_numbers.map(n => (
+                  <span key={n} className="font-mono font-extrabold text-lg px-4 py-1.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-white">
+                    #{n.toString().padStart(pad, '0')}
+                  </span>
+                ))}
+              </div>
+
+              <div className="flex items-center justify-center mt-3">
                 <span className="relative inline-flex">
                   {ticket.status !== 'PAGADO' && (
                     <span className={`status-pulse absolute inset-0 rounded-xl ${STATUS_PULSE_CLASSES[ticket.status]}`} />
@@ -213,7 +219,7 @@ export default function TicketPage() {
 
               {ticket.status === 'APARTADO' && (
                 <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-3 uppercase tracking-wide">
-                  Este número está reservado temporalmente.
+                  {ticket.ticket_numbers.length > 1 ? 'Estos números están reservados temporalmente.' : 'Este número está reservado temporalmente.'}
                 </p>
               )}
               {ticket.status === 'REVISANDO' && (

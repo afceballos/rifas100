@@ -101,21 +101,21 @@ export default function AdminRaffle() {
     } catch (err) { console.error(err); }
   };
 
-  const handleDeleteBuyer = async (ticketNumber, buyerName) => {
+  const handleDeleteBuyer = async (buyer) => {
     const confirmed = await showConfirm(
-      'Liberar boleto',
-      `¿Eliminar a "${buyerName}" del boleto #${String(ticketNumber).padStart(pad, '0')}? El número quedará disponible nuevamente.`,
+      'Liberar boletos',
+      `¿Eliminar a "${buyer.buyer_name}" (${buyer.ticket_numbers.length} número${buyer.ticket_numbers.length === 1 ? '' : 's'})? Quedarán disponibles nuevamente.`,
       'danger',
-      'Liberar boleto'
+      'Liberar boletos'
     );
     if (!confirmed) return false;
 
     try {
-      const res = await fetch('/api/admin_delete_buyer.php', {
+      const res = await fetch('/api/admin_bulk_delete_buyers.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ raffle_id: id, ticket_number: ticketNumber }),
+        body: JSON.stringify({ raffle_id: id, ticket_numbers: buyer.ticket_numbers }),
       });
       const data = await res.json();
       if (data.success) { fetchDashboard(); return true; }
@@ -137,7 +137,7 @@ export default function AdminRaffle() {
     return (
       b.buyer_name?.toLowerCase().includes(q) ||
       (digits && b.buyer_phone?.replace(/\D/g, '').includes(digits)) ||
-      b.ticket_number.toString().padStart(pad, '0').includes(q)
+      b.ticket_numbers.some(n => n.toString().padStart(pad, '0').includes(q))
     );
   });
   const pageCount = Math.max(1, Math.ceil(filteredBuyers.length / pageSize));
@@ -168,20 +168,24 @@ export default function AdminRaffle() {
 
   const toggleSelectAllVisible = () => {
     setSelectedIds(prev => {
-      const allSelected = visibleBuyers.length > 0 && visibleBuyers.every(b => prev.has(b.ticket_number));
+      const allSelected = visibleBuyers.length > 0 && visibleBuyers.every(b => prev.has(b.ticket_code));
       if (allSelected) return new Set();
-      return new Set(visibleBuyers.map(b => b.ticket_number));
+      return new Set(visibleBuyers.map(b => b.ticket_code));
     });
   };
 
-  const toggleSelectOne = (ticketNumber) => {
+  const toggleSelectOne = (ticketCode) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
-      if (next.has(ticketNumber)) next.delete(ticketNumber);
-      else next.add(ticketNumber);
+      if (next.has(ticketCode)) next.delete(ticketCode);
+      else next.add(ticketCode);
       return next;
     });
   };
+
+  // Las acciones masivas ya trabajan por número de boleto; se "aplanan" todos
+  // los números de los participantes (compras) seleccionados.
+  const selectedTicketNumbers = () => buyers.filter(b => selectedIds.has(b.ticket_code)).flatMap(b => b.ticket_numbers);
 
   const handleBulkStatusChange = async (newStatus) => {
     setBulkWorking(true);
@@ -190,7 +194,7 @@ export default function AdminRaffle() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ raffle_id: id, ticket_numbers: [...selectedIds], new_status: newStatus }),
+        body: JSON.stringify({ raffle_id: id, ticket_numbers: selectedTicketNumbers(), new_status: newStatus }),
       });
       const data = await res.json();
       if (data.success) { setSelectedIds(new Set()); fetchDashboard(); }
@@ -200,9 +204,10 @@ export default function AdminRaffle() {
   };
 
   const handleBulkDelete = async () => {
+    const numbers = selectedTicketNumbers();
     const confirmed = await showConfirm(
       'Liberar boletos seleccionados',
-      `¿Liberar ${selectedIds.size} boleto${selectedIds.size === 1 ? '' : 's'}? Quedarán disponibles nuevamente y se perderán sus datos, notas y comprobante.`,
+      `¿Liberar ${numbers.length} boleto${numbers.length === 1 ? '' : 's'} de ${selectedIds.size} participante${selectedIds.size === 1 ? '' : 's'}? Quedarán disponibles nuevamente y se perderán sus datos, notas y comprobante.`,
       'danger',
       'Liberar boletos'
     );
@@ -214,7 +219,7 @@ export default function AdminRaffle() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ raffle_id: id, ticket_numbers: [...selectedIds] }),
+        body: JSON.stringify({ raffle_id: id, ticket_numbers: numbers }),
       });
       const data = await res.json();
       if (data.success) { setSelectedIds(new Set()); fetchDashboard(); }
@@ -330,7 +335,7 @@ export default function AdminRaffle() {
             {selectedIds.size > 0 && (
               <div className="px-6 py-3 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-100 dark:border-blue-900/50 flex flex-wrap items-center gap-3">
                 <span className="text-sm font-bold text-blue-700 dark:text-blue-400">
-                  {selectedIds.size} seleccionado{selectedIds.size === 1 ? '' : 's'}
+                  {selectedIds.size} participante{selectedIds.size === 1 ? '' : 's'} seleccionado{selectedIds.size === 1 ? '' : 's'}
                 </span>
                 <div className="flex flex-wrap items-center gap-2 ml-auto">
                   <span className="text-xs text-zinc-500 dark:text-zinc-400 mr-1">Cambiar a:</span>
@@ -369,12 +374,12 @@ export default function AdminRaffle() {
                     <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800 w-10">
                       <input
                         type="checkbox"
-                        checked={visibleBuyers.length > 0 && visibleBuyers.every(b => selectedIds.has(b.ticket_number))}
+                        checked={visibleBuyers.length > 0 && visibleBuyers.every(b => selectedIds.has(b.ticket_code))}
                         onChange={toggleSelectAllVisible}
                         className="w-4 h-4 rounded accent-blue-600 cursor-pointer"
                       />
                     </th>
-                    <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">Boleto</th>
+                    <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">Boletos</th>
                     <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">Cliente</th>
                     <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">Estado</th>
                     <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">Acciones</th>
@@ -384,16 +389,22 @@ export default function AdminRaffle() {
                   {visibleBuyers.length === 0
                     ? <tr><td colSpan="5" className="px-6 py-12 text-center text-zinc-500">{search || statusFilter ? 'Sin resultados para tu búsqueda.' : 'Sin operaciones recientes.'}</td></tr>
                     : visibleBuyers.map(b => (
-                      <tr key={b.ticket_number} className={`border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors ${selectedIds.has(b.ticket_number) ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}`}>
+                      <tr key={b.ticket_code} className={`border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors ${selectedIds.has(b.ticket_code) ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}`}>
                         <td className="px-6 py-4">
                           <input
                             type="checkbox"
-                            checked={selectedIds.has(b.ticket_number)}
-                            onChange={() => toggleSelectOne(b.ticket_number)}
+                            checked={selectedIds.has(b.ticket_code)}
+                            onChange={() => toggleSelectOne(b.ticket_code)}
                             className="w-4 h-4 rounded accent-blue-600 cursor-pointer"
                           />
                         </td>
-                        <td className="px-6 py-4 font-mono font-bold text-blue-500">#{b.ticket_number.toString().padStart(pad, '0')}</td>
+                        <td className="px-6 py-4 font-mono font-bold text-blue-500 max-w-xs">
+                          <div className="flex flex-wrap gap-1">
+                            {b.ticket_numbers.map(n => (
+                              <span key={n} className="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10">#{n.toString().padStart(pad, '0')}</span>
+                            ))}
+                          </div>
+                        </td>
                         <td className="px-6 py-4 font-medium">
                           {b.buyer_name}
                           <span className="block text-xs font-normal text-zinc-500">{b.buyer_phone}</span>
@@ -413,8 +424,8 @@ export default function AdminRaffle() {
                               <Info size={15} />
                             </button>
                             <button
-                              onClick={() => handleDeleteBuyer(b.ticket_number, b.buyer_name)}
-                              title="Liberar boleto"
+                              onClick={() => handleDeleteBuyer(b)}
+                              title="Liberar boletos"
                               className="p-1.5 text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                             >
                               <Trash2 size={15} />

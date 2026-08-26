@@ -69,9 +69,11 @@ try {
         WHERE raffle_id = ? AND ticket_number = ?
     ");
 
+    // Un solo código para toda la compra: todos los números reservados en esta
+    // llamada comparten el mismo boleto digital (/ticket/:code).
+    $code = generate_ticket_code($pdo);
     $tickets = [];
     foreach ($ticketNumbers as $num) {
-        $code = generate_ticket_code($pdo);
         $updateStmt->execute([$name, $phone, $email, $code, $sellerId, $raffle_id, $num]);
         $tickets[] = ['number' => $num, 'code' => $code];
     }

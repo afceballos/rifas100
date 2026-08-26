@@ -59,7 +59,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ raffle_id: raffleId, ticket_number: localTicket.ticket_number, seller_id: sellerId }),
+        body: JSON.stringify({ raffle_id: raffleId, ticket_code: localTicket.ticket_code, seller_id: sellerId }),
       });
       const data = await res.json();
       if (data.success) {
@@ -78,11 +78,11 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
     if (newStatus === localTicket.status || savingStatus) return;
     setSavingStatus(true);
     try {
-      const res = await fetch('/api/admin_mark_paid.php', {
+      const res = await fetch('/api/admin_bulk_update_status.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ raffle_id: raffleId, ticket_number: localTicket.ticket_number, new_status: newStatus }),
+        body: JSON.stringify({ raffle_id: raffleId, ticket_numbers: localTicket.ticket_numbers, new_status: newStatus }),
       });
       const data = await res.json();
       if (data.success) {
@@ -102,7 +102,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ raffle_id: raffleId, ticket_number: localTicket.ticket_number, admin_notes: notes }),
+        body: JSON.stringify({ raffle_id: raffleId, ticket_code: localTicket.ticket_code, admin_notes: notes }),
       });
       const data = await res.json();
       if (data.success) {
@@ -122,7 +122,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
     try {
       const fd = new FormData();
       fd.append('raffle_id', raffleId);
-      fd.append('ticket_number', localTicket.ticket_number);
+      fd.append('ticket_code', localTicket.ticket_code);
       fd.append('image', file);
       const res = await fetch('/api/admin_upload_ticket_receipt.php', { method: 'POST', credentials: 'include', body: fd });
       const data = await res.json();
@@ -147,7 +147,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
 
   const handleDelete = async () => {
     setDeleting(true);
-    const deleted = await onDelete(localTicket.ticket_number, localTicket.buyer_name);
+    const deleted = await onDelete(localTicket);
     setDeleting(false);
     if (deleted) onClose();
   };
@@ -168,8 +168,14 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
 
           <dl className="space-y-3 text-sm mb-6">
             <div className="flex justify-between gap-3">
-              <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Números</dt>
-              <dd className="font-mono font-bold text-zinc-900 dark:text-white">{localTicket.ticket_number.toString().padStart(pad, '0')}</dd>
+              <dt className="font-semibold text-zinc-500 dark:text-zinc-400 shrink-0">Números</dt>
+              <dd className="flex flex-wrap justify-end gap-1">
+                {localTicket.ticket_numbers.map(n => (
+                  <span key={n} className="font-mono font-bold text-xs px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10 text-zinc-900 dark:text-white">
+                    {n.toString().padStart(pad, '0')}
+                  </span>
+                ))}
+              </dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Nombre</dt>
@@ -181,7 +187,12 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
             </div>
             <div className="flex justify-between gap-3">
               <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Valor</dt>
-              <dd className="font-mono font-bold text-emerald-600 dark:text-emerald-400">${pricePerTicket}</dd>
+              <dd className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                ${(pricePerTicket * localTicket.ticket_numbers.length).toFixed(2)}
+                {localTicket.ticket_numbers.length > 1 && (
+                  <span className="text-zinc-400 dark:text-zinc-500 font-normal"> ({localTicket.ticket_numbers.length} × ${pricePerTicket})</span>
+                )}
+              </dd>
             </div>
             <div className="flex justify-between items-center gap-3">
               <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Tel.</dt>
@@ -317,7 +328,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
               onClick={handleDelete} disabled={deleting}
               className="flex items-center justify-center gap-1.5 px-3 py-2.5 text-sm font-bold rounded-xl bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors disabled:opacity-50"
             >
-              <Trash2 size={15} /> Eliminar
+              <Trash2 size={15} /> {localTicket.ticket_numbers.length > 1 ? 'Liberar' : 'Eliminar'}
             </button>
           </div>
         </div>

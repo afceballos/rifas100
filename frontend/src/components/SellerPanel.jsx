@@ -64,11 +64,12 @@ export default function SellerPanel() {
     return (
       t.buyer_name?.toLowerCase().includes(q) ||
       (digits && t.buyer_phone?.replace(/\D/g, '').includes(digits)) ||
-      t.ticket_number.toString().padStart(pad, '0').includes(q)
+      t.ticket_numbers.some(n => n.toString().padStart(pad, '0').includes(q))
     );
   });
 
-  const paidCount = tickets.filter(t => t.status === 'paid').length;
+  const totalNumbers = tickets.reduce((sum, t) => sum + t.ticket_numbers.length, 0);
+  const paidNumbers = tickets.filter(t => t.status === 'paid').reduce((sum, t) => sum + t.ticket_numbers.length, 0);
 
   return (
     <div className="min-h-screen font-sans pb-12">
@@ -112,12 +113,12 @@ export default function SellerPanel() {
           <div className="bg-white dark:bg-zinc-900 p-5 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
             <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 w-fit mb-3"><Ticket size={20} /></div>
             <h3 className="text-zinc-500 dark:text-zinc-400 text-xs font-medium mb-0.5">Boletos vendidos</h3>
-            <p className="text-2xl font-bold font-mono">{tickets.length}</p>
+            <p className="text-2xl font-bold font-mono">{totalNumbers}</p>
           </div>
           <div className="bg-white dark:bg-zinc-900 p-5 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
             <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 w-fit mb-3"><CheckCircle2 size={20} /></div>
             <h3 className="text-zinc-500 dark:text-zinc-400 text-xs font-medium mb-0.5">Aprobados</h3>
-            <p className="text-2xl font-bold font-mono">{paidCount}</p>
+            <p className="text-2xl font-bold font-mono">{paidNumbers}</p>
           </div>
           <div className="bg-white dark:bg-zinc-900 p-5 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
             <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 w-fit mb-3"><Wallet size={20} /></div>
@@ -152,8 +153,14 @@ export default function SellerPanel() {
                 {filteredTickets.length === 0
                   ? <tr><td colSpan="4" className="px-6 py-12 text-center text-zinc-500">{search ? 'Sin resultados para tu búsqueda.' : 'Todavía no tienes ventas registradas.'}</td></tr>
                   : filteredTickets.map(t => (
-                    <tr key={t.ticket_number} className="border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-                      <td className="px-6 py-4 font-mono font-bold text-blue-500">#{t.ticket_number.toString().padStart(pad, '0')}</td>
+                    <tr key={t.ticket_code} className="border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
+                      <td className="px-6 py-4 font-mono font-bold text-blue-500">
+                        <div className="flex flex-wrap gap-1 max-w-[10rem]">
+                          {t.ticket_numbers.map(n => (
+                            <span key={n} className="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10">#{n.toString().padStart(pad, '0')}</span>
+                          ))}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 font-medium">
                         {t.buyer_name}
                         <span className="block text-xs font-normal text-zinc-500">{t.buyer_phone}</span>

@@ -47,17 +47,38 @@ try {
     $stmt2->execute([$raffle_id]);
     $money = $stmt2->fetchColumn();
 
-    // Listado de compradores (boletos reservados o pagados)
+    // Listado de compradores, agrupado por compra (ticket_code): todos los
+    // números reservados juntos en una misma llamada comparten código y se
+    // muestran como un solo participante con todos sus números.
     $stmt3 = $pdo->prepare("
-        SELECT t.ticket_number, t.ticket_code, t.buyer_name, t.buyer_phone, t.buyer_email, t.status,
-               t.receipt_image, t.admin_notes, t.created_at, t.seller_id, s.name AS seller_name, s.code AS seller_code
+        SELECT
+            t.ticket_code,
+            GROUP_CONCAT(t.ticket_number ORDER BY t.ticket_number) AS ticket_numbers,
+            COUNT(*) AS ticket_count,
+            MIN(t.buyer_name) AS buyer_name,
+            MIN(t.buyer_phone) AS buyer_phone,
+            MIN(t.buyer_email) AS buyer_email,
+            MIN(t.status) AS status,
+            MIN(t.receipt_image) AS receipt_image,
+            MIN(t.admin_notes) AS admin_notes,
+            MIN(t.created_at) AS created_at,
+            MIN(t.seller_id) AS seller_id,
+            MIN(s.name) AS seller_name,
+            MIN(s.code) AS seller_code
         FROM tickets t
         LEFT JOIN sellers s ON s.id = t.seller_id
         WHERE t.raffle_id = ? AND t.status != 'available'
-        ORDER BY t.ticket_number ASC
+        GROUP BY t.ticket_code
+        ORDER BY MIN(t.ticket_number) ASC
     ");
     $stmt3->execute([$raffle_id]);
-    $buyers = $stmt3->fetchAll();
+    $buyerRows = $stmt3->fetchAll();
+
+    $buyers = array_map(function ($row) {
+        $row['ticket_numbers'] = array_map('intval', explode(',', $row['ticket_numbers']));
+        $row['ticket_count'] = (int)$row['ticket_count'];
+        return $row;
+    }, $buyerRows);
 
     echo json_encode([
         'success' => true,
