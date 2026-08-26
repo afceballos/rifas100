@@ -22,13 +22,21 @@ if (!in_array($digits, [2, 3, 4])) {
 $total_tickets = pow(10, $digits);
 $description = isset($data['description']) && $data['description'] !== '' ? $data['description'] : null;
 $organizerName = isset($data['organizer_name']) && $data['organizer_name'] !== '' ? trim($data['organizer_name']) : null;
+$organizerPhone = isset($data['organizer_phone']) && trim($data['organizer_phone']) !== '' ? trim($data['organizer_phone']) : null;
+$organizerEmail = isset($data['organizer_email']) && trim($data['organizer_email']) !== '' ? trim($data['organizer_email']) : null;
+
+if ($organizerEmail !== null && !filter_var($organizerEmail, FILTER_VALIDATE_EMAIL)) {
+    echo json_encode(['success' => false, 'error' => 'Correo del organizador inválido']);
+    exit;
+}
+
 $slug = generate_raffle_slug($pdo);
 
 try {
     $pdo->beginTransaction();
     // Insertar la rifa bajo el tenant del usuario logueado
-    $stmt = $pdo->prepare("INSERT INTO raffles (slug, tenant_id, title, description, organizer_name, price_per_ticket, draw_date, total_tickets) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$slug, current_tenant_id(), $data['title'], $description, $organizerName, $data['price_per_ticket'], $data['draw_date'], $total_tickets]);
+    $stmt = $pdo->prepare("INSERT INTO raffles (slug, tenant_id, title, description, organizer_name, organizer_phone, organizer_email, price_per_ticket, draw_date, total_tickets) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$slug, current_tenant_id(), $data['title'], $description, $organizerName, $organizerPhone, $organizerEmail, $data['price_per_ticket'], $data['draw_date'], $total_tickets]);
     $raffle_id = $pdo->lastInsertId();
 
     // Generar boletos masivamente (Se hace en bloques para no saturar si son 10,000)

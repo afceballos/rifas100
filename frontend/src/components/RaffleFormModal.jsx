@@ -27,6 +27,8 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
     digits: '2',
     description: raffle?.description || '',
     organizer_name: raffle?.organizer_name || '',
+    organizer_phone: raffle?.organizer_phone || '',
+    organizer_email: raffle?.organizer_email || '',
   });
   const [organizerFile, setOrganizerFile] = useState(null);
   const [organizerPreview, setOrganizerPreview] = useState(raffle?.organizer_photo || null);
@@ -78,6 +80,8 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
             draw_date: form.draw_date,
             description: form.description,
             organizer_name: form.organizer_name,
+            organizer_phone: form.organizer_phone,
+            organizer_email: form.organizer_email,
             remove_organizer_photo: removeOrganizerPhoto,
           }),
         });
@@ -183,7 +187,7 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
 
           <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3">
             <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">Organizador</p>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 -mt-2">Se muestra en el popup "Ver el organizador" del sorteo público.</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 -mt-2">Se muestra en el popup de contacto del sorteo público.</p>
             <div className="flex items-center gap-3">
               <div className="relative shrink-0">
                 {organizerPreview ? (
@@ -214,6 +218,18 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
                   <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleOrganizerPhotoPick} />
                 </label>
               </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input
+                type="tel" placeholder="Teléfono de contacto (opcional)"
+                className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-sm"
+                value={form.organizer_phone} onChange={e => setForm({ ...form, organizer_phone: e.target.value })}
+              />
+              <input
+                type="email" placeholder="Correo de contacto (opcional)"
+                className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-sm"
+                value={form.organizer_email} onChange={e => setForm({ ...form, organizer_email: e.target.value })}
+              />
             </div>
           </div>
 

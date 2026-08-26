@@ -5,7 +5,9 @@ import Dialog from './Dialog';
 import AdminRaffleSidebar from './AdminRaffleSidebar';
 import RaffleFormModal from './RaffleFormModal';
 import PaymentMethodModal from './PaymentMethodModal';
-import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2 } from 'lucide-react';
+import TicketQRCode from './TicketQRCode';
+import QRCode from 'qrcode';
+import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2, Download, Copy, Check } from 'lucide-react';
 import { parsePaymentMethods } from '../utils/paymentInfo';
 
 const formatDrawDate = (value) => {
@@ -20,6 +22,7 @@ export default function AdminRaffleSettings() {
   const [raffle, setRaffle] = useState(null);
   const [editingRaffle, setEditingRaffle] = useState(false);
   const [editingPayment, setEditingPayment] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   const [dialog, setDialog] = useState({ open: false });
 
@@ -90,6 +93,27 @@ export default function AdminRaffleSettings() {
 
   const digits = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : null;
   const paymentMethods = raffle ? parsePaymentMethods(raffle.payment_info) : [];
+  const raffleUrl = raffle?.slug ? `${window.location.origin}/sorteo/${raffle.slug}` : null;
+
+  const handleCopyLink = async () => {
+    if (!raffleUrl) return;
+    try {
+      await navigator.clipboard.writeText(raffleUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch { /* clipboard no disponible */ }
+  };
+
+  const handleDownloadQr = async () => {
+    if (!raffleUrl) return;
+    try {
+      const dataUrl = await QRCode.toDataURL(raffleUrl, { width: 800, margin: 2, color: { dark: '#18181b', light: '#ffffff' } });
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = `qr-${raffle.slug}.png`;
+      a.click();
+    } catch { showAlert('Error', 'No se pudo generar el código QR.', 'alert'); }
+  };
 
   return (
     <div className="min-h-screen font-sans pb-12">
@@ -168,6 +192,11 @@ export default function AdminRaffleSettings() {
                   <div className="min-w-0">
                     <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold">Organizador</p>
                     <p className="text-sm font-semibold truncate">{raffle.organizer_name || 'Sin especificar'}</p>
+                    {(raffle.organizer_phone || raffle.organizer_email) && (
+                      <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+                        {[raffle.organizer_phone, raffle.organizer_email].filter(Boolean).join(' · ')}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -232,6 +261,38 @@ export default function AdminRaffleSettings() {
                 </div>
               )}
             </div>
+
+            {/* Código QR */}
+            {raffleUrl && (
+              <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+                <h3 className="font-bold text-lg mb-1">Código QR de tu rifa</h3>
+                <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-4">Compártelo en flyers, redes o pantallas para que la gente entre directo.</p>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                  <div className="p-2 bg-white rounded-xl border border-zinc-100 dark:border-zinc-800 shrink-0">
+                    <TicketQRCode value={raffleUrl} size={112} />
+                  </div>
+                  <div className="flex-1 min-w-0 w-full space-y-2">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2 font-mono">
+                      {raffleUrl}
+                    </p>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={handleDownloadQr}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                      >
+                        <Download size={15} /> Descargar QR
+                      </button>
+                      <button
+                        onClick={handleCopyLink}
+                        className="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                      >
+                        {linkCopied ? <><Check size={15} className="text-emerald-500" /> Copiado</> : <><Copy size={15} /> Copiar enlace</>}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

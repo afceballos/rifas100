@@ -17,6 +17,13 @@ assert_raffle_ownership($pdo, $raffle_id);
 
 $description = isset($data['description']) && $data['description'] !== '' ? $data['description'] : null;
 $organizerName = isset($data['organizer_name']) && $data['organizer_name'] !== '' ? trim($data['organizer_name']) : null;
+$organizerPhone = isset($data['organizer_phone']) && trim($data['organizer_phone']) !== '' ? trim($data['organizer_phone']) : null;
+$organizerEmail = isset($data['organizer_email']) && trim($data['organizer_email']) !== '' ? trim($data['organizer_email']) : null;
+
+if ($organizerEmail !== null && !filter_var($organizerEmail, FILTER_VALIDATE_EMAIL)) {
+    echo json_encode(['success' => false, 'error' => 'Correo del organizador inválido']);
+    exit;
+}
 
 function remove_raffle_photo($pdo, $raffle_id, $column) {
     $stmt = $pdo->prepare("SELECT $column FROM raffles WHERE id = ?");
@@ -33,8 +40,8 @@ function remove_raffle_photo($pdo, $raffle_id, $column) {
 }
 
 try {
-    $stmt = $pdo->prepare("UPDATE raffles SET title = ?, price_per_ticket = ?, draw_date = ?, description = ?, organizer_name = ? WHERE id = ?");
-    $stmt->execute([$data['title'], $data['price_per_ticket'], $data['draw_date'], $description, $organizerName, $raffle_id]);
+    $stmt = $pdo->prepare("UPDATE raffles SET title = ?, price_per_ticket = ?, draw_date = ?, description = ?, organizer_name = ?, organizer_phone = ?, organizer_email = ? WHERE id = ?");
+    $stmt->execute([$data['title'], $data['price_per_ticket'], $data['draw_date'], $description, $organizerName, $organizerPhone, $organizerEmail, $raffle_id]);
 
     if (!empty($data['remove_image'])) {
         remove_raffle_photo($pdo, $raffle_id, 'background_image');

@@ -8,6 +8,7 @@ import OrganizerModal from './OrganizerModal';
 import VerifyParticipationModal from './VerifyParticipationModal';
 import PaymentInfoModal from './PaymentInfoModal';
 import AccountMenuSection from './AccountMenuSection';
+import TicketQRCode from './TicketQRCode';
 import { getRaffleTheme, getNumberStyleClass, getBgColorClass } from '../utils/raffleTheme';
 import {
   ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
@@ -369,6 +370,7 @@ export default function TicketGrid() {
   const theme = getRaffleTheme(raffle.theme_color);
   const numberShapeClass = getNumberStyleClass(raffle.number_style);
   const bgColorClass = getBgColorClass(raffle.bg_color);
+  const raffleUrl = `${window.location.origin}/sorteo/${raffle.slug}`;
 
   return (
     <div
@@ -548,13 +550,30 @@ export default function TicketGrid() {
                   <h1 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-sm leading-tight">
                     {raffle.title}
                   </h1>
-                  {raffle.organizer_name && (
-                    <p className="text-white/80 text-xs font-semibold mt-1">Organiza {raffle.organizer_name}</p>
-                  )}
                 </div>
               </div>
 
               <div className="p-5 space-y-5">
+                {raffle.organizer_name && (
+                  <button
+                    type="button"
+                    onClick={() => setShowOrganizerModal(true)}
+                    className="flex items-center gap-2.5 w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500 transition-colors text-left"
+                  >
+                    {raffle.organizer_photo ? (
+                      <img src={raffle.organizer_photo} alt={raffle.organizer_name} className="w-9 h-9 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center text-white shrink-0" style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}>
+                        <UserCircle2 size={18} />
+                      </div>
+                    )}
+                    <span className="min-w-0">
+                      <span className="block text-[10px] text-zinc-400 uppercase tracking-widest font-bold">Organiza</span>
+                      <span className="block text-sm font-semibold text-zinc-700 dark:text-zinc-200 truncate">{raffle.organizer_name}</span>
+                    </span>
+                  </button>
+                )}
+
                 {raffle.description && (
                   <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">{raffle.description}</p>
                 )}
@@ -607,6 +626,19 @@ export default function TicketGrid() {
 
         </div>
       </div>
+
+      {/* Footer: QR que enlaza directo a esta rifa, útil para compartir en flyers/pantallas */}
+      <footer className="max-w-6xl mx-auto px-4 pb-28">
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 p-5 rounded-3xl bg-white/60 dark:bg-zinc-900/60 backdrop-blur-md border border-zinc-200 dark:border-zinc-800">
+          <div className="p-2 bg-white rounded-xl shrink-0">
+            <TicketQRCode value={raffleUrl} size={88} />
+          </div>
+          <div className="text-center sm:text-left">
+            <p className="font-bold text-sm text-zinc-700 dark:text-zinc-200">Escanea para abrir esta rifa</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">Ideal para compartir en flyers, redes o pantallas.</p>
+          </div>
+        </div>
+      </footer>
 
       {/* Barra flotante: resumen de la rifa cuando no hay selección, controles de reserva cuando sí la hay */}
       {!isEnded && (
