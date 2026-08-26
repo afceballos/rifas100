@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, MessageCircle, Phone, Ticket, Copy, Check, Trash2, StickyNote, Receipt, ImagePlus } from 'lucide-react';
+import { X, MessageCircle, Phone, Ticket, Copy, Check, Trash2, StickyNote, Receipt, ImagePlus, Pencil } from 'lucide-react';
 
 const STATUS_OPTIONS = [
   {
@@ -39,6 +39,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
   const [deleting, setDeleting] = useState(false);
   const [sellers, setSellers] = useState([]);
   const [savingSeller, setSavingSeller] = useState(false);
+  const [editingSeller, setEditingSeller] = useState(false);
 
   const notesDirty = notes !== (localTicket.admin_notes || '');
   const ticketUrl = localTicket.ticket_code ? `${window.location.origin}/ticket/${localTicket.ticket_code}` : null;
@@ -63,7 +64,8 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
       const data = await res.json();
       if (data.success) {
         const seller = sellers.find(s => s.id === sellerId);
-        setLocalTicket(prev => ({ ...prev, seller_id: sellerId, seller_name: seller?.name || null }));
+        setLocalTicket(prev => ({ ...prev, seller_id: sellerId, seller_name: seller?.name || null, seller_code: seller?.code || null }));
+        setEditingSeller(false);
         onUpdated();
       } else {
         showAlert?.('Error', data.error || 'No se pudo actualizar el vendedor', 'alert');
@@ -202,17 +204,32 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
             <div className="flex justify-between items-center gap-3">
               <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Vendedor</dt>
               <dd>
-                <select
-                  value={localTicket.seller_id ?? ''}
-                  onChange={e => handleSellerChange(e.target.value)}
-                  disabled={savingSeller}
-                  className="text-sm font-semibold text-right rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500/40 disabled:opacity-50"
-                >
-                  <option value="">No tiene</option>
-                  {sellers.map(s => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
+                {editingSeller ? (
+                  <select
+                    autoFocus
+                    value={localTicket.seller_id ?? ''}
+                    onChange={e => handleSellerChange(e.target.value)}
+                    onBlur={() => setEditingSeller(false)}
+                    disabled={savingSeller}
+                    className="text-sm font-semibold text-right rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500/40 disabled:opacity-50"
+                  >
+                    <option value="">No tiene</option>
+                    {sellers.map(s => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setEditingSeller(true)}
+                    className="flex items-center gap-1.5 text-right font-semibold text-zinc-900 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                  >
+                    {localTicket.seller_id
+                      ? `${localTicket.seller_code} · ${localTicket.seller_name}`
+                      : 'No tiene'}
+                    <Pencil size={11} className="text-zinc-400" />
+                  </button>
+                )}
               </dd>
             </div>
           </dl>

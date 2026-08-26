@@ -50,7 +50,7 @@ try {
     // Listado de compradores (boletos reservados o pagados)
     $stmt3 = $pdo->prepare("
         SELECT t.ticket_number, t.ticket_code, t.buyer_name, t.buyer_phone, t.buyer_email, t.status,
-               t.receipt_image, t.admin_notes, t.created_at, t.seller_id, s.name AS seller_name
+               t.receipt_image, t.admin_notes, t.created_at, t.seller_id, s.name AS seller_name, s.code AS seller_code
         FROM tickets t
         LEFT JOIN sellers s ON s.id = t.seller_id
         WHERE t.raffle_id = ? AND t.status != 'available'
