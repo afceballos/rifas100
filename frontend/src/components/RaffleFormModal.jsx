@@ -28,29 +28,12 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
     description: raffle?.description || '',
     organizer_name: raffle?.organizer_name || '',
   });
-  const [imageFile, setImageFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(raffle?.background_image || null);
-  const [removeImage, setRemoveImage] = useState(false);
   const [organizerFile, setOrganizerFile] = useState(null);
   const [organizerPreview, setOrganizerPreview] = useState(raffle?.organizer_photo || null);
   const [removeOrganizerPhoto, setRemoveOrganizerPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const digitsLabel = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : null;
-
-  const handleImagePick = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageFile(file);
-    setRemoveImage(false);
-    setImagePreview(URL.createObjectURL(file));
-  };
-
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    setRemoveImage(true);
-  };
 
   const handleOrganizerPhotoPick = (e) => {
     const file = e.target.files?.[0];
@@ -95,7 +78,6 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
             draw_date: form.draw_date,
             description: form.description,
             organizer_name: form.organizer_name,
-            remove_image: removeImage,
             remove_organizer_photo: removeOrganizerPhoto,
           }),
         });
@@ -104,12 +86,6 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
           showAlert?.('Error al guardar', data.error, 'alert');
           setSubmitting(false);
           return;
-        }
-        if (imageFile) {
-          const imgData = await uploadImage(raffle.id, imageFile, 'background');
-          if (!imgData.success) {
-            showAlert?.('Sorteo actualizado, pero falló la imagen', imgData.error, 'alert');
-          }
         }
         if (organizerFile) {
           const orgData = await uploadImage(raffle.id, organizerFile, 'organizer');
@@ -129,12 +105,6 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
           showAlert?.('Error al crear', data.error, 'alert');
           setSubmitting(false);
           return;
-        }
-        if (imageFile) {
-          const imgData = await uploadImage(data.raffle_id, imageFile, 'background');
-          if (!imgData.success) {
-            showAlert?.('Sorteo creado, pero falló la imagen', imgData.error, 'alert');
-          }
         }
         if (organizerFile) {
           const orgData = await uploadImage(data.raffle_id, organizerFile, 'organizer');
@@ -205,31 +175,11 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
             </div>
           )}
 
-          <div>
-            <label className="block text-sm mb-2 text-zinc-500">Imagen de fondo (opcional, se optimiza a WebP)</label>
-            {imagePreview ? (
-              <div className="relative rounded-xl overflow-hidden h-32 border border-zinc-200 dark:border-zinc-800">
-                <div
-                  className="absolute inset-0 bg-cover bg-center scale-110 blur-xl opacity-40 dark:opacity-30"
-                  style={{ backgroundImage: `url(${imagePreview})` }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-white/80 to-white dark:from-[#09090b]/60 dark:via-[#09090b]/80 dark:to-[#09090b]" />
-                <button
-                  type="button" onClick={handleRemoveImage}
-                  className="absolute top-2 right-2 p-1.5 bg-white/90 dark:bg-zinc-900/90 rounded-full text-red-500 hover:text-red-700 shadow-sm"
-                  title="Quitar imagen"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center gap-2 h-32 rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 text-zinc-400 cursor-pointer hover:border-blue-400 hover:text-blue-500 transition-colors">
-                <ImagePlus size={22} />
-                <span className="text-xs font-medium">Subir imagen (JPG, PNG, WebP)</span>
-                <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleImagePick} />
-              </label>
-            )}
-          </div>
+          {isEdit && (
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 -mt-1">
+              La imagen de fondo, el color y el estilo de los números se configuran en Ajustes → Diseño.
+            </p>
+          )}
 
           <div className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3">
             <p className="text-sm font-semibold text-zinc-600 dark:text-zinc-300">Organizador</p>

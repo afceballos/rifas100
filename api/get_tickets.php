@@ -12,7 +12,7 @@ if ($slug === '') {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT id, slug, title, description, background_image, payment_info, organizer_name, organizer_photo, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE slug = ?");
+    $stmt = $pdo->prepare("SELECT id, slug, title, description, background_image, payment_info, organizer_name, organizer_photo, theme_color, number_style, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE slug = ?");
     $stmt->execute([$slug]);
     $raffle = $stmt->fetch();
 

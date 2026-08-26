@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ExternalLink, LayoutDashboard, Settings } from 'lucide-react';
+import { ExternalLink, LayoutDashboard, Settings, Palette } from 'lucide-react';
 
 export default function AdminRaffleSidebar({ id, raffle, activeSection }) {
   const itemClass = (active) =>
@@ -39,6 +39,12 @@ export default function AdminRaffleSidebar({ id, raffle, activeSection }) {
           <Settings size={16} />
           <span className="md:hidden">Ajustes · General</span>
           <span className="hidden md:inline">General</span>
+        </Link>
+
+        <Link to={`/admin/raffle/${id}/ajustes/diseno`} className={itemClass(activeSection === 'design')}>
+          <Palette size={16} />
+          <span className="md:hidden">Ajustes · Diseño</span>
+          <span className="hidden md:inline">Diseño</span>
         </Link>
       </nav>
     </aside>

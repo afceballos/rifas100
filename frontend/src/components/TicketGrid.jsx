@@ -8,6 +8,7 @@ import OrganizerModal from './OrganizerModal';
 import VerifyParticipationModal from './VerifyParticipationModal';
 import PaymentInfoModal from './PaymentInfoModal';
 import AccountMenuSection from './AccountMenuSection';
+import { getRaffleTheme, getNumberStyleClass } from '../utils/raffleTheme';
 import {
   ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
   Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink,
@@ -41,13 +42,15 @@ const formatDrawDate = (value) => {
 
 const TimeBlock = ({ value, label }) => (
   <div className="flex flex-col items-center">
-    <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center relative overflow-hidden group">
-      <div className="absolute inset-0 bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-      <span className="text-2xl sm:text-3xl font-mono font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-violet-500 drop-shadow-sm">
+    <div className="w-full aspect-square bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm rounded-2xl flex items-center justify-center relative overflow-hidden group">
+      <span
+        className="text-xl sm:text-2xl font-mono font-extrabold text-transparent bg-clip-text drop-shadow-sm"
+        style={{ backgroundImage: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}
+      >
         {value.toString().padStart(2, '0')}
       </span>
     </div>
-    <span className="text-[10px] sm:text-xs font-bold text-zinc-400 dark:text-zinc-500 mt-3 uppercase tracking-widest">{label}</span>
+    <span className="text-[9px] sm:text-[10px] font-bold text-zinc-400 dark:text-zinc-500 mt-1.5 uppercase tracking-widest">{label}</span>
   </div>
 );
 
@@ -205,6 +208,13 @@ export default function TicketGrid() {
     }
   }, { dependencies: [tickets, loading], scope: containerRef });
 
+  // Entrada del panel de información (imagen + datos de la rifa)
+  useGSAP(() => {
+    if (loading || !raffle) return;
+    gsap.fromTo('.hero-image-el', { scale: 1.15, opacity: 0 }, { scale: 1, opacity: 1, duration: 1, ease: 'power2.out' });
+    gsap.fromTo('.hero-panel', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' });
+  }, { dependencies: [raffle?.id, loading], scope: containerRef });
+
   // --- Lógica de paginación ---
   const pad = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : 3;
   const totalPages = raffle ? Math.max(1, Math.ceil(raffle.total_tickets / PAGE_SIZE)) : 1;
@@ -356,8 +366,15 @@ export default function TicketGrid() {
   if (loading) return <div className="min-h-screen flex items-center justify-center font-sans bg-zinc-50 dark:bg-zinc-950"><div className="animate-pulse flex items-center gap-2"><Ticket className="animate-spin text-blue-500" /> Cargando bóveda...</div></div>;
   if (!raffle) return <NotFound variant={notFoundVariant || 'not_found'} />;
 
+  const theme = getRaffleTheme(raffle.theme_color);
+  const numberShapeClass = getNumberStyleClass(raffle.number_style);
+
   return (
-    <div className="min-h-screen relative font-sans" ref={containerRef}>
+    <div
+      className="min-h-screen relative font-sans"
+      ref={containerRef}
+      style={{ '--theme-c1': theme.c1, '--theme-c2': theme.c2 }}
+    >
       {/* Fondo con imagen desenfocada, adaptado a claro/oscuro */}
       {raffle.background_image && (
         <div className="fixed inset-0 -z-10 overflow-hidden">
@@ -381,7 +398,8 @@ export default function TicketGrid() {
 
           <button
             onClick={() => setShowPaymentInfoModal(true)}
-            className="p-2 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 text-white shadow-sm shadow-blue-500/30 hover:shadow-md hover:shadow-blue-500/40 transition-all active:scale-95"
+            className="p-2 rounded-full text-white shadow-sm hover:shadow-md transition-all active:scale-95"
+            style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}
             title="Pagos"
           >
             <Wallet size={20} />
@@ -428,138 +446,164 @@ export default function TicketGrid() {
         </div>
       </nav>
 
-      {/* Header Central con Countdown */}
-      <div className="text-center mt-4 mb-16 px-4">
-        <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-4 text-transparent bg-clip-text bg-gradient-to-b from-zinc-900 to-zinc-500 dark:from-white dark:to-zinc-500">
-          {raffle.title}
-        </h1>
+      {/* Bóveda: números a la izquierda, información y acciones a la derecha */}
+      <div className="max-w-6xl mx-auto px-4 pb-24 pt-2">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
 
-        {raffle.description && (
-          <p className="max-w-xl mx-auto text-zinc-500 dark:text-zinc-400 mb-6 leading-relaxed">
-            {raffle.description}
-          </p>
-        )}
+          {/* Columna izquierda: paginación + grilla de números */}
+          <div className="order-2 lg:order-1 min-w-0">
+            {showPagination && (
+              <div className={`mb-6 ${isEnded ? 'opacity-50 pointer-events-none' : ''}`}>
+                <div className="text-center mb-3 text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                  Mostrando {rangeStart.toString().padStart(pad, '0')}–{(rangeEnd - 1).toString().padStart(pad, '0')} de {raffle.total_tickets}
+                </div>
+                <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                  <button
+                    onClick={() => goToPage(page - 1)}
+                    disabled={page === 0}
+                    className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
 
-        <div className="inline-flex items-center gap-2 px-6 py-2 mb-8 rounded-full border border-zinc-200 dark:border-zinc-800 bg-white/50 dark:bg-zinc-900/50 backdrop-blur-md shadow-sm">
-          <span className="text-zinc-500 dark:text-zinc-400 font-medium">Valor sorteo:</span>
-          <span className="font-mono text-xl font-bold text-emerald-600 dark:text-emerald-400">${raffle.price_per_ticket}</span>
-        </div>
+                  {pageList.map(item => item.type === 'ellipsis' ? (
+                    <span key={item.key} className="px-1 text-zinc-400 select-none">…</span>
+                  ) : (
+                    <button
+                      key={item.value}
+                      onClick={() => goToPage(item.value)}
+                      style={item.value === page ? { background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' } : undefined}
+                      className={`min-w-[2.5rem] h-10 px-3 rounded-xl font-mono font-bold text-sm transition-colors ${
+                        item.value === page
+                          ? 'text-white shadow-md'
+                          : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-blue-400 dark:hover:border-blue-500'
+                      }`}
+                    >
+                      {item.value + 1}
+                    </button>
+                  ))}
 
-        {/* CONTENEDOR DEL COUNTDOWN */}
-        <div className="max-w-md mx-auto">
-          {isEnded ? (
-            <div className="inline-block px-8 py-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-2xl">
-              <h3 className="text-red-600 dark:text-red-500 font-bold text-xl tracking-widest uppercase">El sorteo ha finalizado</h3>
+                  <button
+                    onClick={() => goToPage(page + 1)}
+                    disabled={page >= totalPages - 1}
+                    className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div ref={gridSectionRef} className="relative scroll-mt-4">
+              {pageLoading && (
+                <div className="absolute inset-0 flex items-center justify-center z-10">
+                  <Loader2 className="animate-spin text-blue-500" size={28} />
+                </div>
+              )}
+              {onlyAvailable && visibleGridTickets.length === 0 && !pageLoading && (
+                <div className="text-center py-16 text-zinc-500 dark:text-zinc-400">
+                  No quedan boletos disponibles en esta página.
+                </div>
+              )}
+              <div className={`grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3 transition-opacity duration-200 ${isEnded ? 'opacity-50 pointer-events-none grayscale' : ''} ${pageLoading ? 'opacity-30 pointer-events-none' : ''}`}>
+                {visibleGridTickets.map((t) => {
+                  const isAv = t.status === 'available';
+                  const isSelected = isAv && selectedNumbers.has(t.number);
+                  const bgClass = isSelected
+                    ? 'border border-transparent text-white shadow-lg scale-105'
+                    : isAv
+                      ? 'bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400 text-zinc-900 dark:text-zinc-100'
+                      : t.status === 'paid'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-500 opacity-60 cursor-not-allowed'
+                        : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 opacity-50 cursor-not-allowed';
+
+                  return (
+                    <button
+                      key={t.number}
+                      onClick={(e) => toggleSelect(t, e.currentTarget)}
+                      disabled={!isAv || isEnded}
+                      style={isSelected ? { background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' } : undefined}
+                      className={`ticket-item h-12 sm:h-14 flex items-center justify-center ${numberShapeClass} font-mono text-base sm:text-lg font-bold transition-all duration-300 ${bgClass}`}
+                    >
+                      {t.number.toString().padStart(pad, '0')}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          ) : (
-            <div className="flex justify-center gap-3 sm:gap-4">
-              <TimeBlock value={timeLeft.d} label="Días" />
-              <TimeBlock value={timeLeft.h} label="Horas" />
-              <TimeBlock value={timeLeft.m} label="Minutos" />
-              <TimeBlock value={timeLeft.s} label="Segundos" />
+          </div>
+
+          {/* Columna derecha: imagen, info y acciones de la rifa */}
+          <div className="order-1 lg:order-2 lg:sticky lg:top-6">
+            <div className="hero-panel bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-900/5 overflow-hidden">
+              <div className="hero-image-el relative h-52 sm:h-60 overflow-hidden">
+                {raffle.background_image ? (
+                  <img src={raffle.background_image} alt={raffle.title} className="absolute inset-0 w-full h-full object-cover" />
+                ) : (
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }} />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-5">
+                  <h1 className="text-2xl font-extrabold text-white tracking-tight drop-shadow-sm leading-tight">
+                    {raffle.title}
+                  </h1>
+                  {raffle.organizer_name && (
+                    <p className="text-white/80 text-xs font-semibold mt-1">Organiza {raffle.organizer_name}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-5 space-y-5">
+                {raffle.description && (
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">{raffle.description}</p>
+                )}
+
+                <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
+                  <span className="text-sm text-zinc-500 dark:text-zinc-400 font-medium">Valor por número</span>
+                  <span className="font-mono text-lg font-bold" style={{ color: 'var(--theme-c1)' }}>${raffle.price_per_ticket}</span>
+                </div>
+
+                {isEnded ? (
+                  <div className="p-4 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 rounded-2xl text-center">
+                    <h3 className="text-red-600 dark:text-red-500 font-bold text-sm tracking-widest uppercase">Sorteo finalizado</h3>
+                  </div>
+                ) : (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mb-2 text-center">Cierra en</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      <TimeBlock value={timeLeft.d} label="Días" />
+                      <TimeBlock value={timeLeft.h} label="Horas" />
+                      <TimeBlock value={timeLeft.m} label="Minutos" />
+                      <TimeBlock value={timeLeft.s} label="Segundos" />
+                    </div>
+                  </div>
+                )}
+
+                {!isEnded && (
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={openRandomModal}
+                      className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-white shadow-lg transition-all active:scale-95"
+                      style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}
+                    >
+                      <Dices size={16} /> Elegir al azar
+                    </button>
+                    <button
+                      onClick={onlyAvailable ? () => setOnlyAvailable(false) : viewAvailableNumbers}
+                      className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm border transition-colors ${
+                        onlyAvailable
+                          ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/70 dark:bg-blue-500/10'
+                          : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                      }`}
+                    >
+                      {onlyAvailable ? <><FilterX size={16} /> Mostrar todos</> : <><Filter size={16} /> Ver números disponibles</>}
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-        </div>
-
-        {!isEnded && (
-          <div className="flex items-center justify-center gap-3 mt-10 flex-wrap">
-            <button
-              onClick={onlyAvailable ? () => setOnlyAvailable(false) : viewAvailableNumbers}
-              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm border transition-colors backdrop-blur-md ${
-                onlyAvailable
-                  ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/70 dark:bg-blue-500/10'
-                  : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 bg-white/50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-              }`}
-            >
-              {onlyAvailable ? <><FilterX size={16} /> Mostrar todos</> : <><Filter size={16} /> Ver números disponibles</>}
-            </button>
-            <button
-              onClick={openRandomModal}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-gradient-to-r from-blue-500 to-violet-500 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all active:scale-95"
-            >
-              <Dices size={16} /> Elegir al azar
-            </button>
           </div>
-        )}
-      </div>
 
-      {/* Paginación: cada página trae 100 boletos nuevos desde el servidor */}
-      {showPagination && (
-        <div className={`max-w-2xl mx-auto px-4 mb-8 ${isEnded ? 'opacity-50 pointer-events-none' : ''}`}>
-          <div className="text-center mb-3 text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-            Mostrando {rangeStart.toString().padStart(pad, '0')}–{(rangeEnd - 1).toString().padStart(pad, '0')} de {raffle.total_tickets}
-          </div>
-          <div className="flex items-center justify-center gap-1.5 flex-wrap">
-            <button
-              onClick={() => goToPage(page - 1)}
-              disabled={page === 0}
-              className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
-            >
-              <ChevronLeft size={18} />
-            </button>
-
-            {pageList.map(item => item.type === 'ellipsis' ? (
-              <span key={item.key} className="px-1 text-zinc-400 select-none">…</span>
-            ) : (
-              <button
-                key={item.value}
-                onClick={() => goToPage(item.value)}
-                className={`min-w-[2.5rem] h-10 px-3 rounded-xl font-mono font-bold text-sm transition-colors ${
-                  item.value === page
-                    ? 'bg-gradient-to-r from-blue-500 to-violet-500 text-white shadow-md shadow-blue-500/20'
-                    : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-blue-400 dark:hover:border-blue-500'
-                }`}
-              >
-                {item.value + 1}
-              </button>
-            ))}
-
-            <button
-              onClick={() => goToPage(page + 1)}
-              disabled={page >= totalPages - 1}
-              className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
-            >
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Grilla Interactiva */}
-      <div ref={gridSectionRef} className="relative max-w-5xl mx-auto px-4 pb-20 scroll-mt-4">
-        {pageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <Loader2 className="animate-spin text-blue-500" size={28} />
-          </div>
-        )}
-        {onlyAvailable && visibleGridTickets.length === 0 && !pageLoading && (
-          <div className="text-center py-16 text-zinc-500 dark:text-zinc-400">
-            No quedan boletos disponibles en esta página.
-          </div>
-        )}
-        <div className={`grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3 transition-opacity duration-200 ${isEnded ? 'opacity-50 pointer-events-none grayscale' : ''} ${pageLoading ? 'opacity-30 pointer-events-none' : ''}`}>
-          {visibleGridTickets.map((t) => {
-            const isAv = t.status === 'available';
-            const isSelected = isAv && selectedNumbers.has(t.number);
-            const bgClass = isSelected
-              ? 'bg-gradient-to-br from-blue-500 to-violet-500 border border-transparent text-white shadow-lg shadow-blue-500/30 scale-105'
-              : isAv
-                ? 'bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:shadow-blue-500/20 hover:border-blue-500 dark:hover:border-blue-400 text-zinc-900 dark:text-zinc-100'
-                : t.status === 'paid'
-                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-500 opacity-60 cursor-not-allowed'
-                  : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 opacity-50 cursor-not-allowed';
-
-            return (
-              <button
-                key={t.number}
-                onClick={(e) => toggleSelect(t, e.currentTarget)}
-                disabled={!isAv || isEnded}
-                className={`ticket-item h-12 sm:h-14 flex items-center justify-center rounded-xl font-mono text-base sm:text-lg font-bold transition-all duration-300 ${bgClass}`}
-              >
-                {t.number.toString().padStart(pad, '0')}
-              </button>
-            );
-          })}
         </div>
       </div>
 
@@ -570,19 +614,19 @@ export default function TicketGrid() {
             {selectedNumbers.size === 0 ? (
               <div className="flex items-stretch divide-x divide-zinc-200 dark:divide-zinc-800">
                 <div className="flex flex-col items-center px-4 sm:px-6">
-                  <span className="font-mono font-extrabold text-lg text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-violet-500">
+                  <span className="font-mono font-extrabold text-lg text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}>
                     {availableCount ?? '—'}
                   </span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mt-0.5 whitespace-nowrap">Disponibles</span>
                 </div>
                 <div className="flex flex-col items-center px-4 sm:px-6">
-                  <span className="font-mono font-extrabold text-lg text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-violet-500">
+                  <span className="font-mono font-extrabold text-lg text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}>
                     ${raffle.price_per_ticket}
                   </span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mt-0.5 whitespace-nowrap">Por número</span>
                 </div>
                 <div className="flex flex-col items-center px-4 sm:px-6">
-                  <span className="font-mono font-extrabold text-lg text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-violet-500 whitespace-nowrap">
+                  <span className="font-mono font-extrabold text-lg text-transparent bg-clip-text whitespace-nowrap" style={{ backgroundImage: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}>
                     {formatDrawDate(raffle.draw_date)}
                   </span>
                   <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 mt-0.5">Sorteo</span>
@@ -602,7 +646,7 @@ export default function TicketGrid() {
                 </div>
                 <button
                   onClick={() => { setPurchaseStatus(''); setPurchasedTickets(null); setShowReserveModal(true); }}
-                  className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 whitespace-nowrap"
+                  className="flex items-center gap-2 px-4 sm:px-5 py-2.5 bg-[var(--theme-c1)] text-white font-bold rounded-xl hover:brightness-90 shadow-lg transition-all active:scale-95 whitespace-nowrap"
                 >
                   <ShoppingBag size={16} /> Tomar números
                 </button>
@@ -649,7 +693,7 @@ export default function TicketGrid() {
 
                 <button
                   onClick={() => { setShowReserveModal(false); setPurchasedTickets(null); }}
-                  className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95"
+                  className="w-full py-3 bg-[var(--theme-c1)] text-white font-bold rounded-xl hover:brightness-90 shadow-lg transition-all active:scale-95"
                 >
                   Listo
                 </button>
@@ -718,7 +762,7 @@ export default function TicketGrid() {
                   <div className="pt-4 flex gap-3">
                     <button type="button" disabled={submitting} className="flex-1 px-4 py-3 rounded-xl text-zinc-600 dark:text-zinc-400 font-medium hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50"
                       onClick={() => setShowReserveModal(false)}>Cancelar</button>
-                    <button type="submit" disabled={submitting || sortedSelection.length === 0} className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50">
+                    <button type="submit" disabled={submitting || sortedSelection.length === 0} className="flex-1 px-4 py-3 bg-[var(--theme-c1)] text-white font-bold rounded-xl hover:brightness-90 shadow-lg transition-all active:scale-95 disabled:opacity-50">
                       Reservar
                     </button>
                   </div>
@@ -751,9 +795,10 @@ export default function TicketGrid() {
                     <button
                       key={n}
                       onClick={() => setRandomQuantity(n)}
+                      style={randomQuantity === n ? { background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' } : undefined}
                       className={`flex flex-col items-center justify-center gap-1 py-5 rounded-2xl font-bold transition-all ${
                         randomQuantity === n
-                          ? 'bg-gradient-to-br from-blue-500 to-violet-500 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                          ? 'text-white shadow-lg scale-[1.02]'
                           : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-blue-400 dark:hover:border-blue-500'
                       }`}
                     >
@@ -777,7 +822,7 @@ export default function TicketGrid() {
                 <button
                   onClick={drawRandomNumbers}
                   disabled={!randomQuantity || randomLoading}
-                  className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                  className="w-full py-3 bg-[var(--theme-c1)] text-white font-bold rounded-xl hover:brightness-90 shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                 >
                   {randomLoading ? 'Sorteando...' : 'Continuar'}
                 </button>
@@ -827,7 +872,7 @@ export default function TicketGrid() {
                   <button
                     onClick={confirmRandomSelection}
                     disabled={randomNumbers.length === 0}
-                    className="flex-1 px-4 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
+                    className="flex-1 px-4 py-3 bg-[var(--theme-c1)] text-white font-bold rounded-xl hover:brightness-90 shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:shadow-none"
                   >
                     Continuar
                   </button>

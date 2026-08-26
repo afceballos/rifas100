@@ -7,6 +7,7 @@ import Admin from './components/Admin'
 import Register from './components/Register'
 import AdminRaffle from './components/AdminRaffle'
 import AdminRaffleSettings from './components/AdminRaffleSettings'
+import AdminRaffleDesign from './components/AdminRaffleDesign'
 import SuperAdmin from './components/SuperAdmin'
 import NotFound from './components/NotFound'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -33,6 +34,14 @@ function App() {
           element={
             <ProtectedRoute>
               <AdminRaffleSettings />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/raffle/:id/ajustes/diseno"
+          element={
+            <ProtectedRoute>
+              <AdminRaffleDesign />
             </ProtectedRoute>
           }
         />
