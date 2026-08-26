@@ -531,6 +531,9 @@ export default function AdminRaffleSettings() {
           raffleId={raffle.id}
           seller={editingSeller === 'new' ? null : editingSeller}
           pad={digits}
+          numberStart={raffle.number_start || 0}
+          totalTickets={raffle.total_tickets}
+          sellers={sellers}
           onClose={() => setEditingSeller(null)}
           onSaved={fetchSellers}
           showAlert={showAlert}

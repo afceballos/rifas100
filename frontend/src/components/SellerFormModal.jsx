@@ -1,6 +1,26 @@
 import React, { useState } from 'react';
 
-export default function SellerFormModal({ raffleId, seller, pad, onClose, onSaved, showAlert }) {
+// Calcula los tramos de números que todavía no tiene asignados ningún otro
+// vendedor de esta rifa (excluyendo al vendedor que se está editando, si aplica).
+const computeAvailableRanges = (numberStart, totalTickets, sellers, excludeSellerId) => {
+  if (!totalTickets) return [];
+  const maxNumber = numberStart + totalTickets - 1;
+  const occupied = sellers
+    .filter(s => s.id !== excludeSellerId && s.range_start != null)
+    .map(s => [s.range_start, s.range_end])
+    .sort((a, b) => a[0] - b[0]);
+
+  const free = [];
+  let cursor = numberStart;
+  for (const [start, end] of occupied) {
+    if (start > cursor) free.push([cursor, Math.min(start - 1, maxNumber)]);
+    cursor = Math.max(cursor, end + 1);
+  }
+  if (cursor <= maxNumber) free.push([cursor, maxNumber]);
+  return free.filter(([s, e]) => s <= e);
+};
+
+export default function SellerFormModal({ raffleId, seller, pad, numberStart = 0, totalTickets, sellers = [], onClose, onSaved, showAlert }) {
   const isEdit = !!seller;
 
   const [form, setForm] = useState({
@@ -11,6 +31,12 @@ export default function SellerFormModal({ raffleId, seller, pad, onClose, onSave
     range_end: seller?.range_end != null ? String(seller.range_end).padStart(pad, '0') : '',
   });
   const [submitting, setSubmitting] = useState(false);
+
+  const availableRanges = computeAvailableRanges(numberStart, totalTickets, sellers, seller?.id);
+
+  const applyRange = (start, end) => {
+    setForm(prev => ({ ...prev, range_start: String(start).padStart(pad, '0'), range_end: String(end).padStart(pad, '0') }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,6 +118,29 @@ export default function SellerFormModal({ raffleId, seller, pad, onClose, onSave
             <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1.5">
               Déjalo vacío para que este vendedor pueda vender cualquier número de la rifa. Si lo llenas, no se puede cruzar con el rango de otro vendedor.
             </p>
+
+            {totalTickets > 0 && (
+              <div className="mt-3">
+                <p className="text-xs font-semibold text-zinc-500 dark:text-zinc-400 mb-1.5">Rangos disponibles en esta rifa:</p>
+                {availableRanges.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {availableRanges.map(([s, e]) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => applyRange(s, e)}
+                        title="Usar este rango"
+                        className="px-2.5 py-1 text-xs font-mono font-semibold rounded-lg bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-900/50 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors"
+                      >
+                        {String(s).padStart(pad, '0')}–{String(e).padStart(pad, '0')} · {e - s + 1}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500">No quedan rangos libres: todos los números ya están asignados a otros vendedores.</p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">
