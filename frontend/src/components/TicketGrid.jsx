@@ -73,6 +73,12 @@ export default function TicketGrid() {
   const [searchError, setSearchError] = useState('');
   const [pendingHighlight, setPendingHighlight] = useState(null);
 
+  // Vendedores: filtra la grilla por ?seller=CODE (sin cambiar la URL de la rifa)
+  const [sellers, setSellers] = useState([]);
+  const [sellerCodeParam] = useState(() => new URLSearchParams(window.location.search).get('seller')?.toUpperCase() || null);
+  const [sellerPageChecked, setSellerPageChecked] = useState(false);
+  const [selectedSellerCode, setSelectedSellerCode] = useState('');
+
   // Menú hamburguesa (compartir / organizador / verificar / pagos / cuenta)
   const [showMenu, setShowMenu] = useState(false);
   const [showOrganizerModal, setShowOrganizerModal] = useState(false);
@@ -157,6 +163,7 @@ export default function TicketGrid() {
           setTickets(data.tickets);
           setRaffle(data.raffle);
           setAvailableCount(data.available_count);
+          setSellers(data.sellers || []);
           setNotFoundVariant(null);
         } else {
           setRaffle(null);
@@ -219,6 +226,8 @@ export default function TicketGrid() {
     gsap.fromTo('.hero-panel', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' });
   }, { dependencies: [raffle?.id, loading], scope: containerRef });
 
+  const activeSeller = sellerCodeParam ? sellers.find(s => s.code === sellerCodeParam) || null : null;
+
   // --- Lógica de paginación ---
   const pad = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : 3;
   const totalPages = raffle ? Math.max(1, Math.ceil(raffle.total_tickets / PAGE_SIZE)) : 1;
@@ -231,6 +240,21 @@ export default function TicketGrid() {
     const clamped = Math.min(Math.max(targetPage, 0), totalPages - 1);
     if (clamped !== page) setPage(clamped);
   };
+
+  // Si el enlace trae ?seller=CODE, salta una sola vez a la página donde
+  // empieza su rango (solo aplica a rifas con más de una página de números).
+  useEffect(() => {
+    if (!activeSeller || sellerPageChecked || pageLoading) return;
+    setSellerPageChecked(true);
+    goToPage(Math.floor(activeSeller.range_start / PAGE_SIZE));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSeller, sellerPageChecked, pageLoading]);
+
+  // Precarga el vendedor del enlace en el selector de "quién te atendió"
+  useEffect(() => {
+    if (activeSeller && !selectedSellerCode) setSelectedSellerCode(activeSeller.code);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSeller]);
 
   // Crossfade entre el resumen de la rifa y los controles de selección en la barra flotante
   useGSAP(() => {
@@ -326,7 +350,8 @@ export default function TicketGrid() {
     setRandomLoading(true);
     setRandomError('');
     try {
-      const res = await fetch(`/api/random_tickets.php?raffle_id=${raffle.id}&count=${randomQuantity}`);
+      const sellerParam = activeSeller ? `&seller=${encodeURIComponent(activeSeller.code)}` : '';
+      const res = await fetch(`/api/random_tickets.php?raffle_id=${raffle.id}&count=${randomQuantity}${sellerParam}`);
       const data = await res.json();
       if (data.success && data.ticket_numbers.length > 0) {
         setRandomNumbers(data.ticket_numbers.sort((a, b) => a - b));
@@ -355,7 +380,9 @@ export default function TicketGrid() {
   const sortedSelection = [...selectedNumbers].sort((a, b) => a - b);
   const selectionTotal = raffle ? (sortedSelection.length * parseFloat(raffle.price_per_ticket)) : 0;
   const randomTotal = raffle ? (randomNumbers.length * parseFloat(raffle.price_per_ticket)) : 0;
-  const visibleGridTickets = onlyAvailable ? tickets.filter(t => t.status === 'available') : tickets;
+  const visibleGridTickets = tickets
+    .filter(t => !onlyAvailable || t.status === 'available')
+    .filter(t => !activeSeller || (t.number >= activeSeller.range_start && t.number <= activeSeller.range_end));
 
   const handlePurchase = async (e) => {
     e.preventDefault();
@@ -370,7 +397,8 @@ export default function TicketGrid() {
           ticket_numbers: sortedSelection,
           buyer_name: formData.name,
           buyer_phone: formData.phone,
-          buyer_email: formData.email
+          buyer_email: formData.email,
+          seller_code: raffle.allow_seller_selection ? (selectedSellerCode || null) : (activeSeller?.code || null)
         })
       });
       const data = await res.json();
@@ -488,6 +516,16 @@ export default function TicketGrid() {
 
           {/* Columna izquierda: paginación + grilla de números */}
           <div className="order-2 lg:order-1 min-w-0">
+            {activeSeller && (
+              <div className="mb-4 flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-900/50 text-sm">
+                <span className="text-blue-700 dark:text-blue-400 font-semibold truncate">
+                  Números de {activeSeller.name} · {activeSeller.range_start.toString().padStart(pad, '0')}–{activeSeller.range_end.toString().padStart(pad, '0')}
+                </span>
+                <a href={window.location.pathname} className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 shrink-0 whitespace-nowrap">
+                  Ver todos
+                </a>
+              </div>
+            )}
             {/* Barra de acciones pegajosa: siempre a mano mientras se recorre la grilla, sin importar cuántos números tenga la rifa */}
             {!isEnded && (
               <div className="sticky top-2 z-20 mb-5 p-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-md space-y-2">
@@ -578,9 +616,9 @@ export default function TicketGrid() {
                   <Loader2 className="animate-spin text-blue-500" size={28} />
                 </div>
               )}
-              {onlyAvailable && visibleGridTickets.length === 0 && !pageLoading && (
+              {(onlyAvailable || activeSeller) && visibleGridTickets.length === 0 && !pageLoading && (
                 <div className="text-center py-16 text-zinc-500 dark:text-zinc-400">
-                  No quedan boletos disponibles en esta página.
+                  {activeSeller ? 'Este vendedor no tiene números en esta página.' : 'No quedan boletos disponibles en esta página.'}
                 </div>
               )}
               <div className={`grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2 sm:gap-3 transition-opacity duration-200 ${isEnded ? 'opacity-50 pointer-events-none grayscale' : ''} ${pageLoading ? 'opacity-30 pointer-events-none' : ''}`}>
@@ -835,6 +873,19 @@ export default function TicketGrid() {
                     <input type="email" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
                       value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="tu@correo.com" />
                   </div>
+
+                  {raffle.allow_seller_selection && sellers.length > 0 && (
+                    <div>
+                      <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">¿Quién te atendió? (Opcional)</label>
+                      <select
+                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        value={selectedSellerCode} onChange={e => setSelectedSellerCode(e.target.value)}
+                      >
+                        <option value="">Sin vendedor / No sé</option>
+                        {sellers.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
+                      </select>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between px-1 pt-2 border-t border-zinc-100 dark:border-zinc-800">
                     <div>

@@ -39,6 +39,7 @@ CREATE TABLE raffles (
     theme_color VARCHAR(20) NOT NULL DEFAULT 'blue',
     number_style VARCHAR(20) NOT NULL DEFAULT 'rounded',
     bg_color VARCHAR(20) NOT NULL DEFAULT 'default',
+    allow_seller_selection TINYINT(1) NOT NULL DEFAULT 0,
     price_per_ticket DECIMAL(10,2) NOT NULL,
     draw_date DATETIME NOT NULL,
     total_tickets INT NOT NULL,
@@ -64,8 +65,30 @@ CREATE TABLE raffles (
 -- ALTER TABLE raffles ADD COLUMN bg_color VARCHAR(20) NOT NULL DEFAULT 'default';
 -- ALTER TABLE raffles ADD COLUMN organizer_phone VARCHAR(20) NULL;
 -- ALTER TABLE raffles ADD COLUMN organizer_email VARCHAR(150) NULL;
+-- ALTER TABLE raffles ADD COLUMN allow_seller_selection TINYINT(1) NOT NULL DEFAULT 0; (ver migración de vendedores más abajo)
 
--- 4. Boletos (Grilla)
+-- Migración para bases de datos existentes (aplicar en este orden exacto):
+--   1) CREATE TABLE sellers (ver abajo)
+--   2) ALTER TABLE raffles ADD COLUMN allow_seller_selection TINYINT(1) NOT NULL DEFAULT 0;
+--   3) ALTER TABLE tickets ADD COLUMN seller_id INT NULL;
+--   4) ALTER TABLE tickets ADD FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE SET NULL;
+
+-- 4. Vendedores (rango de números asignado dentro de una rifa)
+CREATE TABLE sellers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    raffle_id INT NOT NULL,
+    code VARCHAR(10) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    phone VARCHAR(20) NULL,
+    email VARCHAR(150) NULL,
+    range_start INT NOT NULL,
+    range_end INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_seller_code (code),
+    FOREIGN KEY (raffle_id) REFERENCES raffles(id) ON DELETE CASCADE
+);
+
+-- 5. Boletos (Grilla)
 CREATE TABLE tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     raffle_id INT NOT NULL,
@@ -77,11 +100,13 @@ CREATE TABLE tickets (
     buyer_email VARCHAR(150),
     receipt_image VARCHAR(255) NULL,
     admin_notes TEXT NULL,
+    seller_id INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY unique_ticket (raffle_id, ticket_number),
     UNIQUE KEY unique_ticket_code (ticket_code),
-    FOREIGN KEY (raffle_id) REFERENCES raffles(id) ON DELETE CASCADE
+    FOREIGN KEY (raffle_id) REFERENCES raffles(id) ON DELETE CASCADE,
+    FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE SET NULL
 );
 
 -- ALTER TABLE tickets ADD COLUMN ticket_code VARCHAR(32) NULL;
@@ -89,6 +114,7 @@ CREATE TABLE tickets (
 -- ALTER TABLE tickets MODIFY COLUMN status ENUM('available', 'reserved', 'reviewing', 'paid') DEFAULT 'available';
 -- ALTER TABLE tickets ADD COLUMN receipt_image VARCHAR(255) NULL;
 -- ALTER TABLE tickets ADD COLUMN admin_notes TEXT NULL;
+-- ALTER TABLE tickets: seller_id, ver migración de vendedores más arriba.
 
 -- INSERCIÓN DE PRUEBA
 INSERT INTO tenants (name) VALUES ('Rifas MVP 1');

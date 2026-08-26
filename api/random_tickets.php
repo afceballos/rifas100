@@ -15,10 +15,30 @@ if ($count > 50) {
     exit;
 }
 
+$sellerCode = isset($_GET['seller']) ? strtoupper(trim($_GET['seller'])) : null;
+
 try {
-    $stmt = $pdo->prepare("SELECT ticket_number FROM tickets WHERE raffle_id = ? AND status = 'available' ORDER BY RAND() LIMIT ?");
-    $stmt->bindValue(1, $raffle_id, PDO::PARAM_INT);
-    $stmt->bindValue(2, $count, PDO::PARAM_INT);
+    $sql = "SELECT ticket_number FROM tickets WHERE raffle_id = ? AND status = 'available'";
+    $params = [$raffle_id];
+
+    if ($sellerCode !== null && $sellerCode !== '') {
+        $sellerStmt = $pdo->prepare("SELECT range_start, range_end FROM sellers WHERE raffle_id = ? AND code = ?");
+        $sellerStmt->execute([$raffle_id, $sellerCode]);
+        $seller = $sellerStmt->fetch();
+        if ($seller) {
+            $sql .= " AND ticket_number BETWEEN ? AND ?";
+            $params[] = (int)$seller['range_start'];
+            $params[] = (int)$seller['range_end'];
+        }
+    }
+
+    $sql .= " ORDER BY RAND() LIMIT ?";
+    $params[] = $count;
+
+    $stmt = $pdo->prepare($sql);
+    foreach ($params as $i => $val) {
+        $stmt->bindValue($i + 1, $val, PDO::PARAM_INT);
+    }
     $stmt->execute();
     $numbers = array_map('intval', array_column($stmt->fetchAll(), 'ticket_number'));
 

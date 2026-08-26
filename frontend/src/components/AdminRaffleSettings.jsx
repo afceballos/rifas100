@@ -5,9 +5,11 @@ import Dialog from './Dialog';
 import AdminRaffleSidebar from './AdminRaffleSidebar';
 import RaffleFormModal from './RaffleFormModal';
 import PaymentMethodModal from './PaymentMethodModal';
+import SellerFormModal from './SellerFormModal';
+import SellerShareModal from './SellerShareModal';
 import TicketQRCode from './TicketQRCode';
 import QRCode from 'qrcode';
-import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2, Download, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2, Download, Copy, Check, Users, UserPlus, QrCode, Phone, Mail } from 'lucide-react';
 import { parsePaymentMethods } from '../utils/paymentInfo';
 
 const formatDrawDate = (value) => {
@@ -23,6 +25,11 @@ export default function AdminRaffleSettings() {
   const [editingRaffle, setEditingRaffle] = useState(false);
   const [editingPayment, setEditingPayment] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+
+  const [sellers, setSellers] = useState([]);
+  const [editingSeller, setEditingSeller] = useState(null); // null | 'new' | seller object
+  const [sharingSeller, setSharingSeller] = useState(null);
+  const [savingSellerSetting, setSavingSellerSetting] = useState(false);
 
   const [dialog, setDialog] = useState({ open: false });
 
@@ -44,6 +51,55 @@ export default function AdminRaffleSettings() {
       const data = await res.json();
       if (data.success) setRaffle(data.raffle);
     } catch (err) { console.error(err); }
+  };
+
+  const fetchSellers = async () => {
+    try {
+      const res = await fetch(`/api/admin_get_sellers.php?raffle_id=${id}`, { credentials: 'include' });
+      const data = await res.json();
+      if (data.success) setSellers(data.sellers);
+    } catch (err) { console.error(err); }
+  };
+
+  useEffect(() => { fetchSellers(); }, [id]);
+
+  const handleDeleteSeller = async (seller) => {
+    const confirmed = await showConfirm(
+      'Eliminar vendedor',
+      `¿Eliminar a "${seller.name}" (${seller.code})? Los boletos que ya vendió quedan igual, solo se quita la atribución al vendedor.`,
+      'danger',
+      'Eliminar vendedor'
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch('/api/admin_delete_seller.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: id, seller_id: seller.id }),
+      });
+      const data = await res.json();
+      if (data.success) fetchSellers();
+      else showAlert('Error', data.error, 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
+  };
+
+  const handleToggleSellerSelection = async () => {
+    const nextValue = !raffle.allow_seller_selection;
+    setSavingSellerSetting(true);
+    try {
+      const res = await fetch('/api/admin_update_seller_settings.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: id, allow_seller_selection: nextValue }),
+      });
+      const data = await res.json();
+      if (data.success) fetchRaffle();
+      else showAlert('Error', data.error || 'No se pudo guardar el ajuste', 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
+    setSavingSellerSetting(false);
   };
 
   const handleTogglePublish = async () => {
@@ -262,6 +318,93 @@ export default function AdminRaffleSettings() {
               )}
             </div>
 
+            {/* Vendedores */}
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="font-bold text-lg mb-1">Vendedores</h3>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm">Asígnales un rango de números y compárteles su propio enlace para vender.</p>
+                </div>
+                <button
+                  onClick={() => setEditingSeller('new')}
+                  className="flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors shrink-0"
+                >
+                  <UserPlus size={15} /> Agregar
+                </button>
+              </div>
+
+              {sellers.length > 0 ? (
+                <div className="space-y-2 mb-4">
+                  {sellers.map(s => (
+                    <div key={s.id} className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
+                      <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 shrink-0">
+                        <Users size={18} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold truncate">{s.name}</p>
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                          {s.code} · {String(s.range_start).padStart(digits, '0')}–{String(s.range_end).padStart(digits, '0')} · {s.sold_count}/{s.total_count} vendidos
+                        </p>
+                        {(s.phone || s.email) && (
+                          <p className="text-xs text-zinc-400 dark:text-zinc-500 flex items-center gap-2 mt-0.5">
+                            {s.phone && <span className="flex items-center gap-1"><Phone size={10} /> {s.phone}</span>}
+                            {s.email && <span className="flex items-center gap-1"><Mail size={10} /> {s.email}</span>}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => setSharingSeller(s)}
+                          title="Compartir (QR / enlace)"
+                          className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        >
+                          <QrCode size={16} />
+                        </button>
+                        <button
+                          onClick={() => setEditingSeller(s)}
+                          title="Editar"
+                          className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSeller(s)}
+                          title="Eliminar"
+                          className="p-1.5 text-red-500 hover:text-red-700 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-dashed border-zinc-200 dark:border-zinc-800 text-sm text-zinc-500 dark:text-zinc-400 text-center mb-4">
+                  Aún no tienes vendedores registrados.
+                </div>
+              )}
+
+              <div className="flex items-center justify-between gap-4 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">Elegir vendedor al reservar</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">Los compradores podrán indicar qué vendedor les atendió, aunque no entren por su enlace.</p>
+                </div>
+                <button
+                  onClick={handleToggleSellerSelection}
+                  disabled={savingSellerSetting}
+                  role="switch"
+                  aria-checked={!!raffle.allow_seller_selection}
+                  className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${
+                    raffle.allow_seller_selection ? 'bg-blue-600' : 'bg-zinc-300 dark:bg-zinc-700'
+                  }`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                    raffle.allow_seller_selection ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+            </div>
+
             {/* Código QR */}
             {raffleUrl && (
               <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
@@ -313,6 +456,25 @@ export default function AdminRaffleSettings() {
           onClose={() => setEditingPayment(false)}
           onSaved={fetchRaffle}
           showAlert={showAlert}
+        />
+      )}
+
+      {editingSeller && raffle && (
+        <SellerFormModal
+          raffleId={raffle.id}
+          seller={editingSeller === 'new' ? null : editingSeller}
+          pad={digits}
+          onClose={() => setEditingSeller(null)}
+          onSaved={fetchSellers}
+          showAlert={showAlert}
+        />
+      )}
+
+      {sharingSeller && raffleUrl && (
+        <SellerShareModal
+          seller={sharingSeller}
+          raffleUrl={raffleUrl}
+          onClose={() => setSharingSeller(null)}
         />
       )}
 

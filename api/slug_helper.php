@@ -31,3 +31,25 @@ function generate_raffle_slug($pdo, $length = 24) {
 function generate_ticket_code($pdo, $length = 24) {
     return generate_unique_code($pdo, 'tickets', 'ticket_code', $length);
 }
+
+// Código corto y fácil de compartir para un vendedor (ej. "12E648"). Evita
+// caracteres ambiguos (0/O, 1/I/L) porque se comparte de palabra o impreso.
+function generate_seller_code($pdo, $length = 6) {
+    $chars = '23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+    $charsLen = strlen($chars);
+
+    for ($attempt = 0; $attempt < 10; $attempt++) {
+        $code = '';
+        for ($i = 0; $i < $length; $i++) {
+            $code .= $chars[random_int(0, $charsLen - 1)];
+        }
+
+        $stmt = $pdo->prepare("SELECT 1 FROM sellers WHERE code = ?");
+        $stmt->execute([$code]);
+        if (!$stmt->fetch()) {
+            return $code;
+        }
+    }
+
+    return $code . random_int(10, 99);
+}

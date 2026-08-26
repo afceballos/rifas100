@@ -19,6 +19,7 @@ sort($ticketNumbers); // orden ascendente: evita deadlocks entre reservas múlti
 $name = trim($data['buyer_name']);
 $phone = trim($data['buyer_phone']);
 $email = isset($data['buyer_email']) ? trim($data['buyer_email']) : null;
+$sellerCode = isset($data['seller_code']) && trim($data['seller_code']) !== '' ? strtoupper(trim($data['seller_code'])) : null;
 
 if (empty($ticketNumbers) || $name === '' || $phone === '') {
     echo json_encode(['success' => false, 'message' => 'Faltan datos obligatorios.']);
@@ -32,6 +33,14 @@ if (count($ticketNumbers) > 500) {
 
 try {
     $pdo->beginTransaction();
+
+    $sellerId = null;
+    if ($sellerCode !== null) {
+        $sellerStmt = $pdo->prepare("SELECT id FROM sellers WHERE raffle_id = ? AND code = ?");
+        $sellerStmt->execute([$raffle_id, $sellerCode]);
+        $sellerRow = $sellerStmt->fetch();
+        $sellerId = $sellerRow ? (int)$sellerRow['id'] : null;
+    }
 
     // Bloqueo pesimista de cada boleto para evitar race conditions
     $unavailable = [];
@@ -56,14 +65,14 @@ try {
 
     $updateStmt = $pdo->prepare("
         UPDATE tickets
-        SET status = 'reserved', buyer_name = ?, buyer_phone = ?, buyer_email = ?, ticket_code = ?
+        SET status = 'reserved', buyer_name = ?, buyer_phone = ?, buyer_email = ?, ticket_code = ?, seller_id = ?
         WHERE raffle_id = ? AND ticket_number = ?
     ");
 
     $tickets = [];
     foreach ($ticketNumbers as $num) {
         $code = generate_ticket_code($pdo);
-        $updateStmt->execute([$name, $phone, $email, $code, $raffle_id, $num]);
+        $updateStmt->execute([$name, $phone, $email, $code, $sellerId, $raffle_id, $num]);
         $tickets[] = ['number' => $num, 'code' => $code];
     }
 

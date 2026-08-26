@@ -12,7 +12,7 @@ if ($slug === '') {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT id, slug, title, description, background_image, payment_info, organizer_name, organizer_photo, organizer_phone, organizer_email, theme_color, number_style, bg_color, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE slug = ?");
+    $stmt = $pdo->prepare("SELECT id, slug, title, description, background_image, payment_info, organizer_name, organizer_photo, organizer_phone, organizer_email, theme_color, number_style, bg_color, allow_seller_selection, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE slug = ?");
     $stmt->execute([$slug]);
     $raffle = $stmt->fetch();
 
@@ -40,13 +40,24 @@ try {
     $countStmt->execute([$raffleId]);
     $availableCount = (int)$countStmt->fetchColumn();
 
+    // Datos públicos de vendedores (sin teléfono/correo): permiten filtrar por
+    // ?seller=CODE y, si allow_seller_selection está activo, listar opciones al reservar.
+    $sellersStmt = $pdo->prepare("SELECT code, name, range_start, range_end FROM sellers WHERE raffle_id = ? ORDER BY range_start ASC");
+    $sellersStmt->execute([$raffleId]);
+    $sellers = $sellersStmt->fetchAll();
+    foreach ($sellers as &$s) {
+        $s['range_start'] = (int)$s['range_start'];
+        $s['range_end'] = (int)$s['range_end'];
+    }
+
     echo json_encode([
         'success' => true,
         'raffle' => $raffle,
         'tickets' => $tickets,
         'offset' => $offset,
         'limit' => $limit,
-        'available_count' => $availableCount
+        'available_count' => $availableCount,
+        'sellers' => $sellers,
     ]);
 
 } catch (Exception $e) {
