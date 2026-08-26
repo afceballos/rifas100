@@ -1,13 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
-import { ArrowLeft, Building2, Ticket, Users } from 'lucide-react';
+import Dialog from './Dialog';
+import { ArrowLeft, Building2, Ticket, Users, Trash2 } from 'lucide-react';
 
 export default function SuperAdmin() {
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState(null);
 
-  useEffect(() => {
+  const [dialog, setDialog] = useState({ open: false });
+
+  const showAlert = (title, message, type = 'alert') =>
+    new Promise(resolve =>
+      setDialog({ open: true, type, title, message, onConfirm: () => { setDialog({ open: false }); resolve(true); }, onCancel: () => { setDialog({ open: false }); resolve(false); } })
+    );
+
+  const showConfirm = (title, message, type = 'danger', confirmText = 'Confirmar') =>
+    new Promise(resolve =>
+      setDialog({ open: true, type, title, message, confirmText, onConfirm: () => { setDialog({ open: false }); resolve(true); }, onCancel: () => { setDialog({ open: false }); resolve(false); } })
+    );
+
+  const fetchOverview = () => {
     fetch('/api/superadmin_overview.php', { credentials: 'include' })
       .then(res => res.json())
       .then(data => {
@@ -15,7 +29,38 @@ export default function SuperAdmin() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { fetchOverview(); }, []);
+
+  const handleDeleteTenant = async (tenant) => {
+    const confirmed = await showConfirm(
+      'Eliminar cuenta',
+      `¿Eliminar la cuenta "${tenant.name}"? Se borrarán permanentemente sus usuarios, todas sus rifas y los registros de participantes. Esta acción no se puede deshacer.`,
+      'danger',
+      'Eliminar cuenta'
+    );
+    if (!confirmed) return;
+
+    setDeletingId(tenant.id);
+    try {
+      const res = await fetch('/api/superadmin_delete_tenant.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ tenant_id: tenant.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setTenants(prev => prev.filter(t => t.id !== tenant.id));
+      } else {
+        showAlert('Error', data.error || 'No se pudo eliminar la cuenta', 'alert');
+      }
+    } catch (err) {
+      showAlert('Error', 'Error de conexión', 'alert');
+    }
+    setDeletingId(null);
+  };
 
   return (
     <div className="min-h-screen font-sans pb-12">
@@ -53,6 +98,16 @@ export default function SuperAdmin() {
                   <div className="flex items-center gap-4 text-sm text-zinc-500 dark:text-zinc-400">
                     <span className="flex items-center gap-1.5"><Users size={14} /> {t.users.length}</span>
                     <span className="flex items-center gap-1.5"><Ticket size={14} /> {t.raffles.length}</span>
+                    {t.id !== 1 && (
+                      <button
+                        onClick={() => handleDeleteTenant(t)}
+                        disabled={deletingId === t.id}
+                        title="Eliminar cuenta y todos sus datos"
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors disabled:opacity-50"
+                      >
+                        <Trash2 size={13} /> {deletingId === t.id ? 'Eliminando...' : 'Eliminar'}
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -109,6 +164,8 @@ export default function SuperAdmin() {
           </div>
         )}
       </div>
+
+      <Dialog {...dialog} />
     </div>
   );
 }
