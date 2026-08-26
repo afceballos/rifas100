@@ -9,8 +9,11 @@ import AdminRaffle from './components/AdminRaffle'
 import AdminRaffleSettings from './components/AdminRaffleSettings'
 import AdminRaffleDesign from './components/AdminRaffleDesign'
 import SuperAdmin from './components/SuperAdmin'
+import SellerLogin from './components/SellerLogin'
+import SellerPanel from './components/SellerPanel'
 import NotFound from './components/NotFound'
 import ProtectedRoute from './components/ProtectedRoute'
+import SellerProtectedRoute from './components/SellerProtectedRoute'
 
 function App() {
   return (
@@ -51,6 +54,15 @@ function App() {
             <ProtectedRoute requireSuperAdmin>
               <SuperAdmin />
             </ProtectedRoute>
+          }
+        />
+        <Route path="/vendedor/login" element={<SellerLogin />} />
+        <Route
+          path="/vendedor/panel"
+          element={
+            <SellerProtectedRoute>
+              <SellerPanel />
+            </SellerProtectedRoute>
           }
         />
         <Route path="*" element={<NotFound />} />

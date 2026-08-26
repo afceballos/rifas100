@@ -8,9 +8,10 @@ import PaymentMethodModal from './PaymentMethodModal';
 import SellerFormModal from './SellerFormModal';
 import SellerShareModal from './SellerShareModal';
 import SellerSalesModal from './SellerSalesModal';
+import SellerPasswordModal from './SellerPasswordModal';
 import TicketQRCode from './TicketQRCode';
 import QRCode from 'qrcode';
-import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2, Download, Copy, Check, Users, UserPlus, QrCode, Phone, Mail, ListChecks } from 'lucide-react';
+import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2, Download, Copy, Check, Users, UserPlus, QrCode, Phone, Mail, ListChecks, KeyRound } from 'lucide-react';
 import { parsePaymentMethods } from '../utils/paymentInfo';
 
 const formatDrawDate = (value) => {
@@ -31,7 +32,9 @@ export default function AdminRaffleSettings() {
   const [editingSeller, setEditingSeller] = useState(null); // null | 'new' | seller object
   const [sharingSeller, setSharingSeller] = useState(null);
   const [viewingSellerSales, setViewingSellerSales] = useState(null);
+  const [settingPasswordFor, setSettingPasswordFor] = useState(null);
   const [savingSellerSetting, setSavingSellerSetting] = useState(false);
+  const [savingSellerPortal, setSavingSellerPortal] = useState(false);
 
   const [dialog, setDialog] = useState({ open: false });
 
@@ -102,6 +105,23 @@ export default function AdminRaffleSettings() {
       else showAlert('Error', data.error || 'No se pudo guardar el ajuste', 'alert');
     } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
     setSavingSellerSetting(false);
+  };
+
+  const handleToggleSellerPortal = async () => {
+    const nextValue = !raffle.seller_portal_enabled;
+    setSavingSellerPortal(true);
+    try {
+      const res = await fetch('/api/admin_update_seller_portal.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: id, seller_portal_enabled: nextValue }),
+      });
+      const data = await res.json();
+      if (data.success) fetchRaffle();
+      else showAlert('Error', data.error || 'No se pudo guardar el ajuste', 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
+    setSavingSellerPortal(false);
   };
 
   const handleTogglePublish = async () => {
@@ -358,6 +378,13 @@ export default function AdminRaffleSettings() {
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
                         <button
+                          onClick={() => setSettingPasswordFor(s)}
+                          title="Definir acceso al portal"
+                          className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        >
+                          <KeyRound size={16} />
+                        </button>
+                        <button
                           onClick={() => setViewingSellerSales(s)}
                           title="Ver números vendidos"
                           className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -411,6 +438,29 @@ export default function AdminRaffleSettings() {
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
                     raffle.allow_seller_selection ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between gap-4 pt-4 mt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">Portal de vendedores</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    Permite que tus vendedores entren con su código y contraseña en{' '}
+                    <span className="font-mono">{window.location.origin}/vendedor/login</span> a validar sus propias ventas.
+                  </p>
+                </div>
+                <button
+                  onClick={handleToggleSellerPortal}
+                  disabled={savingSellerPortal}
+                  role="switch"
+                  aria-checked={!!raffle.seller_portal_enabled}
+                  className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${
+                    raffle.seller_portal_enabled ? 'bg-blue-600' : 'bg-zinc-300 dark:bg-zinc-700'
+                  }`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                    raffle.seller_portal_enabled ? 'translate-x-5' : 'translate-x-0'
                   }`} />
                 </button>
               </div>
@@ -496,6 +546,15 @@ export default function AdminRaffleSettings() {
           seller={viewingSellerSales}
           pad={digits}
           onClose={() => setViewingSellerSales(null)}
+        />
+      )}
+
+      {settingPasswordFor && raffle && (
+        <SellerPasswordModal
+          raffleId={raffle.id}
+          seller={settingPasswordFor}
+          onClose={() => setSettingPasswordFor(null)}
+          showAlert={showAlert}
         />
       )}
 

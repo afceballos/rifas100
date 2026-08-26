@@ -40,6 +40,7 @@ CREATE TABLE raffles (
     number_style VARCHAR(20) NOT NULL DEFAULT 'rounded',
     bg_color VARCHAR(20) NOT NULL DEFAULT 'default',
     allow_seller_selection TINYINT(1) NOT NULL DEFAULT 0,
+    seller_portal_enabled TINYINT(1) NOT NULL DEFAULT 1,
     price_per_ticket DECIMAL(10,2) NOT NULL,
     draw_date DATETIME NOT NULL,
     total_tickets INT NOT NULL,
@@ -75,6 +76,8 @@ CREATE TABLE raffles (
 --   5) Si la tabla sellers ya existía con range_start/range_end NOT NULL:
 --      ALTER TABLE sellers MODIFY COLUMN range_start INT NULL;
 --      ALTER TABLE sellers MODIFY COLUMN range_end INT NULL;
+--   6) ALTER TABLE sellers ADD COLUMN password_hash VARCHAR(255) NULL;
+--   7) ALTER TABLE raffles ADD COLUMN seller_portal_enabled TINYINT(1) NOT NULL DEFAULT 1;
 
 -- 4. Vendedores (rango de números asignado dentro de una rifa; el rango es
 -- opcional — si queda NULL, el vendedor puede vender cualquier número)
@@ -87,6 +90,7 @@ CREATE TABLE sellers (
     email VARCHAR(150) NULL,
     range_start INT NULL,
     range_end INT NULL,
+    password_hash VARCHAR(255) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY unique_seller_code (code),
     FOREIGN KEY (raffle_id) REFERENCES raffles(id) ON DELETE CASCADE
