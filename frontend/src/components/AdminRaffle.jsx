@@ -127,7 +127,7 @@ export default function AdminRaffle() {
     }
   };
 
-  const pad = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : 3;
+  const pad = raffle ? Math.max(2, String(Math.max(0, (raffle.number_start || 0) + raffle.total_tickets - 1)).length) : 3;
 
   const filteredBuyers = buyers.filter(b => {
     if (statusFilter && b.status !== statusFilter) return false;

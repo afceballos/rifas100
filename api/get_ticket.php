@@ -21,7 +21,7 @@ try {
     $stmt = $pdo->prepare("
         SELECT t.ticket_number, t.status, t.buyer_name, t.buyer_phone, t.updated_at,
                r.id AS raffle_id, r.slug AS raffle_slug, r.title AS raffle_title, r.draw_date,
-               r.price_per_ticket, r.organizer_name, r.organizer_photo, r.payment_info, r.is_published, r.total_tickets
+               r.price_per_ticket, r.organizer_name, r.organizer_photo, r.payment_info, r.is_published, r.total_tickets, r.number_start
         FROM tickets t
         JOIN raffles r ON r.id = t.raffle_id
         WHERE t.ticket_code = ?
@@ -81,6 +81,7 @@ try {
             'organizer_photo' => $first['organizer_photo'],
             'payment_info' => $first['payment_info'],
             'total_tickets' => (int)$first['total_tickets'],
+            'number_start' => (int)$first['number_start'],
         ],
     ]);
 } catch (Exception $e) {

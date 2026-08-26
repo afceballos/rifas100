@@ -5,7 +5,7 @@
 // - Si solo uno de los dos viene, es un error (hay que dar ambos o ninguno).
 // - Si ambos vienen, deben caer dentro de los límites de la rifa y no cruzarse
 //   con el rango de otro vendedor existente (excluyendo $excludeId en edición).
-function validate_seller_range($pdo, $raffle_id, $total_tickets, $start, $end, $excludeId = null) {
+function validate_seller_range($pdo, $raffle_id, $total_tickets, $start, $end, $excludeId = null, $number_start = 0) {
     if ($start === null && $end === null) {
         return null;
     }
@@ -14,7 +14,8 @@ function validate_seller_range($pdo, $raffle_id, $total_tickets, $start, $end, $
         return 'Indica ambos extremos del rango, o déjalos vacíos para no asignar uno.';
     }
 
-    if ($start < 0 || $end < 0 || $start > $end || $end >= $total_tickets) {
+    $maxNumber = $number_start + $total_tickets - 1;
+    if ($start < $number_start || $end < $number_start || $start > $end || $end > $maxNumber) {
         return 'El rango de números no es válido para esta rifa.';
     }
 

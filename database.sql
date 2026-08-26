@@ -44,6 +44,7 @@ CREATE TABLE raffles (
     price_per_ticket DECIMAL(10,2) NOT NULL,
     draw_date DATETIME NOT NULL,
     total_tickets INT NOT NULL,
+    number_start INT NOT NULL DEFAULT 0,
     is_published TINYINT(1) NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY unique_slug (slug),
@@ -67,6 +68,7 @@ CREATE TABLE raffles (
 -- ALTER TABLE raffles ADD COLUMN organizer_phone VARCHAR(20) NULL;
 -- ALTER TABLE raffles ADD COLUMN organizer_email VARCHAR(150) NULL;
 -- ALTER TABLE raffles ADD COLUMN allow_seller_selection TINYINT(1) NOT NULL DEFAULT 0; (ver migración de vendedores más abajo)
+-- ALTER TABLE raffles ADD COLUMN number_start INT NOT NULL DEFAULT 0;
 
 -- Migración para bases de datos existentes (aplicar en este orden exacto):
 --   1) CREATE TABLE sellers (ver abajo)

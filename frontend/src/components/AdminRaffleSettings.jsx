@@ -169,7 +169,7 @@ export default function AdminRaffleSettings() {
     } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
   };
 
-  const digits = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : null;
+  const digits = raffle ? Math.max(2, String(Math.max(0, (raffle.number_start || 0) + raffle.total_tickets - 1)).length) : null;
   const paymentMethods = raffle ? parsePaymentMethods(raffle.payment_info) : [];
   const raffleUrl = raffle?.slug ? `${window.location.origin}/sorteo/${raffle.slug}` : null;
 
@@ -250,8 +250,14 @@ export default function AdminRaffleSettings() {
                     <dd className="font-semibold">{formatDrawDate(raffle.draw_date)}</dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-0.5">Cifras</dt>
-                    <dd className="font-mono font-semibold">{digits} ({raffle.total_tickets} boletos)</dd>
+                    <dt className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-0.5">
+                      {(raffle.number_start || 0) !== 0 || ![100, 1000, 10000].includes(raffle.total_tickets) ? 'Rango' : 'Cifras'}
+                    </dt>
+                    <dd className="font-mono font-semibold">
+                      {(raffle.number_start || 0) !== 0 || ![100, 1000, 10000].includes(raffle.total_tickets)
+                        ? `${String(raffle.number_start || 0).padStart(digits, '0')}–${String((raffle.number_start || 0) + raffle.total_tickets - 1).padStart(digits, '0')}`
+                        : digits} ({raffle.total_tickets} boletos)
+                    </dd>
                   </div>
                 </dl>
 

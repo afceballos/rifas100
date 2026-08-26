@@ -35,11 +35,11 @@ try {
         exit;
     }
 
-    $stmtRaffle = $pdo->prepare("SELECT total_tickets FROM raffles WHERE id = ?");
+    $stmtRaffle = $pdo->prepare("SELECT total_tickets, number_start FROM raffles WHERE id = ?");
     $stmtRaffle->execute([$raffle_id]);
     $raffle = $stmtRaffle->fetch();
 
-    $error = validate_seller_range($pdo, $raffle_id, (int)$raffle['total_tickets'], $rangeStart, $rangeEnd, $seller_id);
+    $error = validate_seller_range($pdo, $raffle_id, (int)$raffle['total_tickets'], $rangeStart, $rangeEnd, $seller_id, (int)$raffle['number_start']);
     if ($error) {
         echo json_encode(['success' => false, 'error' => $error]);
         exit;

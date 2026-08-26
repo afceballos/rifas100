@@ -111,7 +111,7 @@ export default function TicketPage() {
     }
   }, { dependencies: [ticket], scope: containerRef });
 
-  const pad = ticket ? Math.max(2, String(Math.max(0, ticket.raffle.total_tickets - 1)).length) : 2;
+  const pad = ticket ? Math.max(2, String(Math.max(0, (ticket.raffle.number_start || 0) + ticket.raffle.total_tickets - 1)).length) : 2;
 
   if (loading) {
     return (

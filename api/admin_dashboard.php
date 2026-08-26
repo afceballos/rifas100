@@ -16,7 +16,7 @@ assert_raffle_ownership($pdo, $raffle_id);
 
 try {
     // Datos de la rifa
-    $stmtRaffle = $pdo->prepare("SELECT id, slug, title, description, background_image, payment_info, organizer_name, organizer_photo, organizer_phone, organizer_email, theme_color, number_style, bg_color, allow_seller_selection, seller_portal_enabled, price_per_ticket, draw_date, total_tickets, is_published FROM raffles WHERE id = ?");
+    $stmtRaffle = $pdo->prepare("SELECT id, slug, title, description, background_image, payment_info, organizer_name, organizer_photo, organizer_phone, organizer_email, theme_color, number_style, bg_color, allow_seller_selection, seller_portal_enabled, price_per_ticket, draw_date, total_tickets, number_start, is_published FROM raffles WHERE id = ?");
     $stmtRaffle->execute([$raffle_id]);
     $raffle = $stmtRaffle->fetch();
 

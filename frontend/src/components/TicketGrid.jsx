@@ -238,18 +238,21 @@ export default function TicketGrid() {
   const activeSeller = sellerCodeParam ? sellers.find(s => s.code === sellerCodeParam) || null : null;
 
   // --- Lógica de paginación ---
-  const pad = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : 3;
+  // number_start: primer número de la rifa (0 salvo que se haya creado con un
+  // rango personalizado que empiece en otro punto).
+  const numberStart = raffle ? (raffle.number_start || 0) : 0;
+  const pad = raffle ? Math.max(2, String(Math.max(0, numberStart + raffle.total_tickets - 1)).length) : 3;
   const totalPages = raffle ? Math.max(1, Math.ceil(raffle.total_tickets / PAGE_SIZE)) : 1;
   // Si hay un filtro de vendedor activo con rango, solo hace falta paginar
   // cuando ese rango realmente cruza más de un bloque de PAGE_SIZE (algo muy
   // raro). Si el vendedor no tiene rango (puede vender toda la rifa), la
   // paginación se comporta como si no hubiera filtro.
   const sellerPageSpan = activeSeller && activeSeller.range_start != null
-    ? Math.floor(activeSeller.range_end / PAGE_SIZE) - Math.floor(activeSeller.range_start / PAGE_SIZE) + 1
+    ? Math.floor((activeSeller.range_end - numberStart) / PAGE_SIZE) - Math.floor((activeSeller.range_start - numberStart) / PAGE_SIZE) + 1
     : totalPages;
   const showPagination = totalPages > 1 && sellerPageSpan > 1;
-  const rangeStart = page * PAGE_SIZE;
-  const rangeEnd = raffle ? Math.min(rangeStart + PAGE_SIZE, raffle.total_tickets) : rangeStart;
+  const rangeStart = numberStart + page * PAGE_SIZE;
+  const rangeEnd = raffle ? Math.min(rangeStart + PAGE_SIZE, numberStart + raffle.total_tickets) : rangeStart;
   const pageList = showPagination ? buildPageList(page, totalPages) : [];
 
   const goToPage = (targetPage) => {
@@ -263,7 +266,7 @@ export default function TicketGrid() {
     if (!activeSeller || sellerPageChecked || pageLoading) return;
     setSellerPageChecked(true);
     if (activeSeller.range_start != null) {
-      goToPage(Math.floor(activeSeller.range_start / PAGE_SIZE));
+      goToPage(Math.floor((activeSeller.range_start - numberStart) / PAGE_SIZE));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSeller, sellerPageChecked, pageLoading]);
@@ -329,15 +332,16 @@ export default function TicketGrid() {
     e.preventDefault();
     if (!raffle || !numberSearch.trim()) return;
     const num = parseInt(numberSearch, 10);
-    if (Number.isNaN(num) || num < 0 || num >= raffle.total_tickets) {
-      setSearchError(`Ingresa un número entre ${(0).toString().padStart(pad, '0')} y ${(raffle.total_tickets - 1).toString().padStart(pad, '0')}.`);
+    const maxNumber = numberStart + raffle.total_tickets - 1;
+    if (Number.isNaN(num) || num < numberStart || num > maxNumber) {
+      setSearchError(`Ingresa un número entre ${numberStart.toString().padStart(pad, '0')} y ${maxNumber.toString().padStart(pad, '0')}.`);
       return;
     }
     setSearchError('');
     setNumberSearch('');
     setOnlyAvailable(false);
     setPendingHighlight(num);
-    goToPage(Math.floor(num / PAGE_SIZE));
+    goToPage(Math.floor((num - numberStart) / PAGE_SIZE));
   };
 
   // Cuando hay un número pendiente por resaltar (tras una búsqueda), espera a
@@ -563,7 +567,7 @@ export default function TicketGrid() {
                 <form onSubmit={handleNumberSearch} className="relative">
                   <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
                   <input
-                    type="text" inputMode="numeric" placeholder={`Buscar número (ej. ${(0).toString().padStart(pad, '0')})`}
+                    type="text" inputMode="numeric" placeholder={`Buscar número (ej. ${numberStart.toString().padStart(pad, '0')})`}
                     value={numberSearch}
                     onChange={e => { setNumberSearch(e.target.value.replace(/\D/g, '')); if (searchError) setSearchError(''); }}
                     className="w-full pl-9 pr-14 py-2.5 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all"

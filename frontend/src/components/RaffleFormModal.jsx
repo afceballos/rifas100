@@ -26,17 +26,23 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
     price_per_ticket: raffle?.price_per_ticket || '',
     draw_date: isEdit ? mysqlToDatetimeLocal(raffle?.draw_date) : '',
     digits: '2',
+    range_start: '0',
+    range_end: '1000',
     description: raffle?.description || '',
     organizer_name: raffle?.organizer_name || '',
     organizer_phone: raffle?.organizer_phone || '',
     organizer_email: raffle?.organizer_email || '',
   });
+  const [numberMode, setNumberMode] = useState('digits'); // 'digits' | 'range'
   const [organizerFile, setOrganizerFile] = useState(null);
   const [organizerPreview, setOrganizerPreview] = useState(raffle?.organizer_photo || null);
   const [removeOrganizerPhoto, setRemoveOrganizerPhoto] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const digitsLabel = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : null;
+  const maxNumber = raffle ? (raffle.number_start || 0) + raffle.total_tickets - 1 : 0;
+  const digitsLabel = raffle ? Math.max(2, String(Math.max(0, maxNumber)).length) : null;
+  const isRangeRaffle = raffle && ((raffle.number_start || 0) !== 0 || ![100, 1000, 10000].includes(raffle.total_tickets));
+  const rangeCount = Math.max(0, Number(form.range_end) - Number(form.range_start) + 1);
 
   const handleOrganizerPhotoPick = (e) => {
     const file = e.target.files?.[0];
@@ -103,7 +109,7 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify(form),
+          body: JSON.stringify({ ...form, number_mode: numberMode }),
         });
         const data = await res.json();
         if (!data.success) {
@@ -170,19 +176,64 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
 
           {isEdit ? (
             <div className="text-sm text-zinc-500 bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3">
-              Cifras: <span className="font-mono font-bold">{digitsLabel}</span> (fijo, no editable tras la creación)
+              {isRangeRaffle ? (
+                <>Rango: <span className="font-mono font-bold">{String(raffle.number_start || 0).padStart(digitsLabel, '0')}–{String(maxNumber).padStart(digitsLabel, '0')}</span> ({raffle.total_tickets} boletos, fijo, no editable tras la creación)</>
+              ) : (
+                <>Cifras: <span className="font-mono font-bold">{digitsLabel}</span> (fijo, no editable tras la creación)</>
+              )}
             </div>
           ) : (
-            <div>
-              <label className="block text-sm mb-2 text-zinc-500">Cantidad de Cifras (Boletos)</label>
-              <select
-                className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent"
-                value={form.digits} onChange={e => setForm({ ...form, digits: e.target.value })}
-              >
-                <option value="2">2 Cifras (100 boletos: 00-99)</option>
-                <option value="3">3 Cifras (1,000 boletos: 000-999)</option>
-                <option value="4">4 Cifras (10,000 boletos: 0000-9999)</option>
-              </select>
+            <div className="space-y-3">
+              <div className="flex gap-2 p-1 rounded-xl bg-zinc-100 dark:bg-zinc-800">
+                <button
+                  type="button"
+                  onClick={() => setNumberMode('digits')}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${numberMode === 'digits' ? 'bg-white dark:bg-zinc-900 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}
+                >
+                  Por cifras
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNumberMode('range')}
+                  className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-colors ${numberMode === 'range' ? 'bg-white dark:bg-zinc-900 shadow-sm text-zinc-900 dark:text-white' : 'text-zinc-500 dark:text-zinc-400'}`}
+                >
+                  Rango personalizado
+                </button>
+              </div>
+
+              {numberMode === 'digits' ? (
+                <div>
+                  <label className="block text-sm mb-2 text-zinc-500">Cantidad de Cifras (Boletos)</label>
+                  <select
+                    className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent"
+                    value={form.digits} onChange={e => setForm({ ...form, digits: e.target.value })}
+                  >
+                    <option value="2">2 Cifras (100 boletos: 00-99)</option>
+                    <option value="3">3 Cifras (1,000 boletos: 000-999)</option>
+                    <option value="4">4 Cifras (10,000 boletos: 0000-9999)</option>
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm mb-2 text-zinc-500">Rango de números (paso de 100)</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number" step={100} min={0} required placeholder="Desde"
+                      className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-center font-mono"
+                      value={form.range_start} onChange={e => setForm({ ...form, range_start: e.target.value })}
+                    />
+                    <span className="text-zinc-400 shrink-0">a</span>
+                    <input
+                      type="number" step={100} min={0} required placeholder="Hasta"
+                      className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-center font-mono"
+                      value={form.range_end} onChange={e => setForm({ ...form, range_end: e.target.value })}
+                    />
+                  </div>
+                  <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1.5">
+                    {rangeCount > 0 ? `${rangeCount} boletos (máximo 10,000).` : 'El final debe ser mayor que el inicio.'}
+                  </p>
+                </div>
+              )}
             </div>
           )}
 

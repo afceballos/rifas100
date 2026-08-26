@@ -28,11 +28,11 @@ if ($email !== null && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
 assert_raffle_ownership($pdo, $raffle_id);
 
 try {
-    $stmtRaffle = $pdo->prepare("SELECT total_tickets FROM raffles WHERE id = ?");
+    $stmtRaffle = $pdo->prepare("SELECT total_tickets, number_start FROM raffles WHERE id = ?");
     $stmtRaffle->execute([$raffle_id]);
     $raffle = $stmtRaffle->fetch();
 
-    $error = validate_seller_range($pdo, $raffle_id, (int)$raffle['total_tickets'], $rangeStart, $rangeEnd);
+    $error = validate_seller_range($pdo, $raffle_id, (int)$raffle['total_tickets'], $rangeStart, $rangeEnd, null, (int)$raffle['number_start']);
     if ($error) {
         echo json_encode(['success' => false, 'error' => $error]);
         exit;
