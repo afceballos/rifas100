@@ -682,7 +682,7 @@ export default function TicketGrid() {
           </div>
 
           {/* Columna derecha: título/fecha/descripción (no sticky) + imagen, info y acciones de la rifa (sticky) */}
-          <div className="order-1 lg:order-2 space-y-6">
+          <div className="order-1 lg:order-2 space-y-6 lg:self-stretch">
             {(raffle.description || raffle.title) && (
               <div className="info-panel bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
                 <div className="h-1.5" style={{ background: 'linear-gradient(90deg, var(--theme-c1), var(--theme-c2))' }} />
