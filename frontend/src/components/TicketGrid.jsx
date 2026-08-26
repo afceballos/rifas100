@@ -8,7 +8,7 @@ import OrganizerModal from './OrganizerModal';
 import VerifyParticipationModal from './VerifyParticipationModal';
 import PaymentInfoModal from './PaymentInfoModal';
 import AccountMenuSection from './AccountMenuSection';
-import { getRaffleTheme, getNumberStyleClass } from '../utils/raffleTheme';
+import { getRaffleTheme, getNumberStyleClass, getBgColorClass } from '../utils/raffleTheme';
 import {
   ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
   Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink,
@@ -368,21 +368,22 @@ export default function TicketGrid() {
 
   const theme = getRaffleTheme(raffle.theme_color);
   const numberShapeClass = getNumberStyleClass(raffle.number_style);
+  const bgColorClass = getBgColorClass(raffle.bg_color);
 
   return (
     <div
-      className="min-h-screen relative font-sans"
+      className={`min-h-screen relative font-sans ${bgColorClass}`}
       ref={containerRef}
       style={{ '--theme-c1': theme.c1, '--theme-c2': theme.c2 }}
     >
-      {/* Fondo con imagen desenfocada, adaptado a claro/oscuro */}
+      {/* Fondo con imagen desenfocada, mezclada con el color de fondo elegido (pastel en claro, versión profunda en oscuro) */}
       {raffle.background_image && (
         <div className="fixed inset-0 -z-10 overflow-hidden">
           <div
             className="absolute inset-0 bg-cover bg-center scale-110 blur-3xl opacity-30 dark:opacity-20"
             style={{ backgroundImage: `url(${raffle.background_image})` }}
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-zinc-50/70 via-zinc-50/90 to-zinc-50 dark:from-[#09090b]/70 dark:via-[#09090b]/90 dark:to-[#09090b]" />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, transparent 0%, var(--raffle-bg) 70%)' }} />
         </div>
       )}
 

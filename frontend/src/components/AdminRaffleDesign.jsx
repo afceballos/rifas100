@@ -4,7 +4,7 @@ import ThemeToggle from './ThemeToggle';
 import Dialog from './Dialog';
 import AdminRaffleSidebar from './AdminRaffleSidebar';
 import { ArrowLeft, ImagePlus, X, Check } from 'lucide-react';
-import { RAFFLE_THEMES, DEFAULT_THEME_KEY, NUMBER_STYLES, DEFAULT_NUMBER_STYLE_KEY } from '../utils/raffleTheme';
+import { RAFFLE_THEMES, DEFAULT_THEME_KEY, NUMBER_STYLES, DEFAULT_NUMBER_STYLE_KEY, BG_COLORS, DEFAULT_BG_COLOR_KEY, getBgColorClass } from '../utils/raffleTheme';
 
 export default function AdminRaffleDesign() {
   const { id } = useParams();
@@ -15,6 +15,7 @@ export default function AdminRaffleDesign() {
   const [removeImage, setRemoveImage] = useState(false);
   const [themeColor, setThemeColor] = useState(DEFAULT_THEME_KEY);
   const [numberStyle, setNumberStyle] = useState(DEFAULT_NUMBER_STYLE_KEY);
+  const [bgColor, setBgColor] = useState(DEFAULT_BG_COLOR_KEY);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -37,6 +38,7 @@ export default function AdminRaffleDesign() {
         setImageFile(null);
         setThemeColor(data.raffle.theme_color || DEFAULT_THEME_KEY);
         setNumberStyle(data.raffle.number_style || DEFAULT_NUMBER_STYLE_KEY);
+        setBgColor(data.raffle.bg_color || DEFAULT_BG_COLOR_KEY);
       }
     } catch (err) { console.error(err); }
   };
@@ -63,7 +65,7 @@ export default function AdminRaffleDesign() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ raffle_id: id, theme_color: themeColor, number_style: numberStyle, remove_image: removeImage }),
+        body: JSON.stringify({ raffle_id: id, theme_color: themeColor, number_style: numberStyle, bg_color: bgColor, remove_image: removeImage }),
       });
       const data = await res.json();
       if (!data.success) {
@@ -95,6 +97,7 @@ export default function AdminRaffleDesign() {
 
   const theme = RAFFLE_THEMES[themeColor] || RAFFLE_THEMES[DEFAULT_THEME_KEY];
   const previewShapeClass = (NUMBER_STYLES[numberStyle] || NUMBER_STYLES[DEFAULT_NUMBER_STYLE_KEY]).className;
+  const bgClass = getBgColorClass(bgColor);
 
   return (
     <div className="min-h-screen font-sans pb-12">
@@ -181,6 +184,36 @@ export default function AdminRaffleDesign() {
               </div>
             </div>
 
+            {/* Color de fondo */}
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
+              <h4 className="font-bold mb-1">Color de fondo</h4>
+              <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-4">
+                Tono pastel para el fondo de la página pública. Cada uno trae su propia versión para modo oscuro.
+              </p>
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                {Object.entries(BG_COLORS).map(([key, b]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setBgColor(key)}
+                    className={`relative flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all ${
+                      bgColor === key
+                        ? 'border-zinc-900 dark:border-white ring-2 ring-offset-2 ring-offset-white dark:ring-offset-zinc-900 ring-zinc-900 dark:ring-white'
+                        : 'border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700'
+                    }`}
+                  >
+                    <div
+                      className="w-full h-10 rounded-xl shadow-sm border border-black/5 flex items-center justify-center"
+                      style={{ backgroundColor: b.swatch }}
+                    >
+                      {bgColor === key && <Check size={16} className="text-zinc-700" />}
+                    </div>
+                    <span className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{b.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Estilo de los números */}
             <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
               <h4 className="font-bold mb-1">Estilo de los números</h4>
@@ -213,33 +246,38 @@ export default function AdminRaffleDesign() {
 
             {/* Vista previa */}
             <div className="bg-white dark:bg-zinc-900 p-6 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-              <h4 className="font-bold mb-4">Vista previa</h4>
-              <div className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 h-40">
-                {imagePreview ? (
-                  <img src={imagePreview} alt="Vista previa" className="absolute inset-0 w-full h-full object-cover" />
-                ) : (
-                  <div className="absolute inset-0 bg-zinc-100 dark:bg-zinc-950" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                <div className="absolute inset-0 flex flex-col justify-end p-4">
-                  <div className="flex gap-2 mb-3">
-                    {[7, 14, 23].map(n => (
-                      <div
-                        key={n}
-                        className={`w-10 h-10 flex items-center justify-center font-mono text-xs font-bold text-white shadow-lg ${previewShapeClass}`}
-                        style={{ background: `linear-gradient(135deg, ${theme.c1}, ${theme.c2})` }}
-                      >
-                        {n.toString().padStart(2, '0')}
-                      </div>
-                    ))}
+              <h4 className="font-bold mb-1">Vista previa</h4>
+              <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-4">
+                Así se combinan la imagen, el color del tema, el fondo y el estilo de los números.
+              </p>
+              <div className={`${bgClass} rounded-2xl p-4 border border-black/5 dark:border-white/5 transition-colors`}>
+                <div className="relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 h-40 shadow-sm">
+                  {imagePreview ? (
+                    <img src={imagePreview} alt="Vista previa" className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${theme.c1}, ${theme.c2})` }} />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                  <div className="absolute inset-0 flex flex-col justify-end p-4">
+                    <div className="flex gap-2 mb-3">
+                      {[7, 14, 23].map(n => (
+                        <div
+                          key={n}
+                          className={`w-10 h-10 flex items-center justify-center font-mono text-xs font-bold text-white shadow-lg ${previewShapeClass}`}
+                          style={{ background: `linear-gradient(135deg, ${theme.c1}, ${theme.c2})` }}
+                        >
+                          {n.toString().padStart(2, '0')}
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      className="self-start px-4 py-2 rounded-xl font-bold text-sm text-white shadow-lg"
+                      style={{ background: `linear-gradient(135deg, ${theme.c1}, ${theme.c2})` }}
+                    >
+                      Elegir al azar
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="self-start px-4 py-2 rounded-xl font-bold text-sm text-white shadow-lg"
-                    style={{ background: `linear-gradient(135deg, ${theme.c1}, ${theme.c2})` }}
-                  >
-                    Elegir al azar
-                  </button>
                 </div>
               </div>
             </div>

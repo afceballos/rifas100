@@ -23,6 +23,37 @@
   @apply bg-zinc-300 rounded-full dark:bg-zinc-800;
 }
 
+/* Fondo pastel personalizable por rifa (Ajustes -> Diseño). Cada variante trae
+   su propia versión oscura (profunda, no un pastel deslavado) para que el
+   modo dark mantenga buen contraste. --raffle-bg queda disponible para que
+   otros elementos (p.ej. el degradado de la imagen de fondo) usen el mismo color. */
+.raffle-bg-default { --raffle-bg: #fafafa; background-color: var(--raffle-bg); }
+.dark .raffle-bg-default { --raffle-bg: #09090b; }
+
+.raffle-bg-blue { --raffle-bg: #eff6ff; background-color: var(--raffle-bg); }
+.dark .raffle-bg-blue { --raffle-bg: #0d1526; }
+
+.raffle-bg-violet { --raffle-bg: #f5f3ff; background-color: var(--raffle-bg); }
+.dark .raffle-bg-violet { --raffle-bg: #150f26; }
+
+.raffle-bg-pink { --raffle-bg: #fdf2f8; background-color: var(--raffle-bg); }
+.dark .raffle-bg-pink { --raffle-bg: #240f1b; }
+
+.raffle-bg-amber { --raffle-bg: #fffbeb; background-color: var(--raffle-bg); }
+.dark .raffle-bg-amber { --raffle-bg: #221a08; }
+
+.raffle-bg-emerald { --raffle-bg: #ecfdf5; background-color: var(--raffle-bg); }
+.dark .raffle-bg-emerald { --raffle-bg: #081f18; }
+
+.raffle-bg-teal { --raffle-bg: #f0fdfa; background-color: var(--raffle-bg); }
+.dark .raffle-bg-teal { --raffle-bg: #081f1c; }
+
+.raffle-bg-cyan { --raffle-bg: #ecfeff; background-color: var(--raffle-bg); }
+.dark .raffle-bg-cyan { --raffle-bg: #081e22; }
+
+.raffle-bg-slate { --raffle-bg: #f8fafc; background-color: var(--raffle-bg); }
+.dark .raffle-bg-slate { --raffle-bg: #12161d; }
+
 /* Borde perforado de boleto: usado por las cards del home de rifas */
 .ticket-perforation {
   background-image: radial-gradient(circle, currentColor 1.5px, transparent 1.6px);

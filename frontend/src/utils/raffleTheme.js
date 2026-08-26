@@ -26,3 +26,22 @@ export const NUMBER_STYLES = {
 export const DEFAULT_NUMBER_STYLE_KEY = 'rounded';
 
 export const getNumberStyleClass = (key) => (NUMBER_STYLES[key] || NUMBER_STYLES[DEFAULT_NUMBER_STYLE_KEY]).className;
+
+// Pasteles suaves para el fondo de la página: cada uno trae su propia variante
+// oscura (más profunda, no un pastel deslavado) para que el modo dark se vea
+// bien. Las clases .raffle-bg-* viven en index.css.
+export const BG_COLORS = {
+  default: { label: 'Neutro',       swatch: '#f4f4f5', className: 'raffle-bg-default' },
+  blue:    { label: 'Azul',         swatch: '#dbeafe', className: 'raffle-bg-blue' },
+  violet:  { label: 'Violeta',      swatch: '#ede9fe', className: 'raffle-bg-violet' },
+  pink:    { label: 'Rosa',         swatch: '#fce7f3', className: 'raffle-bg-pink' },
+  amber:   { label: 'Ámbar',        swatch: '#fef3c7', className: 'raffle-bg-amber' },
+  emerald: { label: 'Esmeralda',    swatch: '#d1fae5', className: 'raffle-bg-emerald' },
+  teal:    { label: 'Verde azulado', swatch: '#ccfbf1', className: 'raffle-bg-teal' },
+  cyan:    { label: 'Cian',         swatch: '#cffafe', className: 'raffle-bg-cyan' },
+  slate:   { label: 'Grafito',      swatch: '#e2e8f0', className: 'raffle-bg-slate' },
+};
+
+export const DEFAULT_BG_COLOR_KEY = 'default';
+
+export const getBgColorClass = (key) => (BG_COLORS[key] || BG_COLORS[DEFAULT_BG_COLOR_KEY]).className;
