@@ -49,10 +49,12 @@ try {
 
     // Listado de compradores (boletos reservados o pagados)
     $stmt3 = $pdo->prepare("
-        SELECT ticket_number, ticket_code, buyer_name, buyer_phone, buyer_email, status, receipt_image, admin_notes, created_at
-        FROM tickets
-        WHERE raffle_id = ? AND status != 'available'
-        ORDER BY ticket_number ASC
+        SELECT t.ticket_number, t.ticket_code, t.buyer_name, t.buyer_phone, t.buyer_email, t.status,
+               t.receipt_image, t.admin_notes, t.created_at, t.seller_id, s.name AS seller_name
+        FROM tickets t
+        LEFT JOIN sellers s ON s.id = t.seller_id
+        WHERE t.raffle_id = ? AND t.status != 'available'
+        ORDER BY t.ticket_number ASC
     ");
     $stmt3->execute([$raffle_id]);
     $buyers = $stmt3->fetchAll();

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, MessageCircle, Phone, Ticket, Copy, Check, Trash2, StickyNote, Receipt, ImagePlus } from 'lucide-react';
 
 const STATUS_OPTIONS = [
@@ -37,9 +37,40 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [sellers, setSellers] = useState([]);
+  const [savingSeller, setSavingSeller] = useState(false);
 
   const notesDirty = notes !== (localTicket.admin_notes || '');
   const ticketUrl = localTicket.ticket_code ? `${window.location.origin}/ticket/${localTicket.ticket_code}` : null;
+
+  useEffect(() => {
+    fetch(`/api/admin_get_sellers.php?raffle_id=${raffleId}`, { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => { if (data.success) setSellers(data.sellers); })
+      .catch(() => {});
+  }, [raffleId]);
+
+  const handleSellerChange = async (value) => {
+    const sellerId = value === '' ? null : parseInt(value, 10);
+    setSavingSeller(true);
+    try {
+      const res = await fetch('/api/admin_update_ticket_seller.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: raffleId, ticket_number: localTicket.ticket_number, seller_id: sellerId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const seller = sellers.find(s => s.id === sellerId);
+        setLocalTicket(prev => ({ ...prev, seller_id: sellerId, seller_name: seller?.name || null }));
+        onUpdated();
+      } else {
+        showAlert?.('Error', data.error || 'No se pudo actualizar el vendedor', 'alert');
+      }
+    } catch { showAlert?.('Error', 'Error de conexión', 'alert'); }
+    setSavingSeller(false);
+  };
 
   const handleStatusChange = async (newStatus) => {
     if (newStatus === localTicket.status || savingStatus) return;
@@ -167,6 +198,22 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
             <div className="flex justify-between gap-3">
               <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Email</dt>
               <dd className="text-right text-zinc-700 dark:text-zinc-300 truncate max-w-[60%]">{localTicket.buyer_email || 'Sin correo'}</dd>
+            </div>
+            <div className="flex justify-between items-center gap-3">
+              <dt className="font-semibold text-zinc-500 dark:text-zinc-400">Vendedor</dt>
+              <dd>
+                <select
+                  value={localTicket.seller_id ?? ''}
+                  onChange={e => handleSellerChange(e.target.value)}
+                  disabled={savingSeller}
+                  className="text-sm font-semibold text-right rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500/40 disabled:opacity-50"
+                >
+                  <option value="">No tiene</option>
+                  {sellers.map(s => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+              </dd>
             </div>
           </dl>
 
