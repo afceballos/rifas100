@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Copy, Check } from 'lucide-react';
 import TicketQRCode from './TicketQRCode';
 
-export default function SellerShareModal({ seller, raffleUrl, onClose }) {
+export default function SellerShareModal({ seller, raffleUrl, pad = 2, onClose }) {
   const [copied, setCopied] = useState(false);
   const sellerUrl = `${raffleUrl}?seller=${seller.code}`;
 
@@ -34,7 +34,9 @@ export default function SellerShareModal({ seller, raffleUrl, onClose }) {
             <TicketQRCode value={sellerUrl} size={160} />
           </div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
-            Comparte este enlace o código QR: solo mostrará los números {String(seller.range_start).padStart(2, '0')}–{String(seller.range_end).padStart(2, '0')} que tiene asignados.
+            {seller.range_start != null
+              ? `Comparte este enlace o código QR: solo mostrará los números ${String(seller.range_start).padStart(pad, '0')}–${String(seller.range_end).padStart(pad, '0')} que tiene asignados.`
+              : 'Comparte este enlace o código QR: al no tener rango asignado, muestra todos los números de la rifa.'}
           </p>
           <div className="w-full">
             <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2 font-mono mb-2">

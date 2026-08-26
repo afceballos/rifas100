@@ -1,7 +1,19 @@
 <?php
-// Valida que un rango [start, end] esté dentro de los límites de la rifa y no
-// se cruce con el rango de otro vendedor existente (excluyendo $excludeId en edición).
+// Valida un rango [start, end] opcional para un vendedor.
+// - Si $start y $end son ambos null, el vendedor no tiene rango asignado (puede
+//   vender cualquier número de la rifa) y no hay nada que validar.
+// - Si solo uno de los dos viene, es un error (hay que dar ambos o ninguno).
+// - Si ambos vienen, deben caer dentro de los límites de la rifa y no cruzarse
+//   con el rango de otro vendedor existente (excluyendo $excludeId en edición).
 function validate_seller_range($pdo, $raffle_id, $total_tickets, $start, $end, $excludeId = null) {
+    if ($start === null && $end === null) {
+        return null;
+    }
+
+    if ($start === null || $end === null) {
+        return 'Indica ambos extremos del rango, o déjalos vacíos para no asignar uno.';
+    }
+
     if ($start < 0 || $end < 0 || $start > $end || $end >= $total_tickets) {
         return 'El rango de números no es válido para esta rifa.';
     }

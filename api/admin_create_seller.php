@@ -12,8 +12,8 @@ $raffle_id = isset($data['raffle_id']) ? (int)$data['raffle_id'] : 0;
 $name = isset($data['name']) ? trim($data['name']) : '';
 $phone = isset($data['phone']) && trim($data['phone']) !== '' ? trim($data['phone']) : null;
 $email = isset($data['email']) && trim($data['email']) !== '' ? trim($data['email']) : null;
-$rangeStart = isset($data['range_start']) ? (int)$data['range_start'] : -1;
-$rangeEnd = isset($data['range_end']) ? (int)$data['range_end'] : -1;
+$rangeStart = isset($data['range_start']) && $data['range_start'] !== '' && $data['range_start'] !== null ? (int)$data['range_start'] : null;
+$rangeEnd = isset($data['range_end']) && $data['range_end'] !== '' && $data['range_end'] !== null ? (int)$data['range_end'] : null;
 
 if ($raffle_id <= 0 || $name === '') {
     echo json_encode(['success' => false, 'error' => 'Faltan datos requeridos']);

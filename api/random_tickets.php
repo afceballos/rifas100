@@ -25,7 +25,7 @@ try {
         $sellerStmt = $pdo->prepare("SELECT range_start, range_end FROM sellers WHERE raffle_id = ? AND code = ?");
         $sellerStmt->execute([$raffle_id, $sellerCode]);
         $seller = $sellerStmt->fetch();
-        if ($seller) {
+        if ($seller && $seller['range_start'] !== null) {
             $sql .= " AND ticket_number BETWEEN ? AND ?";
             $params[] = (int)$seller['range_start'];
             $params[] = (int)$seller['range_end'];

@@ -43,12 +43,14 @@ try {
     // Datos públicos de vendedores: permiten filtrar por ?seller=CODE, mostrar
     // su contacto a quien entre por su enlace, y (si allow_seller_selection
     // está activo) listar opciones al reservar.
-    $sellersStmt = $pdo->prepare("SELECT code, name, phone, email, range_start, range_end FROM sellers WHERE raffle_id = ? ORDER BY range_start ASC");
+    $sellersStmt = $pdo->prepare("SELECT code, name, phone, email, range_start, range_end FROM sellers WHERE raffle_id = ? ORDER BY created_at ASC");
     $sellersStmt->execute([$raffleId]);
     $sellers = $sellersStmt->fetchAll();
     foreach ($sellers as &$s) {
-        $s['range_start'] = (int)$s['range_start'];
-        $s['range_end'] = (int)$s['range_end'];
+        if ($s['range_start'] !== null) {
+            $s['range_start'] = (int)$s['range_start'];
+            $s['range_end'] = (int)$s['range_end'];
+        }
     }
 
     echo json_encode([

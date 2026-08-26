@@ -72,8 +72,12 @@ CREATE TABLE raffles (
 --   2) ALTER TABLE raffles ADD COLUMN allow_seller_selection TINYINT(1) NOT NULL DEFAULT 0;
 --   3) ALTER TABLE tickets ADD COLUMN seller_id INT NULL;
 --   4) ALTER TABLE tickets ADD FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE SET NULL;
+--   5) Si la tabla sellers ya existía con range_start/range_end NOT NULL:
+--      ALTER TABLE sellers MODIFY COLUMN range_start INT NULL;
+--      ALTER TABLE sellers MODIFY COLUMN range_end INT NULL;
 
--- 4. Vendedores (rango de números asignado dentro de una rifa)
+-- 4. Vendedores (rango de números asignado dentro de una rifa; el rango es
+-- opcional — si queda NULL, el vendedor puede vender cualquier número)
 CREATE TABLE sellers (
     id INT AUTO_INCREMENT PRIMARY KEY,
     raffle_id INT NOT NULL,
@@ -81,8 +85,8 @@ CREATE TABLE sellers (
     name VARCHAR(150) NOT NULL,
     phone VARCHAR(20) NULL,
     email VARCHAR(150) NULL,
-    range_start INT NOT NULL,
-    range_end INT NOT NULL,
+    range_start INT NULL,
+    range_end INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY unique_seller_code (code),
     FOREIGN KEY (raffle_id) REFERENCES raffles(id) ON DELETE CASCADE

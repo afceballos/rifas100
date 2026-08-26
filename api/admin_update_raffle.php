@@ -20,6 +20,11 @@ $organizerName = isset($data['organizer_name']) && $data['organizer_name'] !== '
 $organizerPhone = isset($data['organizer_phone']) && trim($data['organizer_phone']) !== '' ? trim($data['organizer_phone']) : null;
 $organizerEmail = isset($data['organizer_email']) && trim($data['organizer_email']) !== '' ? trim($data['organizer_email']) : null;
 
+if ($description !== null && mb_strlen($description) > 400) {
+    echo json_encode(['success' => false, 'error' => 'La descripción no puede superar los 400 caracteres']);
+    exit;
+}
+
 if ($organizerEmail !== null && !filter_var($organizerEmail, FILTER_VALIDATE_EMAIL)) {
     echo json_encode(['success' => false, 'error' => 'Correo del organizador inválido']);
     exit;

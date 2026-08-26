@@ -7,6 +7,7 @@ const mysqlToDatetimeLocal = (value) => {
 };
 
 const pad2 = n => String(n).padStart(2, '0');
+const DESCRIPTION_MAX_LENGTH = 400;
 
 // Primer día habilitado en el selector: mañana a las 00:00 (hora local),
 // para que solo se puedan elegir fechas posteriores a hoy.
@@ -138,12 +139,18 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
             value={form.title} onChange={e => setForm({ ...form, title: e.target.value })}
           />
 
-          <textarea
-            placeholder="Descripción (opcional) — cuéntale a la gente de qué trata la rifa"
-            rows={3}
-            className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent resize-none"
-            value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
-          />
+          <div>
+            <textarea
+              placeholder="Descripción (opcional) — cuéntale a la gente de qué trata la rifa"
+              rows={3}
+              maxLength={DESCRIPTION_MAX_LENGTH}
+              className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent resize-none"
+              value={form.description} onChange={e => setForm({ ...form, description: e.target.value.slice(0, DESCRIPTION_MAX_LENGTH) })}
+            />
+            <p className={`text-xs text-right mt-1 ${form.description.length >= DESCRIPTION_MAX_LENGTH ? 'text-amber-500 font-semibold' : 'text-zinc-400 dark:text-zinc-500'}`}>
+              {form.description.length}/{DESCRIPTION_MAX_LENGTH}
+            </p>
+          </div>
 
           <input
             type="number" step="0.01" placeholder="Precio por boleto ($)" required

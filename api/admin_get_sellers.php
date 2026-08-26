@@ -15,25 +15,31 @@ if ($raffle_id <= 0) {
 assert_raffle_ownership($pdo, $raffle_id);
 
 try {
+    // "Vendidos" se cuenta por atribución real (tickets.seller_id), no por
+    // rango: así funciona igual para vendedores con o sin rango asignado.
     $stmt = $pdo->prepare("
         SELECT
             s.id, s.code, s.name, s.phone, s.email, s.range_start, s.range_end, s.created_at,
-            COUNT(CASE WHEN t.status != 'available' THEN 1 END) AS sold_count
+            COUNT(t.id) AS sold_count
         FROM sellers s
-        LEFT JOIN tickets t ON t.raffle_id = s.raffle_id AND t.ticket_number BETWEEN s.range_start AND s.range_end
+        LEFT JOIN tickets t ON t.seller_id = s.id AND t.status != 'available'
         WHERE s.raffle_id = ?
         GROUP BY s.id
-        ORDER BY s.range_start ASC
+        ORDER BY s.created_at ASC
     ");
     $stmt->execute([$raffle_id]);
     $sellers = $stmt->fetchAll();
 
     foreach ($sellers as &$s) {
         $s['id'] = (int)$s['id'];
-        $s['range_start'] = (int)$s['range_start'];
-        $s['range_end'] = (int)$s['range_end'];
         $s['sold_count'] = (int)$s['sold_count'];
-        $s['total_count'] = $s['range_end'] - $s['range_start'] + 1;
+        if ($s['range_start'] !== null) {
+            $s['range_start'] = (int)$s['range_start'];
+            $s['range_end'] = (int)$s['range_end'];
+            $s['total_count'] = $s['range_end'] - $s['range_start'] + 1;
+        } else {
+            $s['total_count'] = null;
+        }
     }
 
     echo json_encode(['success' => true, 'sellers' => $sellers]);

@@ -7,8 +7,8 @@ export default function SellerFormModal({ raffleId, seller, pad, onClose, onSave
     name: seller?.name || '',
     phone: seller?.phone || '',
     email: seller?.email || '',
-    range_start: seller ? String(seller.range_start).padStart(pad, '0') : '',
-    range_end: seller ? String(seller.range_end).padStart(pad, '0') : '',
+    range_start: seller?.range_start != null ? String(seller.range_start).padStart(pad, '0') : '',
+    range_end: seller?.range_end != null ? String(seller.range_end).padStart(pad, '0') : '',
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -26,8 +26,8 @@ export default function SellerFormModal({ raffleId, seller, pad, onClose, onSave
           name: form.name,
           phone: form.phone,
           email: form.email,
-          range_start: parseInt(form.range_start, 10),
-          range_end: parseInt(form.range_end, 10),
+          range_start: form.range_start.trim() === '' ? null : parseInt(form.range_start, 10),
+          range_end: form.range_end.trim() === '' ? null : parseInt(form.range_end, 10),
         }),
       });
       const data = await res.json();
@@ -75,21 +75,23 @@ export default function SellerFormModal({ raffleId, seller, pad, onClose, onSave
           </div>
 
           <div>
-            <label className="block text-sm mb-2 text-zinc-500">Rango de números asignado</label>
+            <label className="block text-sm mb-2 text-zinc-500">Rango de números asignado (opcional)</label>
             <div className="flex items-center gap-2">
               <input
-                type="text" inputMode="numeric" placeholder={'0'.padStart(pad, '0')} required
+                type="text" inputMode="numeric" placeholder={'0'.padStart(pad, '0')}
                 className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-center font-mono"
                 value={form.range_start} onChange={e => setForm({ ...form, range_start: e.target.value.replace(/\D/g, '') })}
               />
               <span className="text-zinc-400 shrink-0">a</span>
               <input
-                type="text" inputMode="numeric" placeholder={'9'.padStart(pad, '9')} required
+                type="text" inputMode="numeric" placeholder={'9'.padStart(pad, '9')}
                 className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent text-center font-mono"
                 value={form.range_end} onChange={e => setForm({ ...form, range_end: e.target.value.replace(/\D/g, '') })}
               />
             </div>
-            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1.5">No se puede cruzar con el rango de otro vendedor.</p>
+            <p className="text-xs text-zinc-400 dark:text-zinc-500 mt-1.5">
+              Déjalo vacío para que este vendedor pueda vender cualquier número de la rifa. Si lo llenas, no se puede cruzar con el rango de otro vendedor.
+            </p>
           </div>
 
           <div className="flex gap-3 pt-4">

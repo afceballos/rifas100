@@ -12,7 +12,7 @@ import TicketQRCode from './TicketQRCode';
 import { getRaffleTheme, getNumberStyleClass, getBgColorClass } from '../utils/raffleTheme';
 import {
   ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
-  Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink, Phone, Mail,
+  Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink, Phone, Mail, CalendarDays,
 } from 'lucide-react';
 
 const RANDOM_PRESETS = [1, 2, 3, 5];
@@ -39,6 +39,13 @@ const formatDrawDate = (value) => {
   const d = new Date(value.replace(/-/g, '/'));
   const formatted = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
   return formatted.replace(/\.$/, '').replace(/^(\d+ )([a-záéíóúñ])/i, (_, day, letter) => day + letter.toUpperCase());
+};
+
+// Fecha completa y legible del sorteo, p.ej. "31 de diciembre de 2026, 11:59"
+const formatDrawDateFull = (value) => {
+  if (!value) return '';
+  const d = new Date(value.replace(/-/g, '/'));
+  return d.toLocaleString('es-ES', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 };
 
 const TimeBlock = ({ value, label }) => (
@@ -219,11 +226,15 @@ export default function TicketGrid() {
     }
   }, { dependencies: [tickets, loading], scope: containerRef });
 
-  // Entrada del panel de información (imagen + datos de la rifa)
+  // Entrada orquestada en dos tiempos: primero el póster/encabezado, luego
+  // la barra lateral con las acciones — refuerza que el encabezado es lo
+  // primero que se lee de la rifa.
   useGSAP(() => {
     if (loading || !raffle) return;
-    gsap.fromTo('.hero-image-el', { scale: 1.15, opacity: 0 }, { scale: 1, opacity: 1, duration: 1, ease: 'power2.out' });
-    gsap.fromTo('.hero-panel', { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: 'power3.out' });
+    const tl = gsap.timeline();
+    tl.fromTo('.hero-image-el', { scale: 1.12, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.9, ease: 'power2.out' })
+      .fromTo('.hero-panel', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, '-=0.6')
+      .fromTo('.side-panel', { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: 'power3.out' }, '-=0.35');
   }, { dependencies: [raffle?.id, loading], scope: containerRef });
 
   const activeSeller = sellerCodeParam ? sellers.find(s => s.code === sellerCodeParam) || null : null;
@@ -231,9 +242,11 @@ export default function TicketGrid() {
   // --- Lógica de paginación ---
   const pad = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : 3;
   const totalPages = raffle ? Math.max(1, Math.ceil(raffle.total_tickets / PAGE_SIZE)) : 1;
-  // Si hay un filtro de vendedor activo, solo hace falta paginar cuando su
-  // rango realmente cruza más de un bloque de PAGE_SIZE (algo muy raro).
-  const sellerPageSpan = activeSeller
+  // Si hay un filtro de vendedor activo con rango, solo hace falta paginar
+  // cuando ese rango realmente cruza más de un bloque de PAGE_SIZE (algo muy
+  // raro). Si el vendedor no tiene rango (puede vender toda la rifa), la
+  // paginación se comporta como si no hubiera filtro.
+  const sellerPageSpan = activeSeller && activeSeller.range_start != null
     ? Math.floor(activeSeller.range_end / PAGE_SIZE) - Math.floor(activeSeller.range_start / PAGE_SIZE) + 1
     : totalPages;
   const showPagination = totalPages > 1 && sellerPageSpan > 1;
@@ -246,12 +259,14 @@ export default function TicketGrid() {
     if (clamped !== page) setPage(clamped);
   };
 
-  // Si el enlace trae ?seller=CODE, salta una sola vez a la página donde
-  // empieza su rango (solo aplica a rifas con más de una página de números).
+  // Si el enlace trae ?seller=CODE y ese vendedor tiene rango, salta una sola
+  // vez a la página donde empieza (solo aplica a rifas con varias páginas).
   useEffect(() => {
     if (!activeSeller || sellerPageChecked || pageLoading) return;
     setSellerPageChecked(true);
-    goToPage(Math.floor(activeSeller.range_start / PAGE_SIZE));
+    if (activeSeller.range_start != null) {
+      goToPage(Math.floor(activeSeller.range_start / PAGE_SIZE));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSeller, sellerPageChecked, pageLoading]);
 
@@ -387,7 +402,7 @@ export default function TicketGrid() {
   const randomTotal = raffle ? (randomNumbers.length * parseFloat(raffle.price_per_ticket)) : 0;
   const visibleGridTickets = tickets
     .filter(t => !onlyAvailable || t.status === 'available')
-    .filter(t => !activeSeller || (t.number >= activeSeller.range_start && t.number <= activeSeller.range_end));
+    .filter(t => !activeSeller || activeSeller.range_start == null || (t.number >= activeSeller.range_start && t.number <= activeSeller.range_end));
 
   const handlePurchase = async (e) => {
     e.preventDefault();
@@ -515,8 +530,76 @@ export default function TicketGrid() {
         </div>
       </nav>
 
+      {/* Póster de la rifa: imagen grande, sello del organizador sobre la línea
+          perforada, título, fecha y descripción completa — todo con espacio
+          de sobra para que una descripción larga nunca quede apretada. */}
+      <div className="max-w-6xl mx-auto px-4 pt-2">
+        <div className="hero-panel relative bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-900/5 overflow-hidden">
+          <div className="hero-image-el relative h-56 sm:h-72 md:h-80 overflow-hidden">
+            {raffle.background_image ? (
+              <img src={raffle.background_image} alt={raffle.title} className="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }} />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/5 to-transparent" />
+          </div>
+
+          {/* Línea perforada, como el talón de un boleto físico */}
+          <div className="ticket-perforation h-3 text-zinc-200 dark:text-zinc-800" />
+
+          <div className="relative px-6 sm:px-10 pb-8 sm:pb-10">
+            {raffle.organizer_name && (
+              <button
+                type="button"
+                onClick={() => setShowOrganizerModal(true)}
+                title="Ver información del organizador"
+                className="absolute -top-8 left-6 sm:left-10 w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden ring-4 ring-white dark:ring-zinc-900 shadow-lg transition-transform hover:scale-105 active:scale-95"
+              >
+                {raffle.organizer_photo ? (
+                  <img src={raffle.organizer_photo} alt={raffle.organizer_name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white" style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}>
+                    <UserCircle2 size={28} />
+                  </div>
+                )}
+              </button>
+            )}
+
+            <div className="pt-12 sm:pt-14">
+              {raffle.organizer_name && (
+                <button
+                  type="button"
+                  onClick={() => setShowOrganizerModal(true)}
+                  className="text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                >
+                  Organiza {raffle.organizer_name}
+                </button>
+              )}
+
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight text-zinc-900 dark:text-white leading-[1.08] mt-1">
+                {raffle.title}
+              </h1>
+
+              <div
+                className="inline-flex items-center gap-2 mt-4 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800"
+                style={{ color: 'var(--theme-c1)' }}
+              >
+                <CalendarDays size={15} />
+                {formatDrawDateFull(raffle.draw_date)}
+              </div>
+
+              {raffle.description && (
+                <p className="mt-5 max-w-2xl text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                  {raffle.description}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Bóveda: números a la izquierda, información y acciones a la derecha */}
-      <div className="max-w-6xl mx-auto px-4 pb-24 pt-2">
+      <div className="max-w-6xl mx-auto px-4 pb-24 pt-6">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
 
           {/* Columna izquierda: paginación + grilla de números */}
@@ -524,7 +607,9 @@ export default function TicketGrid() {
             {activeSeller && (
               <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-900/50 text-sm">
                 <span className="text-blue-700 dark:text-blue-400 font-semibold truncate">
-                  Números de {activeSeller.name} · {activeSeller.range_start.toString().padStart(pad, '0')}–{activeSeller.range_end.toString().padStart(pad, '0')}
+                  {activeSeller.range_start != null
+                    ? `Números de ${activeSeller.name} · ${activeSeller.range_start.toString().padStart(pad, '0')}–${activeSeller.range_end.toString().padStart(pad, '0')}`
+                    : `Comprando a través de ${activeSeller.name}`}
                 </span>
                 {(activeSeller.phone || activeSeller.email) && (
                   <div className="flex items-center gap-3 shrink-0">
@@ -668,8 +753,8 @@ export default function TicketGrid() {
 
           {/* Columna derecha: imagen, info y acciones de la rifa */}
           <div className="order-1 lg:order-2 lg:sticky lg:top-6">
-            <div className="hero-panel bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-900/5 overflow-hidden">
-              <div className="hero-image-el relative h-52 sm:h-60 overflow-hidden">
+            <div className="side-panel bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-900/5 overflow-hidden">
+              <div className="relative h-52 sm:h-60 overflow-hidden">
                 {raffle.background_image ? (
                   <img src={raffle.background_image} alt={raffle.title} className="absolute inset-0 w-full h-full object-cover" />
                 ) : (
@@ -684,6 +769,11 @@ export default function TicketGrid() {
               </div>
 
               <div className="p-5 space-y-5">
+                <div className="flex items-center gap-1.5 text-xs font-semibold" style={{ color: 'var(--theme-c1)' }}>
+                  <CalendarDays size={13} />
+                  {formatDrawDateFull(raffle.draw_date)}
+                </div>
+
                 {raffle.organizer_name && (
                   <button
                     type="button"
@@ -702,10 +792,6 @@ export default function TicketGrid() {
                       <span className="block text-sm font-semibold text-zinc-700 dark:text-zinc-200 truncate">{raffle.organizer_name}</span>
                     </span>
                   </button>
-                )}
-
-                {raffle.description && (
-                  <p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed">{raffle.description}</p>
                 )}
 
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">

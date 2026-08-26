@@ -7,9 +7,10 @@ import RaffleFormModal from './RaffleFormModal';
 import PaymentMethodModal from './PaymentMethodModal';
 import SellerFormModal from './SellerFormModal';
 import SellerShareModal from './SellerShareModal';
+import SellerSalesModal from './SellerSalesModal';
 import TicketQRCode from './TicketQRCode';
 import QRCode from 'qrcode';
-import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2, Download, Copy, Check, Users, UserPlus, QrCode, Phone, Mail } from 'lucide-react';
+import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2, Download, Copy, Check, Users, UserPlus, QrCode, Phone, Mail, ListChecks } from 'lucide-react';
 import { parsePaymentMethods } from '../utils/paymentInfo';
 
 const formatDrawDate = (value) => {
@@ -29,6 +30,7 @@ export default function AdminRaffleSettings() {
   const [sellers, setSellers] = useState([]);
   const [editingSeller, setEditingSeller] = useState(null); // null | 'new' | seller object
   const [sharingSeller, setSharingSeller] = useState(null);
+  const [viewingSellerSales, setViewingSellerSales] = useState(null);
   const [savingSellerSetting, setSavingSellerSetting] = useState(false);
 
   const [dialog, setDialog] = useState({ open: false });
@@ -323,7 +325,7 @@ export default function AdminRaffleSettings() {
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
                   <h3 className="font-bold text-lg mb-1">Vendedores</h3>
-                  <p className="text-zinc-500 dark:text-zinc-400 text-sm">Asígnales un rango de números y compárteles su propio enlace para vender.</p>
+                  <p className="text-zinc-500 dark:text-zinc-400 text-sm">Compárteles su propio enlace para vender. Puedes asignarles un rango de números o dejarlos vender de toda la rifa.</p>
                 </div>
                 <button
                   onClick={() => setEditingSeller('new')}
@@ -343,7 +345,9 @@ export default function AdminRaffleSettings() {
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold truncate">{s.name}</p>
                         <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
-                          {s.code} · {String(s.range_start).padStart(digits, '0')}–{String(s.range_end).padStart(digits, '0')} · {s.sold_count}/{s.total_count} vendidos
+                          {s.code} · {s.range_start != null
+                            ? `${String(s.range_start).padStart(digits, '0')}–${String(s.range_end).padStart(digits, '0')} · ${s.sold_count}/${s.total_count} vendidos`
+                            : `Todos los números · ${s.sold_count} vendidos`}
                         </p>
                         {(s.phone || s.email) && (
                           <p className="text-xs text-zinc-400 dark:text-zinc-500 flex items-center gap-2 mt-0.5">
@@ -353,6 +357,13 @@ export default function AdminRaffleSettings() {
                         )}
                       </div>
                       <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          onClick={() => setViewingSellerSales(s)}
+                          title="Ver números vendidos"
+                          className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                        >
+                          <ListChecks size={16} />
+                        </button>
                         <button
                           onClick={() => setSharingSeller(s)}
                           title="Compartir (QR / enlace)"
@@ -474,7 +485,17 @@ export default function AdminRaffleSettings() {
         <SellerShareModal
           seller={sharingSeller}
           raffleUrl={raffleUrl}
+          pad={digits}
           onClose={() => setSharingSeller(null)}
+        />
+      )}
+
+      {viewingSellerSales && raffle && (
+        <SellerSalesModal
+          raffleId={raffle.id}
+          seller={viewingSellerSales}
+          pad={digits}
+          onClose={() => setViewingSellerSales(null)}
         />
       )}
 
