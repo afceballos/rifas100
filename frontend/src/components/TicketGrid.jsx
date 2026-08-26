@@ -231,7 +231,12 @@ export default function TicketGrid() {
   // --- Lógica de paginación ---
   const pad = raffle ? Math.max(2, String(Math.max(0, raffle.total_tickets - 1)).length) : 3;
   const totalPages = raffle ? Math.max(1, Math.ceil(raffle.total_tickets / PAGE_SIZE)) : 1;
-  const showPagination = totalPages > 1;
+  // Si hay un filtro de vendedor activo, solo hace falta paginar cuando su
+  // rango realmente cruza más de un bloque de PAGE_SIZE (algo muy raro).
+  const sellerPageSpan = activeSeller
+    ? Math.floor(activeSeller.range_end / PAGE_SIZE) - Math.floor(activeSeller.range_start / PAGE_SIZE) + 1
+    : totalPages;
+  const showPagination = totalPages > 1 && sellerPageSpan > 1;
   const rangeStart = page * PAGE_SIZE;
   const rangeEnd = raffle ? Math.min(rangeStart + PAGE_SIZE, raffle.total_tickets) : rangeStart;
   const pageList = showPagination ? buildPageList(page, totalPages) : [];
