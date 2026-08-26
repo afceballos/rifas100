@@ -455,6 +455,29 @@ export default function TicketGrid() {
 
           {/* Columna izquierda: paginación + grilla de números */}
           <div className="order-2 lg:order-1 min-w-0">
+            {/* Barra de acciones pegajosa: siempre a mano mientras se recorre la grilla, sin importar cuántos números tenga la rifa */}
+            {!isEnded && (
+              <div className="sticky top-2 z-20 mb-5 flex items-center gap-2 p-2 rounded-2xl bg-white/95 dark:bg-zinc-900/95 backdrop-blur-md border border-zinc-200 dark:border-zinc-800 shadow-md">
+                <button
+                  onClick={openRandomModal}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm text-white shadow-sm transition-all active:scale-95 shrink-0"
+                  style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}
+                >
+                  <Dices size={15} /> <span className="hidden sm:inline">Elegir al azar</span>
+                </button>
+                <button
+                  onClick={onlyAvailable ? () => setOnlyAvailable(false) : viewAvailableNumbers}
+                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm border transition-colors ${
+                    onlyAvailable
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/70 dark:bg-blue-500/10'
+                      : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                  }`}
+                >
+                  {onlyAvailable ? <><FilterX size={15} /> Mostrar todos</> : <><Filter size={15} /> Ver disponibles</>}
+                </button>
+              </div>
+            )}
+
             {showPagination && (
               <div className={`mb-6 ${isEnded ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div className="text-center mb-3 text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
@@ -599,27 +622,6 @@ export default function TicketGrid() {
                   </div>
                 )}
 
-                {!isEnded && (
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={openRandomModal}
-                      className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm text-white shadow-lg transition-all active:scale-95"
-                      style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }}
-                    >
-                      <Dices size={16} /> Elegir al azar
-                    </button>
-                    <button
-                      onClick={onlyAvailable ? () => setOnlyAvailable(false) : viewAvailableNumbers}
-                      className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm border transition-colors ${
-                        onlyAvailable
-                          ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/70 dark:bg-blue-500/10'
-                          : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
-                      }`}
-                    >
-                      {onlyAvailable ? <><FilterX size={16} /> Mostrar todos</> : <><Filter size={16} /> Ver números disponibles</>}
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           </div>
