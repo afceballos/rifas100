@@ -180,10 +180,17 @@ export default function TicketPage() {
     try {
       const file = await (shareFileRef.current || prepareShareFile());
       if (!file) throw new Error('No se pudo generar la imagen');
+      const numbersLabel = `número${ticket.ticket_numbers.length > 1 ? 's' : ''} ${ticket.ticket_numbers.map(n => '#' + n.toString().padStart(pad, '0')).join(', ')}`;
+      // El enlace va dentro del texto (no solo en `url`) porque algunas apps,
+      // sobre todo en iOS, ignoran `url` cuando también se comparten archivos.
+      const shareText = ticket.raffle.receipt_upload_enabled
+        ? `Mi boleto para "${ticket.raffle.title}" — ${numbersLabel}.\nCuando pagues, puedes subir tu comprobante en este mismo enlace: ${ticketUrl}`
+        : `Mi boleto para "${ticket.raffle.title}" — ${numbersLabel}.\n${ticketUrl}`;
       await navigator.share({
         files: [file],
         title: ticket.raffle.title,
-        text: `Mi boleto para "${ticket.raffle.title}" — número${ticket.ticket_numbers.length > 1 ? 's' : ''} ${ticket.ticket_numbers.map(n => '#' + n.toString().padStart(pad, '0')).join(', ')}.`,
+        text: shareText,
+        url: ticketUrl,
       });
     } catch (err) {
       if (err?.name !== 'AbortError') console.error(err);
