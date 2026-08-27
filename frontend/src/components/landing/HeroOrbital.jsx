@@ -75,21 +75,21 @@ export default function HeroOrbital() {
   return (
     <section
       ref={sectionRef}
-      className="relative isolate flex min-h-[92vh] flex-col overflow-hidden bg-[#0B100D] text-[#ECEDE7]"
+      className="relative isolate flex min-h-[92vh] flex-col overflow-hidden bg-raffle-paper text-raffle-ink dark:bg-[#0B100D] dark:text-[#ECEDE7]"
     >
       <WaveCanvas className="absolute inset-0 z-0 h-full w-full" />
 
-      <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 items-center gap-14 px-6 py-16 lg:grid-cols-[1fr_2fr] lg:gap-8">
+      <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 grid-cols-1 items-center gap-14 px-6 py-16 lg:grid-cols-[1.15fr_1fr] lg:gap-10">
         <div className="order-1 text-center lg:text-left">
-          <span className="inline-flex items-center gap-2 rounded-full border border-raffle-green/30 bg-raffle-green/10 px-4 py-1.5 font-mono text-xs uppercase tracking-wider text-raffle-green">
+          <span className="inline-flex items-center gap-2 rounded-full border border-raffle-green/30 bg-raffle-green/10 px-4 py-1.5 font-mono text-xs uppercase tracking-wider text-raffle-greenDark dark:text-raffle-green">
             Para organizadores de rifas
           </span>
 
           <h1 className="mt-6 font-display text-4xl font-semibold leading-[1.08] tracking-tight sm:text-5xl">
-            Tu rifa, vendida con <span className="text-raffle-green">boletos</span> que se sienten como boletos.
+            Tu rifa, vendida con <span className="text-raffle-greenDark dark:text-raffle-green">boletos</span> que se sienten como boletos.
           </h1>
 
-          <p className="mx-auto mt-6 max-w-md font-body text-lg text-[#ECEDE7]/65 lg:mx-0">
+          <p className="mx-auto mt-6 max-w-lg font-body text-lg text-raffle-ink/65 dark:text-[#ECEDE7]/65 lg:mx-0">
             Cada número reservado se convierte en un boleto real: serial, QR y todo, listo para compartir con tu
             comprador. Crea tu talonario en minutos.
           </p>
@@ -97,14 +97,14 @@ export default function HeroOrbital() {
           <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
             <Link
               to="/registro"
-              className="inline-flex items-center gap-2 rounded-2xl bg-raffle-green px-7 py-3.5 text-base font-bold text-[#0B100D] transition-transform duration-200 hover:scale-[1.04] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-raffle-green focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B100D]"
+              className="inline-flex items-center gap-2 rounded-2xl bg-raffle-green px-7 py-3.5 text-base font-bold text-[#0B100D] transition-transform duration-200 hover:scale-[1.04] active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-raffle-green focus-visible:ring-offset-2 focus-visible:ring-offset-raffle-paper dark:focus-visible:ring-offset-[#0B100D]"
             >
               Crear mi rifa gratis
               <ArrowRight size={18} />
             </Link>
             <a
               href="#como-funciona"
-              className="inline-flex items-center gap-2 rounded-2xl border border-[#ECEDE7]/20 px-7 py-3.5 text-base font-semibold text-[#ECEDE7]/90 transition-colors hover:border-raffle-green/50 hover:text-raffle-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-raffle-green focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B100D]"
+              className="inline-flex items-center gap-2 rounded-2xl border border-raffle-ink/15 px-7 py-3.5 text-base font-semibold text-raffle-ink/80 transition-colors hover:border-raffle-green/50 hover:text-raffle-greenDark dark:border-[#ECEDE7]/20 dark:text-[#ECEDE7]/90 dark:hover:text-raffle-green focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-raffle-green focus-visible:ring-offset-2 focus-visible:ring-offset-raffle-paper dark:focus-visible:ring-offset-[#0B100D]"
             >
               Ver cómo funciona
             </a>

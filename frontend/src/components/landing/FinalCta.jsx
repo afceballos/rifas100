@@ -35,7 +35,7 @@ export default function FinalCta() {
   return (
     <section ref={scope} className="relative mx-auto max-w-6xl px-6 pb-24">
       <div ref={wrapRef} className="reveal relative mx-auto flex max-w-3xl overflow-hidden rounded-[24px] border-[1.6px] border-raffle-ink bg-raffle-ink dark:border-raffle-paper">
-        <WaveCanvas className="absolute inset-0 h-full w-full opacity-70" />
+        <WaveCanvas theme="dark" className="absolute inset-0 h-full w-full opacity-70" />
         <TicketMark
           aria-hidden="true"
           className={`pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 text-raffle-paper transition-all duration-700 ${

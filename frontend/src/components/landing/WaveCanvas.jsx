@@ -5,12 +5,17 @@ const STEP = 18;
 const MAX_DPR = 1.5;
 
 /**
- * Campo de ondas finas de fondo para el hero técnico: respira lentamente y
- * reacciona con un desplazamiento sutil cerca del puntero. Se pausa fuera de
- * viewport/pestaña oculta y se desactiva por completo (un solo frame estático,
- * sin puntero) si el usuario prefiere movimiento reducido.
+ * Campo de ondas finas de fondo: respira lentamente y reacciona con un
+ * desplazamiento sutil cerca del puntero. Se pausa fuera de viewport/pestaña
+ * oculta y se desactiva por completo (un solo frame estático, sin puntero) si
+ * el usuario prefiere movimiento reducido.
+ *
+ * `theme`: 'auto' (por defecto) sigue el modo claro/oscuro del sitio — usar
+ * cuando el fondo detrás del canvas cambia con el tema. 'dark'/'light' fuerza
+ * el color de las líneas — usar cuando el fondo es fijo (p. ej. una tarjeta
+ * siempre oscura) sin importar el tema del sitio.
  */
-export default function WaveCanvas({ className = '' }) {
+export default function WaveCanvas({ className = '', theme = 'auto' }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -39,6 +44,8 @@ export default function WaveCanvas({ className = '' }) {
     };
 
     const draw = (t) => {
+      const isDarkBg = theme === 'dark' ? true : theme === 'light' ? false : document.documentElement.classList.contains('dark');
+      const lineRgb = isDarkBg ? '236,237,231' : '20,20,20';
       ctx.clearRect(0, 0, w, h);
       const spacing = h / (LINES + 1);
       for (let li = 0; li < LINES; li++) {
@@ -59,7 +66,7 @@ export default function WaveCanvas({ className = '' }) {
           if (x === 0) ctx.moveTo(x, y);
           else ctx.lineTo(x, y);
         }
-        ctx.strokeStyle = `rgba(236,237,231,${(0.05 + 0.05 * breathe).toFixed(3)})`;
+        ctx.strokeStyle = `rgba(${lineRgb},${(0.05 + 0.05 * breathe).toFixed(3)})`;
         ctx.lineWidth = 1;
         ctx.stroke();
       }
@@ -118,7 +125,7 @@ export default function WaveCanvas({ className = '' }) {
       parent.removeEventListener('pointermove', onPointerMove);
       parent.removeEventListener('pointerleave', onPointerLeave);
     };
-  }, []);
+  }, [theme]);
 
   return <canvas ref={canvasRef} aria-hidden="true" className={`pointer-events-none ${className}`} />;
 }
