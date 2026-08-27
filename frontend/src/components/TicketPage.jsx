@@ -54,6 +54,9 @@ export default function TicketPage() {
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
+  // Promesa del archivo a compartir, preparada de antemano (ver por qué en
+  // prepareShareFile) — nunca se lee directo, solo a través de esa función.
+  const shareFileRef = useRef(null);
 
   useEffect(() => {
     try {
@@ -141,16 +144,42 @@ export default function TicketPage() {
     setDownloadingPdf(false);
   };
 
-  const handleShareReceipt = async () => {
-    if (!cardRef.current || sharingReceipt) return;
-    setSharingReceipt(true);
-    try {
+  // Safari/iOS solo deja llamar a navigator.share() dentro del mismo gesto
+  // del usuario: si antes hay un await "lento" (cargar html2canvas, dibujar
+  // el canvas), para cuando termina ya perdió el permiso y comparte no hace
+  // nada (sin error visible). Por eso la captura se prepara de antemano, en
+  // segundo plano, apenas carga el boleto — al tocar "Compartir" normalmente
+  // solo queda esperar una promesa ya resuelta, lo que si conserva el gesto.
+  const prepareShareFile = () => {
+    if (!cardRef.current || !ticket) return Promise.resolve(null);
+    const promise = (async () => {
       const { default: html2canvas } = await import('html2canvas-pro');
       const canvas = await html2canvas(cardRef.current, { backgroundColor: '#ffffff', scale: 2 });
       const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-      if (!blob) throw new Error('No se pudo generar la imagen');
+      if (!blob) return null;
       const numbersLabel = ticket.ticket_numbers.map(n => n.toString().padStart(pad, '0')).join('-');
-      const file = new File([blob], `boleto-${numbersLabel}.png`, { type: 'image/png' });
+      return new File([blob], `boleto-${numbersLabel}.png`, { type: 'image/png' });
+    })();
+    shareFileRef.current = promise;
+    return promise;
+  };
+
+  useEffect(() => {
+    shareFileRef.current = null;
+    if (!ticket || !canShareFiles) return undefined;
+    // Se espera a que termine la animación de entrada del boleto, para no
+    // capturarlo a medio aparecer.
+    const id = setTimeout(() => { prepareShareFile(); }, 1200);
+    return () => clearTimeout(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket, canShareFiles]);
+
+  const handleShareReceipt = async () => {
+    if (sharingReceipt) return;
+    setSharingReceipt(true);
+    try {
+      const file = await (shareFileRef.current || prepareShareFile());
+      if (!file) throw new Error('No se pudo generar la imagen');
       await navigator.share({
         files: [file],
         title: ticket.raffle.title,
