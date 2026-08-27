@@ -35,6 +35,7 @@ export default function AdminRaffleSettings() {
   const [settingPasswordFor, setSettingPasswordFor] = useState(null);
   const [savingSellerSetting, setSavingSellerSetting] = useState(false);
   const [savingSellerPortal, setSavingSellerPortal] = useState(false);
+  const [savingReceiptUpload, setSavingReceiptUpload] = useState(false);
 
   const [dialog, setDialog] = useState({ open: false });
 
@@ -122,6 +123,23 @@ export default function AdminRaffleSettings() {
       else showAlert('Error', data.error || 'No se pudo guardar el ajuste', 'alert');
     } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
     setSavingSellerPortal(false);
+  };
+
+  const handleToggleReceiptUpload = async () => {
+    const nextValue = !raffle.receipt_upload_enabled;
+    setSavingReceiptUpload(true);
+    try {
+      const res = await fetch('/api/admin_update_receipt_upload.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ raffle_id: id, receipt_upload_enabled: nextValue }),
+      });
+      const data = await res.json();
+      if (data.success) fetchRaffle();
+      else showAlert('Error', data.error || 'No se pudo guardar el ajuste', 'alert');
+    } catch (err) { showAlert('Error', 'Error de conexión.', 'alert'); }
+    setSavingReceiptUpload(false);
   };
 
   const handleTogglePublish = async () => {
@@ -467,6 +485,28 @@ export default function AdminRaffleSettings() {
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
                     raffle.seller_portal_enabled ? 'translate-x-5' : 'translate-x-0'
+                  }`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between gap-4 pt-4 mt-4 border-t border-zinc-100 dark:border-zinc-800">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold">Comprobantes desde el boleto</p>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                    Deja que el comprador suba su comprobante de pago directamente desde la página de su boleto digital.
+                  </p>
+                </div>
+                <button
+                  onClick={handleToggleReceiptUpload}
+                  disabled={savingReceiptUpload}
+                  role="switch"
+                  aria-checked={!!raffle.receipt_upload_enabled}
+                  className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${
+                    raffle.receipt_upload_enabled ? 'bg-lime-600' : 'bg-zinc-300 dark:bg-zinc-700'
+                  }`}
+                >
+                  <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
+                    raffle.receipt_upload_enabled ? 'translate-x-5' : 'translate-x-0'
                   }`} />
                 </button>
               </div>

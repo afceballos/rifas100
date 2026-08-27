@@ -19,9 +19,10 @@ try {
     // Un código de boleto ahora representa una compra completa: puede haber
     // varias filas (una por número) compartiendo el mismo ticket_code.
     $stmt = $pdo->prepare("
-        SELECT t.ticket_number, t.status, t.buyer_name, t.buyer_phone, t.updated_at,
+        SELECT t.ticket_number, t.status, t.buyer_name, t.buyer_phone, t.updated_at, t.receipt_image,
                r.id AS raffle_id, r.slug AS raffle_slug, r.title AS raffle_title, r.draw_date,
-               r.price_per_ticket, r.organizer_name, r.organizer_photo, r.payment_info, r.is_published, r.total_tickets, r.number_start
+               r.price_per_ticket, r.organizer_name, r.organizer_photo, r.payment_info, r.is_published, r.total_tickets, r.number_start,
+               r.receipt_upload_enabled
         FROM tickets t
         JOIN raffles r ON r.id = t.raffle_id
         WHERE t.ticket_code = ?
@@ -71,6 +72,7 @@ try {
         'buyer_name' => $first['buyer_name'],
         'buyer_phone' => $maskedPhone,
         'updated_at' => $first['updated_at'],
+        'receipt_image' => $first['receipt_image'],
         'other_tickets' => $otherTickets,
         'raffle' => [
             'slug' => $first['raffle_slug'],
@@ -82,6 +84,7 @@ try {
             'payment_info' => $first['payment_info'],
             'total_tickets' => (int)$first['total_tickets'],
             'number_start' => (int)$first['number_start'],
+            'receipt_upload_enabled' => (int)$first['receipt_upload_enabled'] === 1,
         ],
     ]);
 } catch (Exception $e) {

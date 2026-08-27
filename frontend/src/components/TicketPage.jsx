@@ -7,7 +7,7 @@ import NotFound from './NotFound';
 import TicketQRCode from './TicketQRCode';
 import PaymentInfoModal from './PaymentInfoModal';
 import AccountMenuSection from './AccountMenuSection';
-import { Ticket, Copy, Check, CreditCard, ArrowUpRight, Download, Loader2, Menu } from 'lucide-react';
+import { Ticket, Copy, Check, CreditCard, ArrowUpRight, Download, Loader2, Menu, Upload, Image as ImageIcon } from 'lucide-react';
 import TicketMark from './landing/TicketMark';
 
 gsap.registerPlugin(useGSAP);
@@ -49,6 +49,15 @@ export default function TicketPage() {
   const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [me, setMe] = useState(null);
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [uploadError, setUploadError] = useState('');
+  const fileInputRef = useRef(null);
+
+  const refreshTicket = () =>
+    fetch(`/api/get_ticket.php?code=${encodeURIComponent(code)}`)
+      .then(res => res.json())
+      .then(data => { if (data.success) setTicket(data); })
+      .catch(() => {});
 
   useEffect(() => {
     setLoading(true);
@@ -78,6 +87,26 @@ export default function TicketPage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch { /* clipboard no disponible */ }
+  };
+
+  const handleReceiptFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setUploadError('');
+    setUploadingReceipt(true);
+    try {
+      const formData = new FormData();
+      formData.append('ticket_code', code);
+      formData.append('image', file);
+      const res = await fetch('/api/upload_ticket_receipt.php', { method: 'POST', body: formData });
+      const data = await res.json();
+      if (data.success) await refreshTicket();
+      else setUploadError(data.error || 'No se pudo subir el comprobante.');
+    } catch {
+      setUploadError('Error de conexión con el servidor.');
+    }
+    setUploadingReceipt(false);
   };
 
   const handleDownloadPdf = async () => {
@@ -260,6 +289,50 @@ export default function TicketPage() {
             >
               <CreditCard size={18} /> Pagar
             </button>
+
+            {ticket.raffle.receipt_upload_enabled && ticket.status !== 'PAGADO' && (
+              <div className="ticket-reveal mt-2.5">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleReceiptFileChange}
+                />
+                {ticket.receipt_image ? (
+                  <div className="flex items-center justify-between gap-3 rounded-xl border border-lime-200 dark:border-lime-900/50 bg-lime-50 dark:bg-lime-950/30 px-4 py-3">
+                    <a
+                      href={ticket.receipt_image}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-sm font-semibold text-lime-700 dark:text-lime-400 min-w-0"
+                    >
+                      <ImageIcon size={16} className="shrink-0" />
+                      <span className="truncate">Ver comprobante subido</span>
+                    </a>
+                    <button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploadingReceipt}
+                      className="shrink-0 text-xs font-semibold text-zinc-500 hover:text-lime-600 dark:text-zinc-400 disabled:opacity-50"
+                    >
+                      {uploadingReceipt ? 'Subiendo...' : 'Reemplazar'}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingReceipt}
+                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-lime-400 hover:text-lime-600 dark:hover:text-lime-400 transition-colors disabled:opacity-50"
+                  >
+                    {uploadingReceipt ? <Loader2 size={15} className="animate-spin" /> : <Upload size={15} />}
+                    {uploadingReceipt ? 'Subiendo comprobante...' : 'Subir comprobante de pago'}
+                  </button>
+                )}
+                {uploadError && (
+                  <p className="text-xs text-red-500 mt-1.5 text-center">{uploadError}</p>
+                )}
+              </div>
+            )}
 
             <button
               onClick={handleDownloadPdf}
