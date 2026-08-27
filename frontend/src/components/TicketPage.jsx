@@ -7,7 +7,7 @@ import NotFound from './NotFound';
 import TicketQRCode from './TicketQRCode';
 import PaymentInfoModal from './PaymentInfoModal';
 import AccountMenuSection from './AccountMenuSection';
-import { Ticket, Copy, Check, CreditCard, ArrowUpRight, Download, Loader2, Menu, Upload, Image as ImageIcon } from 'lucide-react';
+import { Ticket, Copy, Check, CreditCard, ArrowUpRight, Download, Loader2, Menu, Upload, Image as ImageIcon, Share2 } from 'lucide-react';
 import TicketMark from './landing/TicketMark';
 
 gsap.registerPlugin(useGSAP);
@@ -47,11 +47,22 @@ export default function TicketPage() {
   const [copied, setCopied] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [sharingReceipt, setSharingReceipt] = useState(false);
+  const [canShareFiles, setCanShareFiles] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [me, setMe] = useState(null);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      const probe = new File(['x'], 'probe.png', { type: 'image/png' });
+      setCanShareFiles(!!navigator.canShare && navigator.canShare({ files: [probe] }));
+    } catch {
+      setCanShareFiles(false);
+    }
+  }, []);
 
   const refreshTicket = () =>
     fetch(`/api/get_ticket.php?code=${encodeURIComponent(code)}`)
@@ -128,6 +139,27 @@ export default function TicketPage() {
       console.error(err);
     }
     setDownloadingPdf(false);
+  };
+
+  const handleShareReceipt = async () => {
+    if (!cardRef.current || sharingReceipt) return;
+    setSharingReceipt(true);
+    try {
+      const { default: html2canvas } = await import('html2canvas-pro');
+      const canvas = await html2canvas(cardRef.current, { backgroundColor: '#ffffff', scale: 2 });
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!blob) throw new Error('No se pudo generar la imagen');
+      const numbersLabel = ticket.ticket_numbers.map(n => n.toString().padStart(pad, '0')).join('-');
+      const file = new File([blob], `boleto-${numbersLabel}.png`, { type: 'image/png' });
+      await navigator.share({
+        files: [file],
+        title: ticket.raffle.title,
+        text: `Mi boleto para "${ticket.raffle.title}" — número${ticket.ticket_numbers.length > 1 ? 's' : ''} ${ticket.ticket_numbers.map(n => '#' + n.toString().padStart(pad, '0')).join(', ')}.`,
+      });
+    } catch (err) {
+      if (err?.name !== 'AbortError') console.error(err);
+    }
+    setSharingReceipt(false);
   };
 
   useGSAP(() => {
@@ -334,14 +366,26 @@ export default function TicketPage() {
               </div>
             )}
 
-            <button
-              onClick={handleDownloadPdf}
-              disabled={downloadingPdf}
-              className="ticket-reveal w-full flex items-center justify-center gap-2 mt-2.5 py-2.5 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors disabled:opacity-50"
-            >
-              {downloadingPdf ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
-              {downloadingPdf ? 'Generando PDF...' : 'Descargar comprobante (PDF)'}
-            </button>
+            <div className="ticket-reveal flex gap-2 mt-2.5">
+              {canShareFiles && (
+                <button
+                  onClick={handleShareReceipt}
+                  disabled={sharingReceipt}
+                  className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors disabled:opacity-50"
+                >
+                  {sharingReceipt ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />}
+                  {sharingReceipt ? 'Preparando...' : 'Compartir'}
+                </button>
+              )}
+              <button
+                onClick={handleDownloadPdf}
+                disabled={downloadingPdf}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 text-sm font-semibold rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200 transition-colors disabled:opacity-50"
+              >
+                {downloadingPdf ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+                {downloadingPdf ? 'Generando...' : canShareFiles ? 'PDF' : 'Descargar comprobante (PDF)'}
+              </button>
+            </div>
 
             <Divider />
 
