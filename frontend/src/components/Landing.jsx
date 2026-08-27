@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
 import AccountMenuSection from './AccountMenuSection';
-import Hero from './landing/Hero';
+import HeroOrbital from './landing/HeroOrbital';
 import HowItWorks from './landing/HowItWorks';
 import RaffleTypes from './landing/RaffleTypes';
 import TrustSection from './landing/TrustSection';
@@ -65,7 +65,7 @@ export default function Landing() {
       </header>
 
       <main>
-        <Hero />
+        <HeroOrbital />
         <HowItWorks />
         <RaffleTypes />
         <TrustSection />

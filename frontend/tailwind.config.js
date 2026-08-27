@@ -31,6 +31,15 @@ export default {
         blue: '0 0 0 1px rgba(5,121,251,0.25), 0 8px 30px -6px rgba(5,121,251,0.35)',
         ink: '0 20px 60px -15px rgba(20,20,20,0.35)',
       },
+      keyframes: {
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-8px)' },
+        },
+      },
+      animation: {
+        float: 'float 5s ease-in-out infinite',
+      },
     },
   },
   plugins: [],
