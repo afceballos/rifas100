@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import TicketMark from './TicketMark';
+import WaveCanvas from './WaveCanvas';
 import useScrollReveal from './useScrollReveal';
 import confettiBurst from './confettiBurst';
 
@@ -34,6 +35,7 @@ export default function FinalCta() {
   return (
     <section ref={scope} className="relative mx-auto max-w-6xl px-6 pb-24">
       <div ref={wrapRef} className="reveal relative mx-auto flex max-w-3xl overflow-hidden rounded-[24px] border-[1.6px] border-raffle-ink bg-raffle-ink dark:border-raffle-paper">
+        <WaveCanvas className="absolute inset-0 h-full w-full opacity-70" />
         <TicketMark
           aria-hidden="true"
           className={`pointer-events-none absolute left-1/2 top-1/2 h-[420px] w-[420px] -translate-x-1/2 -translate-y-1/2 text-raffle-paper transition-all duration-700 ${
@@ -51,7 +53,7 @@ export default function FinalCta() {
           <Link
             to="/registro"
             onClick={handleClick}
-            className="relative mt-8 inline-flex items-center gap-2 rounded-2xl bg-raffle-blue px-8 py-3.5 text-base font-bold text-white shadow-blue transition-transform duration-200 hover:scale-[1.04] active:scale-[0.98]"
+            className="relative mt-8 inline-flex items-center gap-2 rounded-2xl bg-raffle-green px-8 py-3.5 text-base font-bold text-raffle-ink shadow-green transition-transform duration-200 hover:scale-[1.04] active:scale-[0.98]"
           >
             Crear mi rifa gratis
             <ArrowRight size={18} />
@@ -60,7 +62,7 @@ export default function FinalCta() {
 
         <div className="ticket-notch-v relative hidden w-32 shrink-0 items-center justify-center sm:flex">
           <span
-            className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-raffle-blueLight"
+            className="font-mono text-xs font-semibold uppercase tracking-[0.2em] text-raffle-greenLight"
             style={{ writingMode: 'vertical-rl' }}
           >
             Ticket100

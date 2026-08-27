@@ -29,7 +29,7 @@ export default function HowItWorks() {
   return (
     <section id="como-funciona" ref={scope} className="mx-auto max-w-6xl px-6 py-24 sm:py-28">
       <div className="reveal mx-auto max-w-2xl text-center">
-        <span className="font-mono text-sm font-bold uppercase tracking-wider text-raffle-blueDark dark:text-raffle-blueLight">
+        <span className="font-mono text-sm font-bold uppercase tracking-wider text-raffle-greenDark dark:text-raffle-greenLight">
           Cómo funciona
         </span>
         <h2 className="mt-3 font-display text-3xl font-semibold text-raffle-ink dark:text-raffle-paper sm:text-4xl">
@@ -47,7 +47,7 @@ export default function HowItWorks() {
               <span className="font-mono text-xs font-bold tracking-widest text-raffle-ink/40 dark:text-raffle-paper/40">
                 {serial}
               </span>
-              <Icon size={22} className="text-raffle-blue" />
+              <Icon size={22} className="text-raffle-greenDark dark:text-raffle-greenLight" />
             </div>
             <h3 className="mt-5 font-display text-xl font-semibold text-raffle-ink dark:text-raffle-paper">
               {title}

@@ -1,4 +1,4 @@
-const COLORS = ['#0579FB', '#3E97FF', '#141414', '#FBF9F4'];
+const COLORS = ['#C7FF43', '#4C6B12', '#141414', '#FBF9F4'];
 
 /**
  * Ráfaga de confeti breve desde (x, y) en coordenadas de viewport. Se usa en

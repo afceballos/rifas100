@@ -19,10 +19,10 @@ export default function LandingFooter() {
             Plataforma
           </h2>
           <ul className="mt-4 space-y-2.5 font-body text-sm text-raffle-ink/70 dark:text-raffle-paper/70">
-            <li><a href="#como-funciona" className="hover:text-raffle-blue">Cómo funciona</a></li>
-            <li><a href="#confianza" className="hover:text-raffle-blue">Confianza y seguridad</a></li>
-            <li><Link to="/registro" className="hover:text-raffle-blue">Crear cuenta</Link></li>
-            <li><Link to="/admin" className="hover:text-raffle-blue">Acceso operativo</Link></li>
+            <li><a href="#como-funciona" className="hover:text-raffle-greenDark dark:hover:text-raffle-greenLight">Cómo funciona</a></li>
+            <li><a href="#confianza" className="hover:text-raffle-greenDark dark:hover:text-raffle-greenLight">Confianza y seguridad</a></li>
+            <li><Link to="/registro" className="hover:text-raffle-greenDark dark:hover:text-raffle-greenLight">Crear cuenta</Link></li>
+            <li><Link to="/admin" className="hover:text-raffle-greenDark dark:hover:text-raffle-greenLight">Acceso operativo</Link></li>
           </ul>
         </nav>
 
@@ -32,7 +32,7 @@ export default function LandingFooter() {
           </h2>
           <ul className="mt-4 space-y-2.5 font-body text-sm text-raffle-ink/70 dark:text-raffle-paper/70">
             <li>
-              <a href="mailto:hola@ticketvault.app" className="flex items-center gap-2 hover:text-raffle-blue">
+              <a href="mailto:hola@ticketvault.app" className="flex items-center gap-2 hover:text-raffle-greenDark dark:hover:text-raffle-greenLight">
                 <Mail size={16} /> hola@ticketvault.app
               </a>
             </li>
@@ -40,13 +40,13 @@ export default function LandingFooter() {
           <div className="mt-5 flex gap-2">
             <a
               href="#"
-              className="rounded-full bg-raffle-ink/5 px-3.5 py-1.5 text-xs font-semibold text-raffle-ink/60 transition-colors hover:bg-raffle-tint hover:text-raffle-blueDark dark:bg-raffle-paper/10 dark:text-raffle-paper/60 dark:hover:text-raffle-blueLight"
+              className="rounded-full bg-raffle-ink/5 px-3.5 py-1.5 text-xs font-semibold text-raffle-ink/60 transition-colors hover:bg-raffle-tint hover:text-raffle-greenDark dark:bg-raffle-paper/10 dark:text-raffle-paper/60 dark:hover:text-raffle-greenLight"
             >
               Instagram
             </a>
             <a
               href="#"
-              className="rounded-full bg-raffle-ink/5 px-3.5 py-1.5 text-xs font-semibold text-raffle-ink/60 transition-colors hover:bg-raffle-tint hover:text-raffle-blueDark dark:bg-raffle-paper/10 dark:text-raffle-paper/60 dark:hover:text-raffle-blueLight"
+              className="rounded-full bg-raffle-ink/5 px-3.5 py-1.5 text-xs font-semibold text-raffle-ink/60 transition-colors hover:bg-raffle-tint hover:text-raffle-greenDark dark:bg-raffle-paper/10 dark:text-raffle-paper/60 dark:hover:text-raffle-greenLight"
             >
               Facebook
             </a>

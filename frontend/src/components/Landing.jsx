@@ -8,8 +8,14 @@ import RaffleTypes from './landing/RaffleTypes';
 import TrustSection from './landing/TrustSection';
 import FinalCta from './landing/FinalCta';
 import LandingFooter from './landing/LandingFooter';
-import TicketWordmark from './landing/TicketWordmark';
+import TicketMark from './landing/TicketMark';
 import { Menu } from 'lucide-react';
+
+const NAV_LINKS = [
+  { href: '#como-funciona', label: 'Cómo funciona' },
+  { href: '#confianza', label: 'Confianza' },
+  { href: '#talonarios', label: 'Talonarios' },
+];
 
 export default function Landing() {
   const [showMenu, setShowMenu] = useState(false);
@@ -24,20 +30,34 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-raffle-paper font-body text-raffle-ink dark:bg-raffle-ink dark:text-raffle-paper">
-      <header className="sticky top-0 z-30 border-b border-raffle-ink/5 bg-raffle-paper/80 backdrop-blur-md dark:border-raffle-paper/5 dark:bg-raffle-ink/80">
-        <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4" aria-label="Principal">
-          <Link to="/" className="flex items-center">
-            <TicketWordmark className="h-6 w-auto text-raffle-ink dark:text-raffle-paper" />
+      <header className="sticky top-0 z-30 border-b border-[#ECEDE7]/10 bg-[#0B100D]/90 backdrop-blur-md">
+        <nav className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-4" aria-label="Principal">
+          <Link to="/" className="flex items-center gap-2 font-mono text-sm tracking-wide text-[#ECEDE7]">
+            <TicketMark className="h-5 w-auto text-raffle-green" />
+            TICKET<span className="text-raffle-green">100</span>
           </Link>
 
+          <ul className="hidden items-center gap-8 font-mono text-xs uppercase tracking-wider text-[#ECEDE7]/55 sm:flex">
+            {NAV_LINKS.map((l) => (
+              <li key={l.href}>
+                <a
+                  href={l.href}
+                  className="rounded-sm transition-colors hover:text-[#ECEDE7] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-raffle-green focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B100D]"
+                >
+                  {l.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+
           <div className="flex items-center gap-3">
-            <ThemeToggle />
+            <ThemeToggle variant="dark" />
 
             {me && (
               <div className="relative">
                 <button
                   onClick={() => setShowMenu(prev => !prev)}
-                  className="p-2 rounded-full bg-raffle-ink/5 text-raffle-ink/70 hover:bg-raffle-ink/10 dark:bg-raffle-paper/10 dark:text-raffle-paper/70 dark:hover:bg-raffle-paper/20 transition-colors"
+                  className="p-2 rounded-full bg-[#ECEDE7]/10 text-[#ECEDE7]/80 hover:bg-[#ECEDE7]/15 transition-colors"
                   title="Más opciones"
                 >
                   <Menu size={20} />
@@ -56,7 +76,7 @@ export default function Landing() {
 
             <Link
               to="/admin"
-              className="hidden sm:inline-flex px-5 py-2 rounded-full text-sm font-semibold bg-raffle-ink/5 hover:bg-raffle-ink/10 dark:bg-raffle-paper/10 dark:hover:bg-raffle-paper/20 transition-colors"
+              className="hidden sm:inline-flex px-5 py-2 rounded-full text-sm font-semibold bg-[#ECEDE7]/10 text-[#ECEDE7] hover:bg-[#ECEDE7]/15 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-raffle-green focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B100D]"
             >
               Acceso operativo
             </Link>
