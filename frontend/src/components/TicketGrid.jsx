@@ -9,9 +9,10 @@ import VerifyParticipationModal from './VerifyParticipationModal';
 import PaymentInfoModal from './PaymentInfoModal';
 import AccountMenuSection from './AccountMenuSection';
 import TicketQRCode from './TicketQRCode';
+import TicketMark from './landing/TicketMark';
 import { getRaffleTheme, getNumberStyleClass, getBgColorClass } from '../utils/raffleTheme';
 import {
-  ShieldCheck, Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
+  Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
   Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink, Phone, Mail, CalendarDays,
 } from 'lucide-react';
 
@@ -447,7 +448,7 @@ export default function TicketGrid() {
     }
   };
 
-  if (loading) return <div className="min-h-screen flex items-center justify-center font-sans bg-zinc-50 dark:bg-zinc-950"><div className="animate-pulse flex items-center gap-2"><Ticket className="animate-spin text-blue-500" /> Cargando bóveda...</div></div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center font-sans bg-zinc-50 dark:bg-zinc-950"><div className="animate-pulse flex items-center gap-2"><Ticket className="animate-spin text-lime-500" /> Cargando bóveda...</div></div>;
   if (!raffle) return <NotFound variant={notFoundVariant || 'not_found'} />;
 
   const theme = getRaffleTheme(raffle.theme_color);
@@ -474,9 +475,9 @@ export default function TicketGrid() {
 
       {/* Navbar Minimalista */}
       <nav className="w-full p-4 flex justify-between items-center max-w-6xl mx-auto relative">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
-          <ShieldCheck className="text-blue-500" />
-          <span>Ticket<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-violet-500">Vault</span></span>
+        <Link to="/" className="flex items-center gap-2 font-mono font-bold text-xl tracking-tight">
+          <TicketMark className="h-6 w-auto text-raffle-greenDark dark:text-raffle-green" />
+          <span>TICKET<span className="text-raffle-greenDark dark:text-raffle-green">100</span></span>
         </Link>
 
         <div className="flex items-center gap-2">
@@ -539,8 +540,8 @@ export default function TicketGrid() {
           {/* Columna izquierda: paginación + grilla de números */}
           <div className="order-2 lg:order-1 min-w-0">
             {activeSeller && (
-              <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-900/50 text-sm">
-                <span className="text-blue-700 dark:text-blue-400 font-semibold truncate">
+              <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-3 rounded-xl bg-lime-50 dark:bg-lime-500/10 border border-lime-100 dark:border-lime-900/50 text-sm">
+                <span className="text-lime-700 dark:text-lime-400 font-semibold truncate">
                   {activeSeller.range_start != null
                     ? `Números de ${activeSeller.name} · ${activeSeller.range_start.toString().padStart(pad, '0')}–${activeSeller.range_end.toString().padStart(pad, '0')}`
                     : `Comprando a través de ${activeSeller.name}`}
@@ -548,12 +549,12 @@ export default function TicketGrid() {
                 {(activeSeller.phone || activeSeller.email) && (
                   <div className="flex items-center gap-3 shrink-0">
                     {activeSeller.phone && (
-                      <a href={`tel:${activeSeller.phone}`} className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 whitespace-nowrap">
+                      <a href={`tel:${activeSeller.phone}`} className="flex items-center gap-1.5 text-xs font-semibold text-lime-600 hover:text-lime-700 dark:text-lime-400 whitespace-nowrap">
                         <Phone size={13} /> {activeSeller.phone}
                       </a>
                     )}
                     {activeSeller.email && (
-                      <a href={`mailto:${activeSeller.email}`} className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 whitespace-nowrap">
+                      <a href={`mailto:${activeSeller.email}`} className="flex items-center gap-1.5 text-xs font-semibold text-lime-600 hover:text-lime-700 dark:text-lime-400 whitespace-nowrap">
                         <Mail size={13} /> Escribir
                       </a>
                     )}
@@ -570,7 +571,7 @@ export default function TicketGrid() {
                     type="text" inputMode="numeric" placeholder={`Buscar número (ej. ${numberStart.toString().padStart(pad, '0')})`}
                     value={numberSearch}
                     onChange={e => { setNumberSearch(e.target.value.replace(/\D/g, '')); if (searchError) setSearchError(''); }}
-                    className="w-full pl-9 pr-14 py-2.5 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 transition-all"
+                    className="w-full pl-9 pr-14 py-2.5 text-sm rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 outline-none focus:ring-2 focus:ring-lime-500/40 focus:border-lime-500 transition-all"
                   />
                   <button
                     type="submit"
@@ -593,7 +594,7 @@ export default function TicketGrid() {
                   onClick={onlyAvailable ? () => setOnlyAvailable(false) : viewAvailableNumbers}
                   className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm border transition-colors ${
                     onlyAvailable
-                      ? 'border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/70 dark:bg-blue-500/10'
+                      ? 'border-lime-500 text-lime-600 dark:text-lime-400 bg-lime-50/70 dark:bg-lime-500/10'
                       : 'border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
                   }`}
                 >
@@ -612,7 +613,7 @@ export default function TicketGrid() {
                   <button
                     onClick={() => goToPage(page - 1)}
                     disabled={page === 0}
-                    className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+                    className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400 dark:hover:border-lime-500 transition-colors"
                   >
                     <ChevronLeft size={18} />
                   </button>
@@ -627,7 +628,7 @@ export default function TicketGrid() {
                       className={`min-w-[2.5rem] h-10 px-3 rounded-xl font-mono font-bold text-sm transition-colors ${
                         item.value === page
                           ? 'text-white shadow-md'
-                          : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-blue-400 dark:hover:border-blue-500'
+                          : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-lime-400 dark:hover:border-lime-500'
                       }`}
                     >
                       {item.value + 1}
@@ -637,7 +638,7 @@ export default function TicketGrid() {
                   <button
                     onClick={() => goToPage(page + 1)}
                     disabled={page >= totalPages - 1}
-                    className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400 dark:hover:border-blue-500 transition-colors"
+                    className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400 dark:hover:border-lime-500 transition-colors"
                   >
                     <ChevronRight size={18} />
                   </button>
@@ -648,7 +649,7 @@ export default function TicketGrid() {
             <div ref={gridSectionRef} className="relative scroll-mt-4">
               {pageLoading && (
                 <div className="absolute inset-0 flex items-center justify-center z-10">
-                  <Loader2 className="animate-spin text-blue-500" size={28} />
+                  <Loader2 className="animate-spin text-lime-500" size={28} />
                 </div>
               )}
               {(onlyAvailable || activeSeller) && visibleGridTickets.length === 0 && !pageLoading && (
@@ -663,7 +664,7 @@ export default function TicketGrid() {
                   const bgClass = isSelected
                     ? 'border border-transparent text-white shadow-lg scale-105'
                     : isAv
-                      ? 'bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:border-blue-500 dark:hover:border-blue-400 text-zinc-900 dark:text-zinc-100'
+                      ? 'bg-white dark:bg-zinc-900 shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-lg hover:border-lime-500 dark:hover:border-lime-400 text-zinc-900 dark:text-zinc-100'
                       : t.status === 'paid'
                         ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 text-emerald-600 dark:text-emerald-500 opacity-60 cursor-not-allowed'
                         : 'bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-400 dark:text-zinc-500 opacity-50 cursor-not-allowed';
@@ -723,7 +724,7 @@ export default function TicketGrid() {
                   <button
                     type="button"
                     onClick={() => setShowOrganizerModal(true)}
-                    className="flex items-center gap-2.5 w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500 transition-colors text-left"
+                    className="flex items-center gap-2.5 w-full p-2.5 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-lime-400 dark:hover:border-lime-500 transition-colors text-left"
                   >
                     {raffle.organizer_photo ? (
                       <img src={raffle.organizer_photo} alt={raffle.organizer_name} className="w-9 h-9 rounded-full object-cover shrink-0" />
@@ -851,7 +852,7 @@ export default function TicketGrid() {
 
                 <div className="flex flex-wrap gap-1.5 mb-4 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
                   {purchasedTickets.map(t => (
-                    <span key={t.number} className="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
+                    <span key={t.number} className="font-mono text-xs font-bold px-2 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-lime-500">
                       #{t.number.toString().padStart(pad, '0')}
                     </span>
                   ))}
@@ -860,7 +861,7 @@ export default function TicketGrid() {
                 <a
                   href={`/ticket/${purchasedTickets[0].code}`}
                   target="_blank" rel="noreferrer"
-                  className="flex items-center justify-center gap-2 w-full p-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-sm hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors mb-6"
+                  className="flex items-center justify-center gap-2 w-full p-3 rounded-xl bg-lime-50 dark:bg-lime-500/10 text-lime-600 dark:text-lime-400 font-bold text-sm hover:bg-lime-100 dark:hover:bg-lime-500/20 transition-colors mb-6"
                 >
                   Ver boleto digital <ExternalLink size={14} />
                 </a>
@@ -885,7 +886,7 @@ export default function TicketGrid() {
 
                 <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto mb-6 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
                   {sortedSelection.map(num => (
-                    <span key={num} className="flex items-center gap-1 font-mono text-xs font-bold pl-2 pr-1 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
+                    <span key={num} className="flex items-center gap-1 font-mono text-xs font-bold pl-2 pr-1 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-lime-500">
                       #{num.toString().padStart(pad, '0')}
                       <button
                         type="button"
@@ -900,25 +901,25 @@ export default function TicketGrid() {
                 </div>
 
                 {purchaseStatus && (
-                  <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-400 rounded-2xl border border-blue-100 dark:border-blue-900/50 text-center text-sm font-medium">
+                  <div className="mb-6 p-4 bg-lime-50 dark:bg-lime-950/50 text-lime-700 dark:text-lime-400 rounded-2xl border border-lime-100 dark:border-lime-900/50 text-center text-sm font-medium">
                     {purchaseStatus}
                   </div>
                 )}
 
                 <form onSubmit={handlePurchase} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Nombre Completo <span className="text-blue-500">*</span></label>
-                    <input required type="text" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                    <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Nombre Completo <span className="text-lime-500">*</span></label>
+                    <input required type="text" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all"
                       value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Ej. Juan Pérez" />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Teléfono Celular <span className="text-blue-500">*</span></label>
-                    <input required type="tel" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                    <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Teléfono Celular <span className="text-lime-500">*</span></label>
+                    <input required type="tel" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all"
                       value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+00 0000000" />
                   </div>
                   <div>
                     <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">Correo Electrónico (Opcional)</label>
-                    <input type="email" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                    <input type="email" className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all"
                       value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="tu@correo.com" />
                   </div>
 
@@ -926,7 +927,7 @@ export default function TicketGrid() {
                     <div>
                       <label className="block text-sm font-semibold mb-1.5 text-zinc-700 dark:text-zinc-300">¿Quién te atendió? (Opcional)</label>
                       <select
-                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                        className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all"
                         value={selectedSellerCode} onChange={e => setSelectedSellerCode(e.target.value)}
                       >
                         <option value="">Sin vendedor / No sé</option>
@@ -986,7 +987,7 @@ export default function TicketGrid() {
                       className={`flex flex-col items-center justify-center gap-1 py-5 rounded-2xl font-bold transition-all ${
                         randomQuantity === n
                           ? 'text-white shadow-lg scale-[1.02]'
-                          : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-blue-400 dark:hover:border-blue-500'
+                          : 'bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-lime-400 dark:hover:border-lime-500'
                       }`}
                     >
                       <span className="text-2xl">+{n}</span>
@@ -1022,7 +1023,7 @@ export default function TicketGrid() {
 
                 <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto mb-6 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
                   {randomNumbers.map(num => (
-                    <span key={num} className="flex items-center gap-1 font-mono text-xs font-bold pl-2 pr-1 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500">
+                    <span key={num} className="flex items-center gap-1 font-mono text-xs font-bold pl-2 pr-1 py-1 rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-lime-500">
                       #{num.toString().padStart(pad, '0')}
                       <button
                         type="button"

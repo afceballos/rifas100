@@ -6,7 +6,7 @@ export default function AdminRaffleSidebar({ id, raffle, activeSection }) {
   const itemClass = (active) =>
     `flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap shrink-0 transition-colors ${
       active
-        ? 'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400'
+        ? 'bg-lime-50 dark:bg-lime-500/10 text-lime-600 dark:text-lime-400'
         : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800'
     }`;
 

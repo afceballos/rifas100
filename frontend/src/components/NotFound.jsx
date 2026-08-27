@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
 import ThemeToggle from './ThemeToggle';
-import { ShieldCheck, Ticket, Home, Search, EyeOff } from 'lucide-react';
+import TicketMark from './landing/TicketMark';
+import { Ticket, Home, Search, EyeOff } from 'lucide-react';
 
 gsap.registerPlugin(useGSAP);
 
@@ -56,9 +57,9 @@ export default function NotFound({ variant = 'not_found' }) {
     <div className="min-h-screen flex flex-col font-sans bg-zinc-50 dark:bg-zinc-950" ref={containerRef}>
       {/* Navbar */}
       <nav className="w-full p-4 flex justify-between items-center max-w-6xl mx-auto">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
-          <ShieldCheck className="text-blue-500" />
-          <span>Ticket<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-violet-500">Vault</span></span>
+        <Link to="/" className="flex items-center gap-2 font-mono font-bold text-xl tracking-tight">
+          <TicketMark className="h-6 w-auto text-raffle-greenDark dark:text-raffle-green" />
+          <span>TICKET<span className="text-raffle-greenDark dark:text-raffle-green">100</span></span>
         </Link>
         <ThemeToggle />
       </nav>
@@ -76,13 +77,13 @@ export default function NotFound({ variant = 'not_found' }) {
 
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <Ticket size={18} className="text-blue-500" />
-                <span className="text-xs font-bold tracking-widest text-zinc-400 dark:text-zinc-500 uppercase">Ticket Vault</span>
+                <Ticket size={18} className="text-raffle-greenDark dark:text-raffle-green" />
+                <span className="text-xs font-bold tracking-widest text-zinc-400 dark:text-zinc-500 uppercase">Ticket100</span>
               </div>
               <span className="text-[10px] font-mono text-zinc-400">N° 000</span>
             </div>
 
-            <div className="nf-number font-mono font-extrabold text-7xl sm:text-8xl tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-br from-blue-500 via-violet-500 to-fuchsia-500">
+            <div className="nf-number font-mono font-extrabold text-7xl sm:text-8xl tracking-tighter leading-none text-transparent bg-clip-text bg-gradient-to-br from-lime-400 via-lime-600 to-green-800">
               <span>4</span><span>0</span><span>4</span>
             </div>
 
@@ -111,7 +112,7 @@ export default function NotFound({ variant = 'not_found' }) {
         <div className="nf-text flex flex-col sm:flex-row items-center gap-3">
           <Link
             to="/"
-            className="group flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all hover:scale-105 active:scale-95"
+            className="group flex items-center gap-2 px-6 py-3 bg-lime-600 text-white font-bold rounded-2xl hover:bg-lime-700 shadow-lg shadow-lime-500/30 transition-all hover:scale-105 active:scale-95"
           >
             <Home size={18} />
             Volver al inicio

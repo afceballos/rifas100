@@ -4,10 +4,11 @@ import ThemeToggle from './ThemeToggle';
 import Dialog from './Dialog';
 import SellerTicketDetailModal from './SellerTicketDetailModal';
 import SellerChangePasswordModal from './SellerChangePasswordModal';
-import { ShieldCheck, LogOut, KeyRound, Search, Info, Ticket, Wallet, CheckCircle2 } from 'lucide-react';
+import { LogOut, KeyRound, Search, Info, Ticket, Wallet, CheckCircle2 } from 'lucide-react';
+import TicketMark from './landing/TicketMark';
 
 const STATUS_PILL = {
-  reserved: { label: 'APARTADO', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' },
+  reserved: { label: 'APARTADO', cls: 'bg-lime-100 text-lime-700 dark:bg-lime-500/10 dark:text-lime-400' },
   reviewing: { label: 'REVISANDO', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' },
   paid: { label: 'APROBADO', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' },
 };
@@ -75,8 +76,9 @@ export default function SellerPanel() {
     <div className="min-h-screen font-sans pb-12">
       <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-10 shadow-sm">
         <div className="max-w-5xl mx-auto px-6 h-16 flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-2 font-bold text-lg text-zinc-500 hover:text-blue-500">
-            <ShieldCheck /> TicketVault
+          <Link to="/" className="flex items-center gap-2 font-mono font-bold text-lg text-zinc-500 hover:text-raffle-greenDark dark:hover:text-raffle-green">
+            <TicketMark className="h-5 w-auto" />
+            Ticket100
           </Link>
           <div className="flex items-center gap-2">
             <button
@@ -111,7 +113,7 @@ export default function SellerPanel() {
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
           <div className="bg-white dark:bg-zinc-900 p-5 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm">
-            <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 w-fit mb-3"><Ticket size={20} /></div>
+            <div className="p-2.5 rounded-xl bg-lime-50 dark:bg-lime-500/10 text-lime-500 w-fit mb-3"><Ticket size={20} /></div>
             <h3 className="text-zinc-500 dark:text-zinc-400 text-xs font-medium mb-0.5">Boletos vendidos</h3>
             <p className="text-2xl font-bold font-mono">{totalNumbers}</p>
           </div>
@@ -154,10 +156,10 @@ export default function SellerPanel() {
                   ? <tr><td colSpan="4" className="px-6 py-12 text-center text-zinc-500">{search ? 'Sin resultados para tu búsqueda.' : 'Todavía no tienes ventas registradas.'}</td></tr>
                   : filteredTickets.map(t => (
                     <tr key={t.ticket_code} className="border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors">
-                      <td className="px-6 py-4 font-mono font-bold text-blue-500">
+                      <td className="px-6 py-4 font-mono font-bold text-lime-500">
                         <div className="flex flex-wrap gap-1 max-w-[10rem]">
                           {t.ticket_numbers.map(n => (
-                            <span key={n} className="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10">#{n.toString().padStart(pad, '0')}</span>
+                            <span key={n} className="px-1.5 py-0.5 rounded bg-lime-50 dark:bg-lime-500/10">#{n.toString().padStart(pad, '0')}</span>
                           ))}
                         </div>
                       </td>
@@ -174,7 +176,7 @@ export default function SellerPanel() {
                         <button
                           onClick={() => setViewingTicket(t)}
                           title="Ver información"
-                          className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          className="p-1.5 text-zinc-500 hover:text-lime-600 dark:hover:text-lime-400 hover:bg-lime-50 dark:hover:bg-lime-900/20 rounded-lg transition-colors"
                         >
                           <Info size={15} />
                         </button>

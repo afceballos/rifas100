@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
 import Dialog from './Dialog';
 import RaffleFormModal from './RaffleFormModal';
+import TicketMark from './landing/TicketMark';
 import { LayoutDashboard, LogOut, PlusCircle, ArrowRight, Trash2, EyeOff, Eye, Pencil, ShieldCheck } from 'lucide-react';
 
 export default function Admin() {
@@ -127,6 +128,10 @@ export default function Admin() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
         <div className="bg-white dark:bg-zinc-900 p-10 rounded-3xl max-w-sm w-full shadow-2xl">
+          <div className="flex items-center justify-center gap-2 font-mono font-bold text-xl tracking-tight mb-6">
+            <TicketMark className="h-6 w-auto text-raffle-greenDark dark:text-raffle-green" />
+            <span>TICKET<span className="text-raffle-greenDark dark:text-raffle-green">100</span></span>
+          </div>
           <h2 className="text-2xl font-bold text-center mb-8">Acceso Operativo</h2>
           <form onSubmit={handleLogin} className="space-y-4">
             <input type="text" placeholder="Usuario" required className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3" value={username} onChange={e => setUsername(e.target.value)} />
@@ -134,7 +139,7 @@ export default function Admin() {
             <button type="submit" className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-xl mt-4">{loading ? '...' : 'Entrar'}</button>
           </form>
           <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-6">
-            ¿No tienes cuenta? <Link to="/registro" className="font-semibold text-blue-500 hover:text-blue-600">Crea una</Link>
+            ¿No tienes cuenta? <Link to="/registro" className="font-semibold text-lime-500 hover:text-lime-600">Crea una</Link>
           </p>
         </div>
         <Dialog {...dialog} />
@@ -146,10 +151,10 @@ export default function Admin() {
     <div className="min-h-screen font-sans pb-12">
       <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex justify-between items-center">
-          <div className="flex items-center gap-2 font-bold text-lg"><LayoutDashboard className="text-blue-500" /> Sorteos Activos</div>
+          <div className="flex items-center gap-2 font-bold text-lg"><LayoutDashboard className="text-lime-500" /> Sorteos Activos</div>
           <div className="flex items-center gap-4">
             {me?.role === 'super_admin' && (
-              <Link to="/superadmin" className="flex items-center gap-1.5 text-sm font-semibold text-violet-500 hover:text-violet-600">
+              <Link to="/superadmin" className="flex items-center gap-1.5 text-sm font-semibold text-lime-600 hover:text-lime-700">
                 <ShieldCheck size={16} /> Super Admin
               </Link>
             )}
@@ -165,7 +170,7 @@ export default function Admin() {
             <h1 className="text-3xl font-bold">Gestor de Bóvedas</h1>
             {me?.tenant_name && <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{me.tenant_name}</p>}
           </div>
-          <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-500/30">
+          <button onClick={() => setShowCreate(true)} className="flex items-center gap-2 px-4 py-2 bg-lime-600 text-white rounded-xl font-bold hover:bg-lime-700 shadow-lg shadow-lime-500/30">
             <PlusCircle size={20} /> Nuevo Sorteo
           </button>
         </div>
@@ -193,7 +198,7 @@ export default function Admin() {
                 <div className="flex gap-4 mb-6">
                   <div>
                     <p className="text-xs text-zinc-400">Boletos</p>
-                    <p className="font-mono font-bold text-lg text-blue-500">{r.total_tickets}</p>
+                    <p className="font-mono font-bold text-lg text-lime-500">{r.total_tickets}</p>
                   </div>
                   <div>
                     <p className="text-xs text-zinc-400">Valor</p>

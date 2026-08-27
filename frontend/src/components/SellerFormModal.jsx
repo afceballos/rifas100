@@ -145,7 +145,7 @@ export default function SellerFormModal({ raffleId, seller, pad, numberStart = 0
 
           <div className="flex gap-3 pt-4">
             <button type="button" onClick={onClose} className="flex-1 py-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl font-bold">Cancelar</button>
-            <button type="submit" disabled={submitting} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold disabled:opacity-50">
+            <button type="submit" disabled={submitting} className="flex-1 py-3 bg-lime-600 text-white rounded-xl font-bold disabled:opacity-50">
               {submitting ? 'Guardando...' : isEdit ? 'Guardar Cambios' : 'Crear vendedor'}
             </button>
           </div>

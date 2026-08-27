@@ -197,7 +197,7 @@ export default function AdminRaffleSettings() {
     <div className="min-h-screen font-sans pb-12">
       <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex justify-between items-center">
-          <Link to="/admin" className="flex items-center gap-2 font-bold text-lg text-zinc-500 hover:text-blue-500">
+          <Link to="/admin" className="flex items-center gap-2 font-bold text-lg text-zinc-500 hover:text-lime-500">
             <ArrowLeft /> Volver al Inicio
           </Link>
           <ThemeToggle />
@@ -269,7 +269,7 @@ export default function AdminRaffleSettings() {
                   {raffle.organizer_photo ? (
                     <img src={raffle.organizer_photo} alt="Organizador" className="w-9 h-9 rounded-full object-cover" />
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white shrink-0">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center text-white shrink-0">
                       <UserCircle2 size={18} />
                     </div>
                   )}
@@ -320,7 +320,7 @@ export default function AdminRaffleSettings() {
                 <div className="space-y-2">
                   {paymentMethods.map((pm, i) => (
                     <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
-                      <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 shrink-0">
+                      <div className="p-2.5 rounded-xl bg-lime-50 dark:bg-lime-500/10 text-lime-500 shrink-0">
                         <Wallet size={18} />
                       </div>
                       <div className="min-w-0">
@@ -365,7 +365,7 @@ export default function AdminRaffleSettings() {
                 <div className="space-y-2 mb-4">
                   {sellers.map(s => (
                     <div key={s.id} className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
-                      <div className="p-2.5 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 shrink-0">
+                      <div className="p-2.5 rounded-xl bg-lime-50 dark:bg-lime-500/10 text-lime-500 shrink-0">
                         <Users size={18} />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -386,28 +386,28 @@ export default function AdminRaffleSettings() {
                         <button
                           onClick={() => setSettingPasswordFor(s)}
                           title="Definir acceso al portal"
-                          className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          className="p-1.5 text-zinc-500 hover:text-lime-600 dark:hover:text-lime-400 hover:bg-lime-50 dark:hover:bg-lime-900/20 rounded-lg transition-colors"
                         >
                           <KeyRound size={16} />
                         </button>
                         <button
                           onClick={() => setViewingSellerSales(s)}
                           title="Ver números vendidos"
-                          className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          className="p-1.5 text-zinc-500 hover:text-lime-600 dark:hover:text-lime-400 hover:bg-lime-50 dark:hover:bg-lime-900/20 rounded-lg transition-colors"
                         >
                           <ListChecks size={16} />
                         </button>
                         <button
                           onClick={() => setSharingSeller(s)}
                           title="Compartir (QR / enlace)"
-                          className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          className="p-1.5 text-zinc-500 hover:text-lime-600 dark:hover:text-lime-400 hover:bg-lime-50 dark:hover:bg-lime-900/20 rounded-lg transition-colors"
                         >
                           <QrCode size={16} />
                         </button>
                         <button
                           onClick={() => setEditingSeller(s)}
                           title="Editar"
-                          className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                          className="p-1.5 text-zinc-500 hover:text-lime-600 dark:hover:text-lime-400 hover:bg-lime-50 dark:hover:bg-lime-900/20 rounded-lg transition-colors"
                         >
                           <Pencil size={16} />
                         </button>
@@ -439,7 +439,7 @@ export default function AdminRaffleSettings() {
                   role="switch"
                   aria-checked={!!raffle.allow_seller_selection}
                   className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${
-                    raffle.allow_seller_selection ? 'bg-blue-600' : 'bg-zinc-300 dark:bg-zinc-700'
+                    raffle.allow_seller_selection ? 'bg-lime-600' : 'bg-zinc-300 dark:bg-zinc-700'
                   }`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${
@@ -462,7 +462,7 @@ export default function AdminRaffleSettings() {
                   role="switch"
                   aria-checked={!!raffle.seller_portal_enabled}
                   className={`relative shrink-0 w-11 h-6 rounded-full transition-colors disabled:opacity-50 ${
-                    raffle.seller_portal_enabled ? 'bg-blue-600' : 'bg-zinc-300 dark:bg-zinc-700'
+                    raffle.seller_portal_enabled ? 'bg-lime-600' : 'bg-zinc-300 dark:bg-zinc-700'
                   }`}
                 >
                   <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${

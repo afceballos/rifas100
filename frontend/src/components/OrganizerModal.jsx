@@ -20,7 +20,7 @@ export default function OrganizerModal({ raffle, onClose }) {
           {raffle?.organizer_photo ? (
             <img src={raffle.organizer_photo} alt={raffle.organizer_name || 'Organizador'} className="w-24 h-24 rounded-full object-cover border border-zinc-200 dark:border-zinc-800 shadow-sm" />
           ) : (
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center text-white shadow-lg shadow-lime-500/20">
               {raffle?.organizer_name ? <UserCircle2 size={44} /> : <ShieldCheck size={40} />}
             </div>
           )}
@@ -29,7 +29,7 @@ export default function OrganizerModal({ raffle, onClose }) {
               {raffle?.organizer_name || 'Organizador no especificado'}
             </p>
             <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-              Responsable de este sorteo en TicketVault.
+              Responsable de este sorteo en Ticket100.
             </p>
           </div>
 
@@ -38,9 +38,9 @@ export default function OrganizerModal({ raffle, onClose }) {
               {raffle.organizer_phone && (
                 <a
                   href={`tel:${raffle.organizer_phone}`}
-                  className="flex items-center gap-3 w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500 transition-colors text-left"
+                  className="flex items-center gap-3 w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-lime-400 dark:hover:border-lime-500 transition-colors text-left"
                 >
-                  <span className="p-2 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                  <span className="p-2 rounded-lg bg-lime-50 dark:bg-lime-500/10 text-lime-600 dark:text-lime-400 shrink-0">
                     <Phone size={16} />
                   </span>
                   <span className="min-w-0">
@@ -52,9 +52,9 @@ export default function OrganizerModal({ raffle, onClose }) {
               {raffle.organizer_email && (
                 <a
                   href={`mailto:${raffle.organizer_email}`}
-                  className="flex items-center gap-3 w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-blue-400 dark:hover:border-blue-500 transition-colors text-left"
+                  className="flex items-center gap-3 w-full p-3 rounded-xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 hover:border-lime-400 dark:hover:border-lime-500 transition-colors text-left"
                 >
-                  <span className="p-2 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                  <span className="p-2 rounded-lg bg-lime-50 dark:bg-lime-500/10 text-lime-600 dark:text-lime-400 shrink-0">
                     <Mail size={16} />
                   </span>
                   <span className="min-w-0">

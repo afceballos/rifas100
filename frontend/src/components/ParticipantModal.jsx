@@ -3,9 +3,9 @@ import { X, MessageCircle, Phone, Ticket, Copy, Check, Trash2, StickyNote, Recei
 
 const STATUS_OPTIONS = [
   {
-    value: 'reserved', label: 'Apartado', dot: 'bg-blue-500',
-    active: 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20',
-    inactive: 'bg-white dark:bg-zinc-900 border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30',
+    value: 'reserved', label: 'Apartado', dot: 'bg-lime-500',
+    active: 'bg-lime-600 border-lime-600 text-white shadow-md shadow-lime-500/20',
+    inactive: 'bg-white dark:bg-zinc-900 border-lime-200 dark:border-lime-900/50 text-lime-600 dark:text-lime-400 hover:bg-lime-50 dark:hover:bg-lime-950/30',
   },
   {
     value: 'reviewing', label: 'Revisando', dot: 'bg-amber-500',
@@ -171,7 +171,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
               <dt className="font-semibold text-zinc-500 dark:text-zinc-400 shrink-0">Números</dt>
               <dd className="flex flex-wrap justify-end gap-1">
                 {localTicket.ticket_numbers.map(n => (
-                  <span key={n} className="font-mono font-bold text-xs px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10 text-zinc-900 dark:text-white">
+                  <span key={n} className="font-mono font-bold text-xs px-1.5 py-0.5 rounded bg-lime-50 dark:bg-lime-500/10 text-zinc-900 dark:text-white">
                     {n.toString().padStart(pad, '0')}
                   </span>
                 ))}
@@ -203,7 +203,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
                     <MessageCircle size={14} />
                   </a>
                 )}
-                <a href={`tel:${localTicket.buyer_phone}`} title="Llamar" className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">
+                <a href={`tel:${localTicket.buyer_phone}`} title="Llamar" className="p-1.5 rounded-lg bg-lime-50 dark:bg-lime-500/10 text-lime-600 dark:text-lime-400 hover:bg-lime-100 dark:hover:bg-lime-500/20 transition-colors">
                   <Phone size={14} />
                 </a>
               </dd>
@@ -222,7 +222,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
                     onChange={e => handleSellerChange(e.target.value)}
                     onBlur={() => setEditingSeller(false)}
                     disabled={savingSeller}
-                    className="text-sm font-semibold text-right rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white px-2 py-1 outline-none focus:ring-2 focus:ring-blue-500/40 disabled:opacity-50"
+                    className="text-sm font-semibold text-right rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white px-2 py-1 outline-none focus:ring-2 focus:ring-lime-500/40 disabled:opacity-50"
                   >
                     <option value="">No tiene</option>
                     {sellers.map(s => (
@@ -233,7 +233,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
                   <button
                     type="button"
                     onClick={() => setEditingSeller(true)}
-                    className="flex items-center gap-1.5 text-right font-semibold text-zinc-900 dark:text-white hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+                    className="flex items-center gap-1.5 text-right font-semibold text-zinc-900 dark:text-white hover:text-lime-500 dark:hover:text-lime-400 transition-colors"
                   >
                     {localTicket.seller_id
                       ? `${localTicket.seller_code} · ${localTicket.seller_name}`
@@ -289,7 +289,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
             {localTicket.receipt_image ? (
               <div className="flex items-center gap-3">
                 <img src={localTicket.receipt_image} alt="Comprobante" className="w-16 h-16 rounded-xl object-cover border border-zinc-200 dark:border-zinc-800" />
-                <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-500 cursor-pointer hover:text-blue-600">
+                <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-lime-500 cursor-pointer hover:text-lime-600">
                   {uploadingReceipt ? 'Subiendo...' : 'Reemplazar'}
                   <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleReceiptPick} disabled={uploadingReceipt} />
                 </label>
@@ -300,7 +300,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
                   <p className="text-xs text-zinc-500 dark:text-zinc-400">No se ha subido un comprobante.</p>
                   <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">Los participantes no pueden subir comprobantes todavía.</p>
                 </div>
-                <label className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:border-blue-400 hover:text-blue-500 transition-colors">
+                <label className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:border-lime-400 hover:text-lime-500 transition-colors">
                   {uploadingReceipt ? <span className="text-[10px]">...</span> : <ImagePlus size={16} />}
                   <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleReceiptPick} disabled={uploadingReceipt} />
                 </label>
@@ -312,7 +312,7 @@ export default function ParticipantModal({ raffleId, ticket, pad, pricePerTicket
             {ticketUrl && (
               <a
                 href={ticketUrl} target="_blank" rel="noreferrer"
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold rounded-xl bg-lime-50 dark:bg-lime-500/10 text-lime-600 dark:text-lime-400 hover:bg-lime-100 dark:hover:bg-lime-500/20 transition-colors"
               >
                 <Ticket size={15} /> Abrir ticket
               </a>

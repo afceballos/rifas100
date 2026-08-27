@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Dialog from './Dialog';
+import TicketMark from './landing/TicketMark';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -47,6 +48,10 @@ export default function Register() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="bg-white dark:bg-zinc-900 p-10 rounded-3xl max-w-sm w-full shadow-2xl">
+        <div className="flex items-center justify-center gap-2 font-mono font-bold text-xl tracking-tight mb-6">
+          <TicketMark className="h-6 w-auto text-raffle-greenDark dark:text-raffle-green" />
+          <span>TICKET<span className="text-raffle-greenDark dark:text-raffle-green">100</span></span>
+        </div>
         <h2 className="text-2xl font-bold text-center mb-2">Crea tu cuenta</h2>
         <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mb-8">Empieza a crear tus propias rifas gratis.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,12 +80,12 @@ export default function Register() {
             className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3"
             value={form.confirm} onChange={e => setForm({ ...form, confirm: e.target.value })}
           />
-          <button type="submit" disabled={loading} className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all disabled:opacity-50 mt-4">
+          <button type="submit" disabled={loading} className="w-full py-3 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-700 shadow-lg shadow-lime-500/30 transition-all disabled:opacity-50 mt-4">
             {loading ? 'Creando...' : 'Crear cuenta'}
           </button>
         </form>
         <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-6">
-          ¿Ya tienes cuenta? <Link to="/admin" className="font-semibold text-blue-500 hover:text-blue-600">Inicia sesión</Link>
+          ¿Ya tienes cuenta? <Link to="/admin" className="font-semibold text-lime-600 hover:text-lime-700">Inicia sesión</Link>
         </p>
       </div>
       <Dialog {...dialog} />

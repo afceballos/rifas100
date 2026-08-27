@@ -44,7 +44,7 @@ export default function SellerShareModal({ seller, raffleUrl, pad = 2, onClose }
             </p>
             <button
               onClick={handleCopy}
-              className="w-full flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 text-sm font-semibold rounded-xl bg-lime-600 text-white hover:bg-lime-700 transition-colors"
             >
               {copied ? <><Check size={15} /> Copiado</> : <><Copy size={15} /> Copiar enlace</>}
             </button>

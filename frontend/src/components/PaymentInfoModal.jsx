@@ -19,7 +19,7 @@ const CopyButton = ({ value }) => {
     } catch { /* clipboard no disponible */ }
   };
   return (
-    <button type="button" onClick={handleCopy} title="Copiar" className="p-1 text-zinc-400 hover:text-blue-500 transition-colors shrink-0">
+    <button type="button" onClick={handleCopy} title="Copiar" className="p-1 text-zinc-400 hover:text-lime-500 transition-colors shrink-0">
       {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
     </button>
   );
@@ -47,7 +47,7 @@ export default function PaymentInfoModal({ raffle, onClose }) {
               return (
                 <div key={i} className="p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800">
                   <div className="flex items-center gap-3 mb-1">
-                    <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-blue-500 shrink-0">
+                    <div className="p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-lime-500 shrink-0">
                       <Icon size={18} />
                     </div>
                     <div className="min-w-0">
@@ -82,7 +82,7 @@ export default function PaymentInfoModal({ raffle, onClose }) {
 
         <div className="text-center pt-4 border-t border-zinc-100 dark:border-zinc-800">
           <p className="text-xs text-zinc-400 uppercase tracking-widest font-bold mb-1">Valor del número</p>
-          <p className="text-2xl font-mono font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-violet-500">
+          <p className="text-2xl font-mono font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-lime-500 to-lime-600">
             ${raffle?.price_per_ticket}
           </p>
         </div>

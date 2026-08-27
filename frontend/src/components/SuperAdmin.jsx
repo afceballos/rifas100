@@ -66,7 +66,7 @@ export default function SuperAdmin() {
     <div className="min-h-screen font-sans pb-12">
       <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex justify-between items-center">
-          <Link to="/admin" className="flex items-center gap-2 font-bold text-lg text-zinc-500 hover:text-blue-500">
+          <Link to="/admin" className="flex items-center gap-2 font-bold text-lg text-zinc-500 hover:text-lime-500">
             <ArrowLeft /> Volver al Inicio
           </Link>
           <ThemeToggle />
@@ -87,7 +87,7 @@ export default function SuperAdmin() {
               <div key={t.id} className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-sm overflow-hidden">
                 <div className="px-6 py-5 border-b border-zinc-200 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-violet-50 dark:bg-violet-500/10 text-violet-500">
+                    <div className="p-2.5 rounded-xl bg-lime-50 dark:bg-lime-600/10 text-lime-600">
                       <Building2 size={18} />
                     </div>
                     <div>
@@ -141,7 +141,7 @@ export default function SuperAdmin() {
                           <tr key={r.id} className="border-t border-zinc-100 dark:border-zinc-800/50">
                             <td className="px-6 py-3 font-medium">
                               {r.slug ? (
-                                <a href={`/sorteo/${r.slug}`} target="_blank" rel="noreferrer" className="hover:text-blue-500">{r.title}</a>
+                                <a href={`/sorteo/${r.slug}`} target="_blank" rel="noreferrer" className="hover:text-lime-500">{r.title}</a>
                               ) : r.title}
                             </td>
                             <td className="px-6 py-3 font-mono">{r.total_tickets}</td>

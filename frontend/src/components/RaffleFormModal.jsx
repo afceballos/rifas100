@@ -251,7 +251,7 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
                 {organizerPreview ? (
                   <img src={organizerPreview} alt="Organizador" className="w-14 h-14 rounded-full object-cover border border-zinc-200 dark:border-zinc-800" />
                 ) : (
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center text-white">
                     <UserCircle2 size={26} />
                   </div>
                 )}
@@ -271,7 +271,7 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
                   className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-transparent"
                   value={form.organizer_name} onChange={e => setForm({ ...form, organizer_name: e.target.value })}
                 />
-                <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-500 cursor-pointer hover:text-blue-600">
+                <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-lime-500 cursor-pointer hover:text-lime-600">
                   <ImagePlus size={14} /> {organizerPreview ? 'Cambiar foto' : 'Subir foto'}
                   <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleOrganizerPhotoPick} />
                 </label>
@@ -293,7 +293,7 @@ export default function RaffleFormModal({ mode, raffle, onClose, onSaved, showAl
 
           <div className="flex gap-3 pt-4">
             <button type="button" onClick={onClose} className="flex-1 py-3 bg-zinc-100 dark:bg-zinc-800 rounded-xl font-bold">Cancelar</button>
-            <button type="submit" disabled={submitting} className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-bold">
+            <button type="submit" disabled={submitting} className="flex-1 py-3 bg-lime-600 text-white rounded-xl font-bold">
               {submitting ? 'Guardando...' : isEdit ? 'Guardar Cambios' : 'Crear Bóveda'}
             </button>
           </div>

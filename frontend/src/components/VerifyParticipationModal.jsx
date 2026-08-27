@@ -75,7 +75,7 @@ export default function VerifyParticipationModal({ raffle, pad, onClose }) {
               key={key} type="button" onClick={() => switchType(key)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-bold transition-colors ${
                 searchType === key
-                  ? 'bg-gradient-to-r from-blue-500 to-violet-500 text-white shadow-md shadow-blue-500/20'
+                  ? 'bg-gradient-to-r from-lime-500 to-lime-600 text-white shadow-md shadow-lime-500/20'
                   : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'
               }`}
             >
@@ -88,12 +88,12 @@ export default function VerifyParticipationModal({ raffle, pad, onClose }) {
           <input
             required
             {...inputProps}
-            className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+            className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3 text-zinc-900 dark:text-white outline-none focus:ring-2 focus:ring-lime-500/50 focus:border-lime-500 transition-all"
             value={query} onChange={e => setQuery(e.target.value)}
           />
           <button
             type="submit" disabled={loading}
-            className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-500 to-violet-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-lime-500 to-lime-600 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-lime-500/30 transition-all active:scale-95 disabled:opacity-50"
           >
             <Search size={16} /> {loading ? 'Consultando...' : 'Consultar'}
           </button>
@@ -120,7 +120,7 @@ export default function VerifyParticipationModal({ raffle, pad, onClose }) {
                             ? 'text-emerald-600 dark:text-emerald-400'
                             : result.status === 'REVISANDO'
                               ? 'text-amber-600 dark:text-amber-400'
-                              : 'text-blue-600 dark:text-blue-400'
+                              : 'text-lime-600 dark:text-lime-400'
                         }`}>{result.status}</span>
                       </div>
                       <div className="flex justify-between gap-3"><span className="text-zinc-500 dark:text-zinc-400 font-medium">Código</span><span className="font-mono font-semibold text-right">{result.code}</span></div>

@@ -3,9 +3,9 @@ import { X, MessageCircle, Phone, Ticket, Copy, Check, Receipt, ImagePlus } from
 
 const STATUS_OPTIONS = [
   {
-    value: 'reserved', label: 'Apartado', dot: 'bg-blue-500',
-    active: 'bg-blue-600 border-blue-600 text-white shadow-md shadow-blue-500/20',
-    inactive: 'bg-white dark:bg-zinc-900 border-blue-200 dark:border-blue-900/50 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30',
+    value: 'reserved', label: 'Apartado', dot: 'bg-lime-500',
+    active: 'bg-lime-600 border-lime-600 text-white shadow-md shadow-lime-500/20',
+    inactive: 'bg-white dark:bg-zinc-900 border-lime-200 dark:border-lime-900/50 text-lime-600 dark:text-lime-400 hover:bg-lime-50 dark:hover:bg-lime-950/30',
   },
   {
     value: 'reviewing', label: 'Revisando', dot: 'bg-amber-500',
@@ -106,7 +106,7 @@ export default function SellerTicketDetailModal({ ticket, pad, pricePerTicket, o
               <dt className="font-semibold text-zinc-500 dark:text-zinc-400 shrink-0">Números</dt>
               <dd className="flex flex-wrap justify-end gap-1">
                 {localTicket.ticket_numbers.map(n => (
-                  <span key={n} className="font-mono font-bold text-xs px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10 text-zinc-900 dark:text-white">
+                  <span key={n} className="font-mono font-bold text-xs px-1.5 py-0.5 rounded bg-lime-50 dark:bg-lime-500/10 text-zinc-900 dark:text-white">
                     {n.toString().padStart(pad, '0')}
                   </span>
                 ))}
@@ -138,7 +138,7 @@ export default function SellerTicketDetailModal({ ticket, pad, pricePerTicket, o
                     <MessageCircle size={14} />
                   </a>
                 )}
-                <a href={`tel:${localTicket.buyer_phone}`} title="Llamar" className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors">
+                <a href={`tel:${localTicket.buyer_phone}`} title="Llamar" className="p-1.5 rounded-lg bg-lime-50 dark:bg-lime-500/10 text-lime-600 dark:text-lime-400 hover:bg-lime-100 dark:hover:bg-lime-500/20 transition-colors">
                   <Phone size={14} />
                 </a>
               </dd>
@@ -173,7 +173,7 @@ export default function SellerTicketDetailModal({ ticket, pad, pricePerTicket, o
             {localTicket.receipt_image ? (
               <div className="flex items-center gap-3">
                 <img src={localTicket.receipt_image} alt="Comprobante" className="w-16 h-16 rounded-xl object-cover border border-zinc-200 dark:border-zinc-800" />
-                <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-500 cursor-pointer hover:text-blue-600">
+                <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-lime-500 cursor-pointer hover:text-lime-600">
                   {uploadingReceipt ? 'Subiendo...' : 'Reemplazar'}
                   <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleReceiptPick} disabled={uploadingReceipt} />
                 </label>
@@ -181,7 +181,7 @@ export default function SellerTicketDetailModal({ ticket, pad, pricePerTicket, o
             ) : (
               <div className="flex items-center justify-between gap-3">
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">No se ha subido un comprobante.</p>
-                <label className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:border-blue-400 hover:text-blue-500 transition-colors">
+                <label className="shrink-0 flex items-center justify-center w-9 h-9 rounded-full bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-500 dark:text-zinc-400 cursor-pointer hover:border-lime-400 hover:text-lime-500 transition-colors">
                   {uploadingReceipt ? <span className="text-[10px]">...</span> : <ImagePlus size={16} />}
                   <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleReceiptPick} disabled={uploadingReceipt} />
                 </label>
@@ -193,7 +193,7 @@ export default function SellerTicketDetailModal({ ticket, pad, pricePerTicket, o
             {ticketUrl && (
               <a
                 href={ticketUrl} target="_blank" rel="noreferrer"
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold rounded-xl bg-lime-50 dark:bg-lime-500/10 text-lime-600 dark:text-lime-400 hover:bg-lime-100 dark:hover:bg-lime-500/20 transition-colors"
               >
                 <Ticket size={15} /> Abrir ticket
               </a>

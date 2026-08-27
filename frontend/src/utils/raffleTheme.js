@@ -1,4 +1,5 @@
 export const RAFFLE_THEMES = {
+  lime:    { label: 'Lima',      c1: '#C7FF43', c2: '#65a30d' },
   blue:    { label: 'Azul',      c1: '#3b82f6', c2: '#8b5cf6' },
   violet:  { label: 'Violeta',   c1: '#8b5cf6', c2: '#d946ef' },
   pink:    { label: 'Rosa',      c1: '#ec4899', c2: '#f43f5e' },
@@ -12,7 +13,7 @@ export const RAFFLE_THEMES = {
   slate:   { label: 'Grafito',   c1: '#94a3b8', c2: '#334155' },
 };
 
-export const DEFAULT_THEME_KEY = 'blue';
+export const DEFAULT_THEME_KEY = 'lime';
 
 export const getRaffleTheme = (key) => RAFFLE_THEMES[key] || RAFFLE_THEMES[DEFAULT_THEME_KEY];
 

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import ThemeToggle from './ThemeToggle';
-import { ShieldCheck, Store } from 'lucide-react';
+import TicketMark from './landing/TicketMark';
+import { Store } from 'lucide-react';
 
 export default function SellerLogin() {
   const navigate = useNavigate();
@@ -33,9 +34,9 @@ export default function SellerLogin() {
   return (
     <div className="min-h-screen flex flex-col font-sans">
       <nav className="w-full p-4 flex justify-between items-center max-w-6xl mx-auto">
-        <Link to="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
-          <ShieldCheck className="text-blue-500" />
-          <span>Ticket<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-violet-500">Vault</span></span>
+        <Link to="/" className="flex items-center gap-2 font-mono font-bold text-xl tracking-tight">
+          <TicketMark className="h-6 w-auto text-raffle-greenDark dark:text-raffle-green" />
+          <span>TICKET<span className="text-raffle-greenDark dark:text-raffle-green">100</span></span>
         </Link>
         <ThemeToggle />
       </nav>
@@ -43,7 +44,7 @@ export default function SellerLogin() {
       <div className="flex-1 flex items-center justify-center p-4">
         <div className="bg-white dark:bg-zinc-900 p-10 rounded-3xl max-w-sm w-full shadow-2xl border border-zinc-200 dark:border-zinc-800">
           <div className="flex flex-col items-center text-center mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-violet-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-lime-500 to-lime-600 flex items-center justify-center text-white shadow-lg shadow-lime-500/30 mb-3">
               <Store size={22} />
             </div>
             <h2 className="text-2xl font-bold">Portal de Vendedores</h2>
@@ -68,7 +69,7 @@ export default function SellerLogin() {
               </p>
             )}
 
-            <button type="submit" disabled={loading} className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50">
+            <button type="submit" disabled={loading} className="w-full py-3 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-700 shadow-lg shadow-lime-500/30 transition-all active:scale-95 disabled:opacity-50">
               {loading ? 'Entrando...' : 'Entrar'}
             </button>
           </form>

@@ -159,7 +159,7 @@ export default function PaymentMethodModal({ raffle, onClose, onSaved, showAlert
 
           <button
             type="submit" disabled={submitting}
-            className="w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 transition-all active:scale-95 disabled:opacity-50"
+            className="w-full py-3 bg-lime-600 text-white font-bold rounded-xl hover:bg-lime-700 shadow-lg shadow-lime-500/30 transition-all active:scale-95 disabled:opacity-50"
           >
             {submitting ? 'Guardando...' : 'Guardar'}
           </button>

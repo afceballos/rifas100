@@ -22,8 +22,8 @@ const CircularProgress = ({ percent, size = 132, strokeWidth = 11 }) => {
         />
         <defs>
           <linearGradient id="raffleProgressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#8b5cf6" />
+            <stop offset="0%" stopColor="#84cc16" />
+            <stop offset="100%" stopColor="#65a30d" />
           </linearGradient>
         </defs>
         <circle
@@ -36,7 +36,7 @@ const CircularProgress = ({ percent, size = 132, strokeWidth = 11 }) => {
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-2xl font-mono font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-violet-500">
+        <span className="text-2xl font-mono font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-lime-500 to-lime-600">
           {Math.round(clamped)}%
         </span>
       </div>
@@ -45,7 +45,7 @@ const CircularProgress = ({ percent, size = 132, strokeWidth = 11 }) => {
 };
 
 const STATUS_PILL = {
-  reserved: { label: 'APARTADO', cls: 'bg-blue-100 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400' },
+  reserved: { label: 'APARTADO', cls: 'bg-lime-100 text-lime-700 dark:bg-lime-500/10 dark:text-lime-400' },
   reviewing: { label: 'REVISANDO', cls: 'bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' },
   paid: { label: 'VALIDADO', cls: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' },
 };
@@ -53,7 +53,7 @@ const STATUS_PILL = {
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
 const BULK_STATUS_OPTIONS = [
-  { value: 'reserved', label: 'Apartado', cls: 'bg-blue-600 hover:bg-blue-700' },
+  { value: 'reserved', label: 'Apartado', cls: 'bg-lime-600 hover:bg-lime-700' },
   { value: 'reviewing', label: 'Revisando', cls: 'bg-amber-500 hover:bg-amber-600' },
   { value: 'paid', label: 'Validado', cls: 'bg-emerald-600 hover:bg-emerald-700' },
 ];
@@ -232,7 +232,7 @@ export default function AdminRaffle() {
     <div className="min-h-screen font-sans pb-12">
       <nav className="bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 z-10 shadow-sm">
         <div className="max-w-6xl mx-auto px-6 h-16 flex justify-between items-center">
-          <Link to="/admin" className="flex items-center gap-2 font-bold text-lg text-zinc-500 hover:text-blue-500">
+          <Link to="/admin" className="flex items-center gap-2 font-bold text-lg text-zinc-500 hover:text-lime-500">
             <ArrowLeft /> Volver al Inicio
           </Link>
           <ThemeToggle />
@@ -253,7 +253,7 @@ export default function AdminRaffle() {
                 </p>
                 <div className="flex flex-wrap gap-5 justify-center sm:justify-start text-sm font-medium">
                   <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
-                    <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-blue-500 to-violet-500" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-lime-500 to-lime-600" />
                     Vendidos: {stats.reserved + stats.reviewing + stats.paid}
                   </span>
                   <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-300">
@@ -277,8 +277,8 @@ export default function AdminRaffle() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-4">
             {[
-              { title: 'Disponibles',        val: stats.available, icon: <Ticket size={24}/>,       color: 'text-blue-500',   bg: 'bg-blue-50 dark:bg-blue-500/10', filterValue: null },
-              { title: 'Apartados',          val: stats.reserved,  icon: <Clock size={24}/>,       color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-500/10', filterValue: 'reserved' },
+              { title: 'Disponibles',        val: stats.available, icon: <Ticket size={24}/>,       color: 'text-lime-500',   bg: 'bg-lime-50 dark:bg-lime-500/10', filterValue: null },
+              { title: 'Apartados',          val: stats.reserved,  icon: <Clock size={24}/>,       color: 'text-lime-500', bg: 'bg-lime-50 dark:bg-lime-500/10', filterValue: 'reserved' },
               { title: 'Revisando',          val: stats.reviewing, icon: <EyeIcon size={24}/>,     color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-500/10', filterValue: 'reviewing' },
               { title: 'Validados',          val: stats.paid,     icon: <CheckCircle2 size={24}/>, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-500/10', filterValue: 'paid' },
             ].map((card, i) => {
@@ -290,13 +290,13 @@ export default function AdminRaffle() {
                   onClick={card.filterValue ? () => toggleStatusFilter(card.filterValue) : undefined}
                   className={`text-left bg-white dark:bg-zinc-900 p-6 rounded-3xl border shadow-sm transition-all ${
                     isActive
-                      ? 'border-blue-500 dark:border-blue-500 ring-2 ring-blue-500/30'
+                      ? 'border-lime-500 dark:border-lime-500 ring-2 ring-lime-500/30'
                       : 'border-zinc-200 dark:border-zinc-800'
-                  } ${card.filterValue ? 'hover:border-blue-400 dark:hover:border-blue-500 cursor-pointer' : ''}`}
+                  } ${card.filterValue ? 'hover:border-lime-400 dark:hover:border-lime-500 cursor-pointer' : ''}`}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className={`p-3 rounded-2xl ${card.bg} ${card.color}`}>{card.icon}</div>
-                    {isActive && <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500">Filtrando</span>}
+                    {isActive && <span className="text-[10px] font-bold uppercase tracking-widest text-lime-500">Filtrando</span>}
                   </div>
                   <h3 className="text-zinc-500 dark:text-zinc-400 text-sm font-medium mb-1">{card.title}</h3>
                   <p className="text-3xl font-bold font-mono tracking-tight">{card.val}</p>
@@ -312,7 +312,7 @@ export default function AdminRaffle() {
               </span>
               <button
                 onClick={() => toggleStatusFilter(statusFilter)}
-                className="flex items-center gap-1 text-xs font-semibold text-blue-500 hover:text-blue-600"
+                className="flex items-center gap-1 text-xs font-semibold text-lime-500 hover:text-lime-600"
               >
                 <X size={12} /> Quitar filtro
               </button>
@@ -333,8 +333,8 @@ export default function AdminRaffle() {
             </div>
 
             {selectedIds.size > 0 && (
-              <div className="px-6 py-3 bg-blue-50 dark:bg-blue-950/30 border-b border-blue-100 dark:border-blue-900/50 flex flex-wrap items-center gap-3">
-                <span className="text-sm font-bold text-blue-700 dark:text-blue-400">
+              <div className="px-6 py-3 bg-lime-50 dark:bg-lime-950/30 border-b border-lime-100 dark:border-lime-900/50 flex flex-wrap items-center gap-3">
+                <span className="text-sm font-bold text-lime-700 dark:text-lime-400">
                   {selectedIds.size} participante{selectedIds.size === 1 ? '' : 's'} seleccionado{selectedIds.size === 1 ? '' : 's'}
                 </span>
                 <div className="flex flex-wrap items-center gap-2 ml-auto">
@@ -376,7 +376,7 @@ export default function AdminRaffle() {
                         type="checkbox"
                         checked={visibleBuyers.length > 0 && visibleBuyers.every(b => selectedIds.has(b.ticket_code))}
                         onChange={toggleSelectAllVisible}
-                        className="w-4 h-4 rounded accent-blue-600 cursor-pointer"
+                        className="w-4 h-4 rounded accent-lime-600 cursor-pointer"
                       />
                     </th>
                     <th className="px-6 py-4 border-b border-zinc-200 dark:border-zinc-800">Boletos</th>
@@ -389,19 +389,19 @@ export default function AdminRaffle() {
                   {visibleBuyers.length === 0
                     ? <tr><td colSpan="5" className="px-6 py-12 text-center text-zinc-500">{search || statusFilter ? 'Sin resultados para tu búsqueda.' : 'Sin operaciones recientes.'}</td></tr>
                     : visibleBuyers.map(b => (
-                      <tr key={b.ticket_code} className={`border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors ${selectedIds.has(b.ticket_code) ? 'bg-blue-50/50 dark:bg-blue-950/20' : ''}`}>
+                      <tr key={b.ticket_code} className={`border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/30 transition-colors ${selectedIds.has(b.ticket_code) ? 'bg-lime-50/50 dark:bg-lime-950/20' : ''}`}>
                         <td className="px-6 py-4">
                           <input
                             type="checkbox"
                             checked={selectedIds.has(b.ticket_code)}
                             onChange={() => toggleSelectOne(b.ticket_code)}
-                            className="w-4 h-4 rounded accent-blue-600 cursor-pointer"
+                            className="w-4 h-4 rounded accent-lime-600 cursor-pointer"
                           />
                         </td>
-                        <td className="px-6 py-4 font-mono font-bold text-blue-500 max-w-xs">
+                        <td className="px-6 py-4 font-mono font-bold text-lime-500 max-w-xs">
                           <div className="flex flex-wrap gap-1">
                             {b.ticket_numbers.map(n => (
-                              <span key={n} className="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-500/10">#{n.toString().padStart(pad, '0')}</span>
+                              <span key={n} className="px-1.5 py-0.5 rounded bg-lime-50 dark:bg-lime-500/10">#{n.toString().padStart(pad, '0')}</span>
                             ))}
                           </div>
                         </td>
@@ -419,7 +419,7 @@ export default function AdminRaffle() {
                             <button
                               onClick={() => setViewingTicket(b)}
                               title="Ver información"
-                              className="p-1.5 text-zinc-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                              className="p-1.5 text-zinc-500 hover:text-lime-600 dark:hover:text-lime-400 hover:bg-lime-50 dark:hover:bg-lime-900/20 rounded-lg transition-colors"
                             >
                               <Info size={15} />
                             </button>
@@ -471,14 +471,14 @@ export default function AdminRaffle() {
                   <button
                     onClick={() => goToPage(Math.max(0, page - 1))}
                     disabled={page === 0}
-                    className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400"
+                    className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400"
                   >
                     <ChevronLeft size={15} />
                   </button>
                   <button
                     onClick={() => goToPage(Math.min(pageCount - 1, page + 1))}
                     disabled={page >= pageCount - 1}
-                    className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-blue-400"
+                    className="p-2 rounded-lg border border-zinc-200 dark:border-zinc-800 text-zinc-500 disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400"
                   >
                     <ChevronRight size={15} />
                   </button>
