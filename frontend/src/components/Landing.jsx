@@ -8,7 +8,8 @@ import RaffleTypes from './landing/RaffleTypes';
 import TrustSection from './landing/TrustSection';
 import FinalCta from './landing/FinalCta';
 import LandingFooter from './landing/LandingFooter';
-import { Ticket, Menu } from 'lucide-react';
+import TicketWordmark from './landing/TicketWordmark';
+import { Menu } from 'lucide-react';
 
 export default function Landing() {
   const [showMenu, setShowMenu] = useState(false);
@@ -22,12 +23,11 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-raffle-paper font-sans text-raffle-ink dark:bg-raffle-ink dark:text-raffle-paper">
+    <div className="min-h-screen bg-raffle-paper font-body text-raffle-ink dark:bg-raffle-ink dark:text-raffle-paper">
       <header className="sticky top-0 z-30 border-b border-raffle-ink/5 bg-raffle-paper/80 backdrop-blur-md dark:border-raffle-paper/5 dark:bg-raffle-ink/80">
         <nav className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4" aria-label="Principal">
-          <Link to="/" className="flex items-center gap-2 font-display text-xl font-semibold tracking-tight">
-            <Ticket className="text-raffle-goldDark dark:text-raffle-gold" size={26} />
-            Ticket<span className="bg-gold-foil bg-clip-text text-transparent">Vault</span>
+          <Link to="/" className="flex items-center">
+            <TicketWordmark className="h-6 w-auto text-raffle-ink dark:text-raffle-paper" />
           </Link>
 
           <div className="flex items-center gap-3">

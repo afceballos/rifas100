@@ -67,6 +67,66 @@
   background-repeat: repeat-x;
 }
 
+/* Divisor de talonario con muescas: línea punteada + dos círculos "recortados"
+   a los lados, como el borde de un boleto real. Los círculos heredan el color
+   de fondo de la tarjeta que los contiene (así el "recorte" siempre calza,
+   sin tener que sincronizar un color a mano por componente). */
+.ticket-notch {
+  position: relative;
+  height: 0;
+  background-color: inherit;
+  border-top: 2px dashed rgba(20, 20, 20, 0.22);
+}
+.dark .ticket-notch {
+  border-top-color: rgba(251, 249, 244, 0.2);
+}
+.ticket-notch::before,
+.ticket-notch::after {
+  content: '';
+  position: absolute;
+  top: -9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: inherit;
+  border: 1.6px solid rgba(20, 20, 20, 0.85);
+}
+.dark .ticket-notch::before,
+.dark .ticket-notch::after {
+  border-color: rgba(251, 249, 244, 0.75);
+}
+.ticket-notch::before { left: -9px; }
+.ticket-notch::after { right: -9px; }
+
+/* Variante vertical del divisor con muescas: usada en el "talón" del boleto
+   de cierre (CTA final del home). */
+.ticket-notch-v {
+  position: relative;
+  width: 0;
+  background-color: inherit;
+  border-left: 2px dashed rgba(20, 20, 20, 0.22);
+}
+.dark .ticket-notch-v {
+  border-left-color: rgba(251, 249, 244, 0.2);
+}
+.ticket-notch-v::before,
+.ticket-notch-v::after {
+  content: '';
+  position: absolute;
+  left: -9px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: inherit;
+  border: 1.6px solid rgba(20, 20, 20, 0.85);
+}
+.dark .ticket-notch-v::before,
+.dark .ticket-notch-v::after {
+  border-color: rgba(251, 249, 244, 0.75);
+}
+.ticket-notch-v::before { top: -9px; }
+.ticket-notch-v::after { bottom: -9px; }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.001ms !important;

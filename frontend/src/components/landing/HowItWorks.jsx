@@ -7,7 +7,7 @@ const STEPS = [
     icon: SlidersHorizontal,
     serial: 'N.º 01',
     title: 'Configura tu talonario',
-    desc: 'Elige 2, 3 o 4 cifras (100 a 10,000 números), pon precio, sube la imagen del premio y agrega tus métodos de pago.',
+    desc: 'Elige 2, 3 o 4 cifras (100 a 10,000 números) o un rango a la medida, pon precio, sube la imagen del premio y agrega tus métodos de pago.',
   },
   {
     icon: Share2,
@@ -29,7 +29,7 @@ export default function HowItWorks() {
   return (
     <section id="como-funciona" ref={scope} className="mx-auto max-w-6xl px-6 py-24 sm:py-28">
       <div className="reveal mx-auto max-w-2xl text-center">
-        <span className="text-sm font-bold uppercase tracking-wider text-raffle-goldDark dark:text-raffle-gold">
+        <span className="font-mono text-sm font-bold uppercase tracking-wider text-raffle-blueDark dark:text-raffle-blueLight">
           Cómo funciona
         </span>
         <h2 className="mt-3 font-display text-3xl font-semibold text-raffle-ink dark:text-raffle-paper sm:text-4xl">
@@ -37,22 +37,22 @@ export default function HowItWorks() {
         </h2>
       </div>
 
-      <ol className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
-        {STEPS.map(({ icon: Icon, serial, title, desc }) => (
+      <ol className="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-3 sm:gap-0">
+        {STEPS.map(({ icon: Icon, serial, title, desc }, i) => (
           <li
             key={serial}
-            className="reveal relative rounded-2xl border border-raffle-ink/10 bg-raffle-paper p-7 shadow-sm dark:border-raffle-paper/10 dark:bg-raffle-plum/40"
+            className={`reveal px-0 sm:px-8 ${i > 0 ? 'sm:border-l sm:border-raffle-ink/10 sm:dark:border-raffle-paper/10' : ''} ${i === 0 ? 'sm:pl-0' : ''}`}
           >
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs font-bold tracking-widest text-raffle-ink/40 dark:text-raffle-paper/40">
                 {serial}
               </span>
-              <Icon size={22} className="text-raffle-goldDark dark:text-raffle-gold" />
+              <Icon size={22} className="text-raffle-blue" />
             </div>
             <h3 className="mt-5 font-display text-xl font-semibold text-raffle-ink dark:text-raffle-paper">
               {title}
             </h3>
-            <p className="mt-2.5 text-[15px] leading-relaxed text-raffle-ink/65 dark:text-raffle-paper/65">
+            <p className="mt-2.5 font-body text-[15px] leading-relaxed text-raffle-ink/65 dark:text-raffle-paper/65">
               {desc}
             </p>
           </li>

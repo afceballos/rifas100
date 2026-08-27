@@ -7,42 +7,29 @@ export default {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
-        // Familia de exhibición: titulares y cifras grandes tipo "boleto premiado".
-        // Uso restringido a H1/H2 y números destacados, nunca en cuerpo de texto.
-        display: ['"Fraunces"', 'serif'],
+        // Familia de exhibición del home (titulares) y familia de cuerpo del
+        // home (párrafos). Uso restringido al árbol de Landing.jsx.
+        display: ['"Bricolage Grotesque"', 'sans-serif'],
+        body: ['"Work Sans"', 'sans-serif'],
       },
       colors: {
-        // Paleta "boleto de rifa": noche de gala (morado profundo) + lámina dorada
-        // + papel de boleto (marfil) + tinta roja de talonario. Pensada para
-        // reutilizarse en todo el sitio, no solo en el home.
+        // Paleta de marca "Ticket100": papel de boleto cálido + tinta negra +
+        // azul de marca. Pensada para reutilizarse en todo el sitio, no solo
+        // en el home.
         raffle: {
-          ink: '#170B26',       // fondo modo oscuro — noche de gala
-          plum: '#3D1550',      // superficie modo oscuro — terciopelo
-          plumLight: '#5C2470', // superficie hover / borde modo oscuro
-          gold: '#E8B84B',      // acento primario — lámina dorada
-          goldLight: '#F6D77A', // brillo / gradiente / hover del dorado
-          goldDark: '#B8862E',  // texto sobre dorado, sombras
-          paper: '#FDF6E9',     // fondo modo claro — papel de boleto
-          paperDim: '#F3E8D2',  // superficie modo claro
+          ink: '#141414',       // fondo modo oscuro — texto principal modo claro
+          paper: '#FBF9F4',     // fondo modo claro — papel de boleto cálido
+          paperDim: '#F3EFE6',  // superficie secundaria modo claro
+          blue: '#0579FB',      // acento primario de marca
+          blueLight: '#3E97FF', // brillo / hover del azul
+          blueDark: '#0460CC',  // texto sobre azul, estados activos
+          tint: '#EAF2FF',      // relleno azul muy claro
           stub: '#C43D4B',      // tinta roja de talonario — urgencia, "agotado"
         },
       },
       boxShadow: {
-        gold: '0 0 0 1px rgba(232,184,75,0.35), 0 8px 30px -6px rgba(232,184,75,0.35)',
-        plum: '0 20px 60px -15px rgba(23,11,38,0.6)',
-      },
-      backgroundImage: {
-        'gold-foil': 'linear-gradient(135deg, #F6D77A 0%, #E8B84B 45%, #B8862E 100%)',
-        'velvet': 'radial-gradient(120% 120% at 50% 0%, #3D1550 0%, #170B26 60%)',
-      },
-      keyframes: {
-        shimmer: {
-          '0%': { backgroundPosition: '-200% 0' },
-          '100%': { backgroundPosition: '200% 0' },
-        },
-      },
-      animation: {
-        shimmer: 'shimmer 2.5s linear infinite',
+        blue: '0 0 0 1px rgba(5,121,251,0.25), 0 8px 30px -6px rgba(5,121,251,0.35)',
+        ink: '0 20px 60px -15px rgba(20,20,20,0.35)',
       },
     },
   },
