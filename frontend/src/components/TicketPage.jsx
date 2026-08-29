@@ -7,6 +7,7 @@ import NotFound from './NotFound';
 import TicketQRCode from './TicketQRCode';
 import PaymentInfoModal from './PaymentInfoModal';
 import AccountMenuSection from './AccountMenuSection';
+import ReceiptLightbox from './ReceiptLightbox';
 import { Ticket, Copy, Check, CreditCard, ArrowUpRight, Download, Loader2, Menu, Upload, Image as ImageIcon, Share2 } from 'lucide-react';
 import TicketMark from './landing/TicketMark';
 
@@ -52,6 +53,7 @@ export default function TicketPage() {
   const [showMenu, setShowMenu] = useState(false);
   const [me, setMe] = useState(null);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
+  const [showReceiptLightbox, setShowReceiptLightbox] = useState(false);
   const [uploadError, setUploadError] = useState('');
   const fileInputRef = useRef(null);
   // Promesa del archivo a compartir, preparada de antemano (ver por qué en
@@ -369,15 +371,14 @@ export default function TicketPage() {
                 />
                 {ticket.receipt_image ? (
                   <div className="flex items-center justify-between gap-3 rounded-xl border border-lime-200 dark:border-lime-900/50 bg-lime-50 dark:bg-lime-950/30 px-4 py-3">
-                    <a
-                      href={ticket.receipt_image}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => setShowReceiptLightbox(true)}
                       className="flex items-center gap-2 text-sm font-semibold text-lime-700 dark:text-lime-400 min-w-0"
                     >
                       <ImageIcon size={16} className="shrink-0" />
                       <span className="truncate">Ver comprobante subido</span>
-                    </a>
+                    </button>
                     <button
                       onClick={() => fileInputRef.current?.click()}
                       disabled={uploadingReceipt}
@@ -446,6 +447,10 @@ export default function TicketPage() {
 
       {showPaymentModal && (
         <PaymentInfoModal raffle={ticket.raffle} onClose={() => setShowPaymentModal(false)} />
+      )}
+
+      {showReceiptLightbox && (
+        <ReceiptLightbox src={ticket.receipt_image} onClose={() => setShowReceiptLightbox(false)} />
       )}
     </div>
   );

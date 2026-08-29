@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, MessageCircle, Phone, Ticket, Copy, Check, Receipt, ImagePlus } from 'lucide-react';
+import { X, MessageCircle, Phone, Ticket, Copy, Check, Receipt, ImagePlus, ZoomIn } from 'lucide-react';
+import ReceiptLightbox from './ReceiptLightbox';
 
 const STATUS_OPTIONS = [
   {
@@ -34,6 +35,7 @@ export default function SellerTicketDetailModal({ ticket, pad, pricePerTicket, o
   const [savingStatus, setSavingStatus] = useState(false);
   const [uploadingReceipt, setUploadingReceipt] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [showReceiptLightbox, setShowReceiptLightbox] = useState(false);
 
   const ticketUrl = localTicket.ticket_code ? `${window.location.origin}/ticket/${localTicket.ticket_code}` : null;
 
@@ -172,7 +174,17 @@ export default function SellerTicketDetailModal({ ticket, pad, pricePerTicket, o
             </p>
             {localTicket.receipt_image ? (
               <div className="flex items-center gap-3">
-                <img src={localTicket.receipt_image} alt="Comprobante" className="w-16 h-16 rounded-xl object-cover border border-zinc-200 dark:border-zinc-800" />
+                <button
+                  type="button"
+                  onClick={() => setShowReceiptLightbox(true)}
+                  title="Ver comprobante"
+                  className="relative shrink-0 w-16 h-16 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-800 group"
+                >
+                  <img src={localTicket.receipt_image} alt="Comprobante" className="w-full h-full object-cover" />
+                  <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors">
+                    <ZoomIn size={16} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </span>
+                </button>
                 <label className="inline-flex items-center gap-1.5 text-xs font-semibold text-lime-500 cursor-pointer hover:text-lime-600">
                   {uploadingReceipt ? 'Subiendo...' : 'Reemplazar'}
                   <input type="file" accept="image/jpeg,image/png,image/gif,image/webp" className="hidden" onChange={handleReceiptPick} disabled={uploadingReceipt} />
@@ -208,6 +220,10 @@ export default function SellerTicketDetailModal({ ticket, pad, pricePerTicket, o
           </div>
         </div>
       </div>
+
+      {showReceiptLightbox && (
+        <ReceiptLightbox src={localTicket.receipt_image} onClose={() => setShowReceiptLightbox(false)} />
+      )}
     </div>
   );
 }
