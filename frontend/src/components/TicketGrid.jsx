@@ -85,6 +85,7 @@ export default function TicketGrid() {
   const [sellers, setSellers] = useState([]);
   const [sellerCodeParam] = useState(() => new URLSearchParams(window.location.search).get('seller')?.toUpperCase() || null);
   const [sellerPageChecked, setSellerPageChecked] = useState(false);
+  const [sellerNumbersMode, setSellerNumbersMode] = useState(false);
   const [selectedSellerCode, setSelectedSellerCode] = useState('');
 
   // Menú hamburguesa (compartir / organizador / verificar / pagos / cuenta)
@@ -188,7 +189,32 @@ export default function TicketGrid() {
       });
   };
 
-  useEffect(() => { loadTickets(page); }, [id, page]);
+  // Trae exactamente los números asignados a un vendedor por sorteo aleatorio,
+  // sin importar en cuántos bloques de PAGE_SIZE caerían en la rifa completa
+  // (evita que queden repartidos entre varias "páginas" del paginador general).
+  const loadSellerNumberTickets = (numbers) => {
+    setPageLoading(true);
+    fetch(`/api/get_tickets.php?slug=${encodeURIComponent(id)}&numbers=${numbers.join(',')}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setTickets(data.tickets);
+          setRaffle(data.raffle);
+          setAvailableCount(data.available_count);
+          setSellers(data.sellers || []);
+          setNotFoundVariant(null);
+        }
+        setLoading(false);
+        setPageLoading(false);
+      })
+      .catch(() => { setLoading(false); setPageLoading(false); });
+  };
+
+  useEffect(() => {
+    if (sellerNumbersMode) return;
+    loadTickets(page);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, page, sellerNumbersMode]);
 
   // Countdown Logic
   useEffect(() => {
@@ -238,6 +264,19 @@ export default function TicketGrid() {
 
   const activeSeller = sellerCodeParam ? sellers.find(s => s.code === sellerCodeParam) || null : null;
 
+  // Si el vendedor del enlace (?seller=CODE) tiene números sueltos asignados
+  // por sorteo aleatorio, se reemplaza la carga por bloques con una traída
+  // directa de exactamente esos números (una sola vez), sin importar en
+  // cuántas "páginas" de la rifa completa caerían repartidos.
+  useEffect(() => {
+    if (!activeSeller || sellerNumbersMode) return;
+    if (activeSeller.numbers?.length > 0) {
+      setSellerNumbersMode(true);
+      loadSellerNumberTickets(activeSeller.numbers);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSeller, sellerNumbersMode]);
+
   // --- Lógica de paginación ---
   // number_start: primer número de la rifa (0 salvo que se haya creado con un
   // rango personalizado que empiece en otro punto).
@@ -246,14 +285,14 @@ export default function TicketGrid() {
   const totalPages = raffle ? Math.max(1, Math.ceil(raffle.total_tickets / PAGE_SIZE)) : 1;
   // Si hay un filtro de vendedor activo con rango, solo hace falta paginar
   // cuando ese rango realmente cruza más de un bloque de PAGE_SIZE (algo muy
-  // raro). Si el vendedor tiene números sueltos (asignación al azar), se
-  // cuentan las páginas distintas que realmente tocan esos números. Si el
-  // vendedor no tiene rango ni números (puede vender toda la rifa), la
-  // paginación se comporta como si no hubiera filtro.
+  // raro). Si el vendedor tiene números sueltos (asignación al azar), ya se
+  // trajeron todos de una vez (ver el useEffect de arriba), así que nunca
+  // hace falta paginar. Si el vendedor no tiene rango ni números (puede
+  // vender toda la rifa), la paginación se comporta como si no hubiera filtro.
   const sellerPageSpan = activeSeller && activeSeller.range_start != null
     ? Math.floor((activeSeller.range_end - numberStart) / PAGE_SIZE) - Math.floor((activeSeller.range_start - numberStart) / PAGE_SIZE) + 1
     : activeSeller && activeSeller.numbers?.length > 0
-      ? new Set(activeSeller.numbers.map(n => Math.floor((n - numberStart) / PAGE_SIZE))).size
+      ? 1
       : totalPages;
   const showPagination = totalPages > 1 && sellerPageSpan > 1;
   const rangeStart = numberStart + page * PAGE_SIZE;
@@ -265,16 +304,15 @@ export default function TicketGrid() {
     if (clamped !== page) setPage(clamped);
   };
 
-  // Si el enlace trae ?seller=CODE y ese vendedor tiene rango o números
-  // asignados al azar, salta una sola vez a la página donde empieza el
-  // primero (solo aplica a rifas con varias páginas).
+  // Si el enlace trae ?seller=CODE y ese vendedor tiene rango, salta una sola
+  // vez a la página donde empieza (solo aplica a rifas con varias páginas).
+  // Los vendedores con números al azar no usan "página": ya se trajeron
+  // todos sus números de una vez (ver el useEffect de arriba).
   useEffect(() => {
     if (!activeSeller || sellerPageChecked || pageLoading) return;
     setSellerPageChecked(true);
     if (activeSeller.range_start != null) {
       goToPage(Math.floor((activeSeller.range_start - numberStart) / PAGE_SIZE));
-    } else if (activeSeller.numbers?.length > 0) {
-      goToPage(Math.floor((Math.min(...activeSeller.numbers) - numberStart) / PAGE_SIZE));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSeller, sellerPageChecked, pageLoading]);
@@ -332,7 +370,11 @@ export default function TicketGrid() {
     // navegador) para reflejar lo que otros compradores hayan tomado mientras
     // tanto, activa el filtro de "solo disponibles" y desplaza hasta la grilla.
     setOnlyAvailable(true);
-    loadTickets(page);
+    if (sellerNumbersMode && activeSeller?.numbers?.length > 0) {
+      loadSellerNumberTickets(activeSeller.numbers);
+    } else {
+      loadTickets(page);
+    }
     gridSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 

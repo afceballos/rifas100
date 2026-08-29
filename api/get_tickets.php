@@ -5,6 +5,10 @@ require_once 'db.php';
 $slug = isset($_GET['slug']) ? trim($_GET['slug']) : '';
 $offset = isset($_GET['offset']) ? max(0, (int)$_GET['offset']) : 0;
 $limit = isset($_GET['limit']) ? min(1000, max(1, (int)$_GET['limit'])) : 1000;
+// Lista de números puntuales (p.ej. la asignación aleatoria de un vendedor):
+// cuando viene, se ignoran offset/limit y se traen exactamente esos números,
+// sin importar en cuántos bloques de "página" caerían en la rifa completa.
+$numbersParam = isset($_GET['numbers']) ? trim($_GET['numbers']) : '';
 
 if ($slug === '') {
     echo json_encode(['success' => false, 'code' => 'not_found', 'error' => 'Rifa no encontrada.']);
@@ -28,12 +32,24 @@ try {
 
     $raffleId = (int)$raffle['id'];
 
-    $stmt = $pdo->prepare("SELECT ticket_number as number, status FROM tickets WHERE raffle_id = ? ORDER BY ticket_number ASC LIMIT ? OFFSET ?");
-    $stmt->bindValue(1, $raffleId, PDO::PARAM_INT);
-    $stmt->bindValue(2, $limit, PDO::PARAM_INT);
-    $stmt->bindValue(3, $offset, PDO::PARAM_INT);
-    $stmt->execute();
-    $tickets = $stmt->fetchAll();
+    if ($numbersParam !== '') {
+        $numbersList = array_values(array_unique(array_filter(array_map('intval', explode(',', $numbersParam)))));
+        if (!empty($numbersList)) {
+            $placeholders = implode(',', array_fill(0, count($numbersList), '?'));
+            $stmt = $pdo->prepare("SELECT ticket_number as number, status FROM tickets WHERE raffle_id = ? AND ticket_number IN ($placeholders) ORDER BY ticket_number ASC");
+            $stmt->execute(array_merge([$raffleId], $numbersList));
+            $tickets = $stmt->fetchAll();
+        } else {
+            $tickets = [];
+        }
+    } else {
+        $stmt = $pdo->prepare("SELECT ticket_number as number, status FROM tickets WHERE raffle_id = ? ORDER BY ticket_number ASC LIMIT ? OFFSET ?");
+        $stmt->bindValue(1, $raffleId, PDO::PARAM_INT);
+        $stmt->bindValue(2, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(3, $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $tickets = $stmt->fetchAll();
+    }
 
     // Conteo global (no solo de la página actual) para la barra flotante
     $countStmt = $pdo->prepare("SELECT COUNT(CASE WHEN status = 'available' THEN 1 END) AS available_count FROM tickets WHERE raffle_id = ?");
