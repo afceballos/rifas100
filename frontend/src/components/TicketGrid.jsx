@@ -10,10 +10,11 @@ import PaymentInfoModal from './PaymentInfoModal';
 import AccountMenuSection from './AccountMenuSection';
 import TicketQRCode from './TicketQRCode';
 import TicketMark from './landing/TicketMark';
+import ImageLightbox from './ImageLightbox';
 import { getRaffleTheme, getNumberStyleClass, getBgColorClass } from '../utils/raffleTheme';
 import {
   Ticket, ChevronLeft, ChevronRight, Loader2, Trash2, ShoppingBag, Filter, FilterX, Dices, X, RotateCcw,
-  Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink, Phone, Mail, CalendarDays,
+  Menu, Share2, UserCircle2, Search, Wallet, Check, CheckCircle2, ExternalLink, Phone, Mail, CalendarDays, ZoomIn,
 } from 'lucide-react';
 
 const RANDOM_PRESETS = [1, 2, 3, 5];
@@ -95,6 +96,7 @@ export default function TicketGrid() {
   const [showPaymentInfoModal, setShowPaymentInfoModal] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
   const [me, setMe] = useState(null);
+  const [showCoverLightbox, setShowCoverLightbox] = useState(false);
 
   useEffect(() => {
     fetch('/api/me.php', { credentials: 'include' })
@@ -768,11 +770,21 @@ export default function TicketGrid() {
             <div className="side-panel bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 shadow-xl shadow-zinc-900/5 overflow-hidden">
               <div className="relative h-52 sm:h-60 overflow-hidden">
                 {raffle.background_image ? (
-                  <img src={raffle.background_image} alt={raffle.title} className="absolute inset-0 w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setShowCoverLightbox(true)}
+                    title="Ver imagen en grande"
+                    className="group absolute inset-0 w-full h-full"
+                  >
+                    <img src={raffle.background_image} alt={raffle.title} className="absolute inset-0 w-full h-full object-cover" />
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors">
+                      <ZoomIn size={22} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                    </span>
+                  </button>
                 ) : (
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' }} />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
               </div>
 
               <div className="p-5 space-y-5">
@@ -1138,6 +1150,10 @@ export default function TicketGrid() {
 
       {showPaymentInfoModal && (
         <PaymentInfoModal raffle={raffle} onClose={() => setShowPaymentInfoModal(false)} />
+      )}
+
+      {showCoverLightbox && (
+        <ImageLightbox src={raffle.background_image} alt={raffle.title} onClose={() => setShowCoverLightbox(false)} />
       )}
     </div>
   );

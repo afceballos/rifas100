@@ -7,7 +7,7 @@ import NotFound from './NotFound';
 import TicketQRCode from './TicketQRCode';
 import PaymentInfoModal from './PaymentInfoModal';
 import AccountMenuSection from './AccountMenuSection';
-import ReceiptLightbox from './ReceiptLightbox';
+import ImageLightbox from './ImageLightbox';
 import { Ticket, Copy, Check, CreditCard, ArrowUpRight, Download, Loader2, Menu, Upload, Image as ImageIcon, Share2 } from 'lucide-react';
 import TicketMark from './landing/TicketMark';
 
@@ -450,7 +450,7 @@ export default function TicketPage() {
       )}
 
       {showReceiptLightbox && (
-        <ReceiptLightbox src={ticket.receipt_image} onClose={() => setShowReceiptLightbox(false)} />
+        <ImageLightbox src={ticket.receipt_image} alt="Comprobante" onClose={() => setShowReceiptLightbox(false)} />
       )}
     </div>
   );

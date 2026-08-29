@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, MessageCircle, Phone, Ticket, Copy, Check, Receipt, ImagePlus, ZoomIn } from 'lucide-react';
-import ReceiptLightbox from './ReceiptLightbox';
+import ImageLightbox from './ImageLightbox';
 
 const STATUS_OPTIONS = [
   {
@@ -222,7 +222,7 @@ export default function SellerTicketDetailModal({ ticket, pad, pricePerTicket, o
       </div>
 
       {showReceiptLightbox && (
-        <ReceiptLightbox src={localTicket.receipt_image} onClose={() => setShowReceiptLightbox(false)} />
+        <ImageLightbox src={localTicket.receipt_image} alt="Comprobante" onClose={() => setShowReceiptLightbox(false)} />
       )}
     </div>
   );
