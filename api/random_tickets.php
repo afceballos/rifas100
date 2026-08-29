@@ -22,13 +22,22 @@ try {
     $params = [$raffle_id];
 
     if ($sellerCode !== null && $sellerCode !== '') {
-        $sellerStmt = $pdo->prepare("SELECT range_start, range_end FROM sellers WHERE raffle_id = ? AND code = ?");
+        $sellerStmt = $pdo->prepare("SELECT id, range_start, range_end FROM sellers WHERE raffle_id = ? AND code = ?");
         $sellerStmt->execute([$raffle_id, $sellerCode]);
         $seller = $sellerStmt->fetch();
         if ($seller && $seller['range_start'] !== null) {
             $sql .= " AND ticket_number BETWEEN ? AND ?";
             $params[] = (int)$seller['range_start'];
             $params[] = (int)$seller['range_end'];
+        } elseif ($seller) {
+            $numStmt = $pdo->prepare("SELECT ticket_number FROM seller_numbers WHERE seller_id = ?");
+            $numStmt->execute([(int)$seller['id']]);
+            $nums = array_map('intval', array_column($numStmt->fetchAll(), 'ticket_number'));
+            if (!empty($nums)) {
+                $placeholders = implode(',', array_fill(0, count($nums), '?'));
+                $sql .= " AND ticket_number IN ($placeholders)";
+                $params = array_merge($params, $nums);
+            }
         }
     }
 

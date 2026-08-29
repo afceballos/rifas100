@@ -20,9 +20,11 @@ try {
     $stmt = $pdo->prepare("
         SELECT
             s.id, s.code, s.name, s.phone, s.email, s.range_start, s.range_end, s.created_at,
-            COUNT(t.id) AS sold_count
+            COUNT(DISTINCT t.id) AS sold_count,
+            GROUP_CONCAT(DISTINCT sn.ticket_number ORDER BY sn.ticket_number) AS numbers_csv
         FROM sellers s
         LEFT JOIN tickets t ON t.seller_id = s.id AND t.status != 'available'
+        LEFT JOIN seller_numbers sn ON sn.seller_id = s.id
         WHERE s.raffle_id = ?
         GROUP BY s.id
         ORDER BY s.created_at ASC
@@ -33,10 +35,14 @@ try {
     foreach ($sellers as &$s) {
         $s['id'] = (int)$s['id'];
         $s['sold_count'] = (int)$s['sold_count'];
+        $s['numbers'] = $s['numbers_csv'] ? array_map('intval', explode(',', $s['numbers_csv'])) : [];
+        unset($s['numbers_csv']);
         if ($s['range_start'] !== null) {
             $s['range_start'] = (int)$s['range_start'];
             $s['range_end'] = (int)$s['range_end'];
             $s['total_count'] = $s['range_end'] - $s['range_start'] + 1;
+        } elseif (!empty($s['numbers'])) {
+            $s['total_count'] = count($s['numbers']);
         } else {
             $s['total_count'] = null;
         }

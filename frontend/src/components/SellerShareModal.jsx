@@ -36,7 +36,9 @@ export default function SellerShareModal({ seller, raffleUrl, pad = 2, onClose }
           <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
             {seller.range_start != null
               ? `Comparte este enlace o código QR: solo mostrará los números ${String(seller.range_start).padStart(pad, '0')}–${String(seller.range_end).padStart(pad, '0')} que tiene asignados.`
-              : 'Comparte este enlace o código QR: al no tener rango asignado, muestra todos los números de la rifa.'}
+              : seller.numbers?.length > 0
+                ? `Comparte este enlace o código QR: solo mostrará los ${seller.numbers.length} números que tiene asignados al azar.`
+                : 'Comparte este enlace o código QR: al no tener rango asignado, muestra todos los números de la rifa.'}
           </p>
           <div className="w-full">
             <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate bg-zinc-50 dark:bg-zinc-950 border border-zinc-100 dark:border-zinc-800 rounded-lg px-3 py-2 font-mono mb-2">

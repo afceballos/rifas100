@@ -391,7 +391,9 @@ export default function AdminRaffleSettings() {
                         <p className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
                           {s.code} · {s.range_start != null
                             ? `${String(s.range_start).padStart(digits, '0')}–${String(s.range_end).padStart(digits, '0')} · ${s.sold_count}/${s.total_count} vendidos`
-                            : `Todos los números · ${s.sold_count} vendidos`}
+                            : s.numbers?.length > 0
+                              ? `${s.numbers.length} números al azar · ${s.sold_count}/${s.total_count} vendidos`
+                              : `Todos los números · ${s.sold_count} vendidos`}
                         </p>
                         {(s.phone || s.email) && (
                           <p className="text-xs text-zinc-400 dark:text-zinc-500 flex items-center gap-2 mt-0.5">

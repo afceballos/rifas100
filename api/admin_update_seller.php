@@ -14,6 +14,7 @@ $phone = isset($data['phone']) && trim($data['phone']) !== '' ? trim($data['phon
 $email = isset($data['email']) && trim($data['email']) !== '' ? trim($data['email']) : null;
 $rangeStart = isset($data['range_start']) && $data['range_start'] !== '' && $data['range_start'] !== null ? (int)$data['range_start'] : null;
 $rangeEnd = isset($data['range_end']) && $data['range_end'] !== '' && $data['range_end'] !== null ? (int)$data['range_end'] : null;
+$numbers = isset($data['numbers']) && is_array($data['numbers']) ? array_map('intval', $data['numbers']) : [];
 
 if ($raffle_id <= 0 || $seller_id <= 0 || $name === '') {
     echo json_encode(['success' => false, 'error' => 'Faltan datos requeridos']);
@@ -39,7 +40,13 @@ try {
     $stmtRaffle->execute([$raffle_id]);
     $raffle = $stmtRaffle->fetch();
 
-    $error = validate_seller_range($pdo, $raffle_id, (int)$raffle['total_tickets'], $rangeStart, $rangeEnd, $seller_id, (int)$raffle['number_start']);
+    if (!empty($numbers)) {
+        $rangeStart = null;
+        $rangeEnd = null;
+        $error = validate_seller_numbers($pdo, $raffle_id, (int)$raffle['total_tickets'], $numbers, $seller_id, (int)$raffle['number_start']);
+    } else {
+        $error = validate_seller_range($pdo, $raffle_id, (int)$raffle['total_tickets'], $rangeStart, $rangeEnd, $seller_id, (int)$raffle['number_start']);
+    }
     if ($error) {
         echo json_encode(['success' => false, 'error' => $error]);
         exit;
@@ -50,6 +57,8 @@ try {
         WHERE id = ? AND raffle_id = ?
     ");
     $stmt->execute([$name, $phone, $email, $rangeStart, $rangeEnd, $seller_id, $raffle_id]);
+
+    set_seller_numbers($pdo, $seller_id, $numbers);
 
     echo json_encode(['success' => true]);
 } catch (Exception $e) {

@@ -56,7 +56,10 @@ export default function SellerPanel() {
     navigate('/vendedor/login');
   };
 
-  const pad = seller ? Math.max(2, String(Math.max(0, seller.range_end ?? seller.total_tickets - 1)).length) : 2;
+  const sellerMaxNumber = seller
+    ? (seller.range_end ?? (seller.numbers?.length ? Math.max(...seller.numbers) : seller.total_tickets - 1))
+    : 0;
+  const pad = seller ? Math.max(2, String(Math.max(0, sellerMaxNumber)).length) : 2;
 
   const filteredTickets = tickets.filter(t => {
     const q = search.trim().toLowerCase();
@@ -107,7 +110,11 @@ export default function SellerPanel() {
           </p>
           <h1 className="text-3xl font-bold">Hola, {seller?.name || '...'}</h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 font-mono">
-            {seller?.code}{seller && seller.range_start != null ? ` · Números ${String(seller.range_start).padStart(pad, '0')}–${String(seller.range_end).padStart(pad, '0')}` : ' · Todos los números'}
+            {seller?.code}{seller && seller.range_start != null
+              ? ` · Números ${String(seller.range_start).padStart(pad, '0')}–${String(seller.range_end).padStart(pad, '0')}`
+              : seller?.numbers?.length > 0
+                ? ` · ${seller.numbers.length} números al azar`
+                : ' · Todos los números'}
           </p>
         </div>
 

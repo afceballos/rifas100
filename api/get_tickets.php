@@ -43,7 +43,15 @@ try {
     // Datos públicos de vendedores: permiten filtrar por ?seller=CODE, mostrar
     // su contacto a quien entre por su enlace, y (si allow_seller_selection
     // está activo) listar opciones al reservar.
-    $sellersStmt = $pdo->prepare("SELECT code, name, phone, email, range_start, range_end FROM sellers WHERE raffle_id = ? ORDER BY created_at ASC");
+    $sellersStmt = $pdo->prepare("
+        SELECT s.code, s.name, s.phone, s.email, s.range_start, s.range_end,
+               GROUP_CONCAT(sn.ticket_number ORDER BY sn.ticket_number) AS numbers_csv
+        FROM sellers s
+        LEFT JOIN seller_numbers sn ON sn.seller_id = s.id
+        WHERE s.raffle_id = ?
+        GROUP BY s.id
+        ORDER BY s.created_at ASC
+    ");
     $sellersStmt->execute([$raffleId]);
     $sellers = $sellersStmt->fetchAll();
     foreach ($sellers as &$s) {
@@ -51,6 +59,8 @@ try {
             $s['range_start'] = (int)$s['range_start'];
             $s['range_end'] = (int)$s['range_end'];
         }
+        $s['numbers'] = $s['numbers_csv'] ? array_map('intval', explode(',', $s['numbers_csv'])) : [];
+        unset($s['numbers_csv']);
     }
 
     echo json_encode([

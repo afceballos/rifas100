@@ -101,6 +101,24 @@ CREATE TABLE sellers (
     FOREIGN KEY (raffle_id) REFERENCES raffles(id) ON DELETE CASCADE
 );
 
+-- 4b. Números sueltos asignados a un vendedor por sorteo aleatorio (modo
+-- alterno a range_start/range_end: un conjunto de números no necesariamente
+-- contiguos, elegidos al azar entre los libres de la rifa).
+CREATE TABLE seller_numbers (
+    seller_id INT NOT NULL,
+    ticket_number INT NOT NULL,
+    PRIMARY KEY (seller_id, ticket_number),
+    FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE CASCADE
+);
+
+-- Migración para bases de datos existentes:
+--   CREATE TABLE seller_numbers (
+--       seller_id INT NOT NULL,
+--       ticket_number INT NOT NULL,
+--       PRIMARY KEY (seller_id, ticket_number),
+--       FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE CASCADE
+--   );
+
 -- 5. Boletos (Grilla)
 CREATE TABLE tickets (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,

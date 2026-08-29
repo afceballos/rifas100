@@ -1,6 +1,7 @@
 <?php
 require_once 'seller_auth.php';
 require_once 'db.php';
+require_once 'seller_helper.php';
 header('Content-Type: application/json');
 
 require_seller_auth($pdo);
@@ -20,6 +21,8 @@ try {
         echo json_encode(['success' => false, 'error' => 'Vendedor no encontrado']);
         exit;
     }
+
+    $seller['numbers'] = get_seller_numbers($pdo, (int)$seller['id']);
 
     echo json_encode(['success' => true, 'seller' => $seller]);
 } catch (Exception $e) {

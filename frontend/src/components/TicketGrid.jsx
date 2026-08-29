@@ -246,11 +246,15 @@ export default function TicketGrid() {
   const totalPages = raffle ? Math.max(1, Math.ceil(raffle.total_tickets / PAGE_SIZE)) : 1;
   // Si hay un filtro de vendedor activo con rango, solo hace falta paginar
   // cuando ese rango realmente cruza más de un bloque de PAGE_SIZE (algo muy
-  // raro). Si el vendedor no tiene rango (puede vender toda la rifa), la
+  // raro). Si el vendedor tiene números sueltos (asignación al azar), se
+  // cuentan las páginas distintas que realmente tocan esos números. Si el
+  // vendedor no tiene rango ni números (puede vender toda la rifa), la
   // paginación se comporta como si no hubiera filtro.
   const sellerPageSpan = activeSeller && activeSeller.range_start != null
     ? Math.floor((activeSeller.range_end - numberStart) / PAGE_SIZE) - Math.floor((activeSeller.range_start - numberStart) / PAGE_SIZE) + 1
-    : totalPages;
+    : activeSeller && activeSeller.numbers?.length > 0
+      ? new Set(activeSeller.numbers.map(n => Math.floor((n - numberStart) / PAGE_SIZE))).size
+      : totalPages;
   const showPagination = totalPages > 1 && sellerPageSpan > 1;
   const rangeStart = numberStart + page * PAGE_SIZE;
   const rangeEnd = raffle ? Math.min(rangeStart + PAGE_SIZE, numberStart + raffle.total_tickets) : rangeStart;
@@ -261,13 +265,16 @@ export default function TicketGrid() {
     if (clamped !== page) setPage(clamped);
   };
 
-  // Si el enlace trae ?seller=CODE y ese vendedor tiene rango, salta una sola
-  // vez a la página donde empieza (solo aplica a rifas con varias páginas).
+  // Si el enlace trae ?seller=CODE y ese vendedor tiene rango o números
+  // asignados al azar, salta una sola vez a la página donde empieza el
+  // primero (solo aplica a rifas con varias páginas).
   useEffect(() => {
     if (!activeSeller || sellerPageChecked || pageLoading) return;
     setSellerPageChecked(true);
     if (activeSeller.range_start != null) {
       goToPage(Math.floor((activeSeller.range_start - numberStart) / PAGE_SIZE));
+    } else if (activeSeller.numbers?.length > 0) {
+      goToPage(Math.floor((Math.min(...activeSeller.numbers) - numberStart) / PAGE_SIZE));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSeller, sellerPageChecked, pageLoading]);
@@ -405,7 +412,12 @@ export default function TicketGrid() {
   const randomTotal = raffle ? (randomNumbers.length * parseFloat(raffle.price_per_ticket)) : 0;
   const visibleGridTickets = tickets
     .filter(t => !onlyAvailable || t.status === 'available')
-    .filter(t => !activeSeller || activeSeller.range_start == null || (t.number >= activeSeller.range_start && t.number <= activeSeller.range_end));
+    .filter(t => {
+      if (!activeSeller) return true;
+      if (activeSeller.range_start != null) return t.number >= activeSeller.range_start && t.number <= activeSeller.range_end;
+      if (activeSeller.numbers?.length > 0) return activeSeller.numbers.includes(t.number);
+      return true;
+    });
 
   const handlePurchase = async (e) => {
     e.preventDefault();
@@ -544,7 +556,9 @@ export default function TicketGrid() {
                 <span className="text-lime-700 dark:text-lime-400 font-semibold truncate">
                   {activeSeller.range_start != null
                     ? `Números de ${activeSeller.name} · ${activeSeller.range_start.toString().padStart(pad, '0')}–${activeSeller.range_end.toString().padStart(pad, '0')}`
-                    : `Comprando a través de ${activeSeller.name}`}
+                    : activeSeller.numbers?.length > 0
+                      ? `Números de ${activeSeller.name} · ${activeSeller.numbers.length} números al azar`
+                      : `Comprando a través de ${activeSeller.name}`}
                 </span>
                 {(activeSeller.phone || activeSeller.email) && (
                   <div className="flex items-center gap-3 shrink-0">
