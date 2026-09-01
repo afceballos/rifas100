@@ -4,13 +4,16 @@ import ThemeToggle from './ThemeToggle';
 import Dialog from './Dialog';
 import RaffleFormModal from './RaffleFormModal';
 import TicketMark from './landing/TicketMark';
-import { LayoutDashboard, LogOut, PlusCircle, ArrowRight, Trash2, EyeOff, Eye, Pencil, ShieldCheck } from 'lucide-react';
+import { LayoutDashboard, LogOut, PlusCircle, ArrowRight, Trash2, EyeOff, Eye, Pencil, ShieldCheck, MailWarning } from 'lucide-react';
 
 export default function Admin() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState(null);
+  const [resending, setResending] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
   const [raffles, setRaffles] = useState([]);
   const [me, setMe] = useState(null);
 
@@ -56,6 +59,8 @@ export default function Admin() {
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setUnverifiedEmail(null);
+    setResendSent(false);
     try {
       const res = await fetch('/api/login.php', {
         method: 'POST',
@@ -65,9 +70,24 @@ export default function Admin() {
       });
       const data = await res.json();
       if (data.success) checkAuth();
+      else if (data.code === 'unverified') setUnverifiedEmail(data.email);
       else showAlert('Acceso denegado', data.message, 'alert');
     } catch (err) { showAlert('Error', 'Error de conexión con el servidor.', 'alert'); }
     setLoading(false);
+  };
+
+  const handleResendVerification = async () => {
+    if (!unverifiedEmail || resending) return;
+    setResending(true);
+    try {
+      await fetch('/api/resend_verification.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      });
+      setResendSent(true);
+    } catch (err) { showAlert('Error', 'Error de conexión con el servidor.', 'alert'); }
+    setResending(false);
   };
 
   const handleLogout = async () => {
@@ -133,6 +153,28 @@ export default function Admin() {
             <span>TICKET<span className="text-raffle-greenDark dark:text-raffle-green">100</span></span>
           </div>
           <h2 className="text-2xl font-bold text-center mb-8">Acceso Operativo</h2>
+
+          {unverifiedEmail && (
+            <div className="mb-4 p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-900/50 text-sm">
+              <p className="flex items-start gap-2 text-amber-700 dark:text-amber-400 font-semibold">
+                <MailWarning size={16} className="shrink-0 mt-0.5" /> Debes verificar tu correo antes de iniciar sesión.
+              </p>
+              <p className="text-xs text-amber-700/80 dark:text-amber-400/80 mt-1.5">
+                Revisa {unverifiedEmail}. {resendSent ? 'Te reenviamos el enlace.' : ''}
+              </p>
+              {!resendSent && (
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={resending}
+                  className="mt-2 text-xs font-bold text-amber-700 dark:text-amber-400 hover:underline disabled:opacity-50"
+                >
+                  {resending ? 'Enviando...' : 'Reenviar correo de verificación'}
+                </button>
+              )}
+            </div>
+          )}
+
           <form onSubmit={handleLogin} className="space-y-4">
             <input type="text" placeholder="Usuario" required className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3" value={username} onChange={e => setUsername(e.target.value)} />
             <input type="password" placeholder="Contraseña" required className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3" value={password} onChange={e => setPassword(e.target.value)} />

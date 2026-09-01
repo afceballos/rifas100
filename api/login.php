@@ -14,11 +14,17 @@ if($stmt->fetchColumn() == 0) {
     $pdo->query("INSERT INTO users (username, password_hash, role) VALUES ('admin', '$hash', 'super_admin')");
 }
 
-$stmt = $pdo->prepare("SELECT id, password_hash, tenant_id, role FROM users WHERE username = ?");
+$stmt = $pdo->prepare("SELECT id, password_hash, tenant_id, role, email, email_verified_at FROM users WHERE username = ?");
 $stmt->execute([$user]);
 $row = $stmt->fetch();
 
 if ($row && password_verify($pass, $row['password_hash'])) {
+    // Las cuentas sin correo (la de bootstrap del MVP, o cuentas creadas antes
+    // de este cambio) no quedan bloqueadas por verificación.
+    if ($row['email'] !== null && $row['email_verified_at'] === null) {
+        echo json_encode(['success' => false, 'code' => 'unverified', 'email' => $row['email'], 'message' => 'Debes verificar tu correo antes de iniciar sesión.']);
+        exit;
+    }
     $_SESSION['admin_id'] = $row['id'];
     $_SESSION['tenant_id'] = $row['tenant_id'];
     $_SESSION['role'] = $row['role'];

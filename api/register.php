@@ -4,6 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 header('Content-Type: application/json');
 require_once 'db.php';
+require_once 'mailer.php';
 
 $data = json_decode(file_get_contents('php://input'), true);
 $tenantName = trim($data['tenant_name'] ?? '');
@@ -45,14 +46,20 @@ try {
     $stmtUser->execute([$tenantId, $username, $email, $hash]);
     $userId = $pdo->lastInsertId();
 
+    $token = bin2hex(random_bytes(32));
+    $expiresAt = date('Y-m-d H:i:s', time() + 86400);
+    $stmtToken = $pdo->prepare("INSERT INTO email_verifications (user_id, token, expires_at) VALUES (?, ?, ?)");
+    $stmtToken->execute([$userId, $token, $expiresAt]);
+
     $pdo->commit();
 
-    $_SESSION['admin_id'] = $userId;
-    $_SESSION['tenant_id'] = (int)$tenantId;
-    $_SESSION['role'] = 'admin';
-    $_SESSION['last_activity'] = time();
+    // La cuenta queda creada pero sin sesión: hay que verificar el correo
+    // antes de poder iniciar sesión (ver login.php).
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+    $verifyUrl = "https://{$host}/verificar-correo?token={$token}";
+    send_verification_email($email, $username, $verifyUrl);
 
-    echo json_encode(['success' => true, 'message' => 'Cuenta creada exitosamente.']);
+    echo json_encode(['success' => true, 'message' => 'Cuenta creada. Revisa tu correo para activarla.', 'requires_verification' => true]);
 } catch (Exception $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();

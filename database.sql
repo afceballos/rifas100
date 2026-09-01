@@ -17,11 +17,39 @@ CREATE TABLE users (
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(150) NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
+    email_verified_at DATETIME NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
 );
 
 -- ALTER TABLE users ADD COLUMN email VARCHAR(150) NULL UNIQUE;
+-- ALTER TABLE users ADD COLUMN email_verified_at DATETIME NULL;
+
+-- 2b. Tokens de verificación de correo (uno o más por usuario mientras no
+-- verifica; se borran todos al verificar o al pedir uno nuevo).
+CREATE TABLE email_verifications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_token (token),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Migración para bases de datos existentes:
+--   CREATE TABLE email_verifications (
+--       id INT AUTO_INCREMENT PRIMARY KEY,
+--       user_id INT NOT NULL,
+--       token VARCHAR(64) NOT NULL,
+--       expires_at DATETIME NOT NULL,
+--       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--       UNIQUE KEY unique_token (token),
+--       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+--   );
+-- Nota: las cuentas ya existentes quedan con email_verified_at NULL. Para no
+-- bloquearles el login retroactivamente, corre una vez:
+--   UPDATE users SET email_verified_at = NOW() WHERE email_verified_at IS NULL;
 
 -- 3. Configuración de la Rifa
 CREATE TABLE raffles (
