@@ -178,6 +178,9 @@ export default function Admin() {
           <form onSubmit={handleLogin} className="space-y-4">
             <input type="text" placeholder="Usuario o correo" required className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3" value={username} onChange={e => setUsername(e.target.value)} />
             <input type="password" placeholder="Contraseña" required className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3" value={password} onChange={e => setPassword(e.target.value)} />
+            <div className="text-right">
+              <Link to="/recuperar-contrasena" className="text-xs font-semibold text-zinc-500 hover:text-lime-600 dark:hover:text-lime-400">¿Olvidaste tu contraseña?</Link>
+            </div>
             <button type="submit" className="w-full py-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold rounded-xl mt-4">{loading ? '...' : 'Entrar'}</button>
           </form>
           <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mt-6">

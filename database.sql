@@ -51,6 +51,30 @@ CREATE TABLE email_verifications (
 -- bloquearles el login retroactivamente, corre una vez:
 --   UPDATE users SET email_verified_at = NOW() WHERE email_verified_at IS NULL;
 
+-- 2c. Tokens para "olvidé mi contraseña" (uno o más por usuario mientras no se
+-- usa; se borran todos al restablecer o al pedir uno nuevo). Vencen rápido
+-- (1 hora) por ser más sensibles que la verificación de correo.
+CREATE TABLE password_resets (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    token VARCHAR(64) NOT NULL,
+    expires_at DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unique_token (token),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- Migración para bases de datos existentes:
+--   CREATE TABLE password_resets (
+--       id INT AUTO_INCREMENT PRIMARY KEY,
+--       user_id INT NOT NULL,
+--       token VARCHAR(64) NOT NULL,
+--       expires_at DATETIME NOT NULL,
+--       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+--       UNIQUE KEY unique_token (token),
+--       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+--   );
+
 -- 3. Configuración de la Rifa
 CREATE TABLE raffles (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -7,6 +7,9 @@ import Admin from './components/Admin'
 import Register from './components/Register'
 import RegisterPending from './components/RegisterPending'
 import VerifyEmail from './components/VerifyEmail'
+import ForgotPassword from './components/ForgotPassword'
+import ForgotPasswordSent from './components/ForgotPasswordSent'
+import ResetPassword from './components/ResetPassword'
 import AdminRaffle from './components/AdminRaffle'
 import AdminRaffleSettings from './components/AdminRaffleSettings'
 import AdminRaffleDesign from './components/AdminRaffleDesign'
@@ -28,6 +31,9 @@ function App() {
         <Route path="/registro" element={<Register />} />
         <Route path="/registro/pendiente" element={<RegisterPending />} />
         <Route path="/verificar-correo" element={<VerifyEmail />} />
+        <Route path="/recuperar-contrasena" element={<ForgotPassword />} />
+        <Route path="/recuperar-contrasena/enviado" element={<ForgotPasswordSent />} />
+        <Route path="/restablecer-contrasena" element={<ResetPassword />} />
         <Route
           path="/admin/raffle/:id"
           element={
