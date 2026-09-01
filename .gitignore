@@ -1,0 +1,13 @@
+# Imágenes subidas en tiempo de ejecución (comprobantes, fondos de rifa, fotos
+# de organizador). Viven solo en el servidor — nunca deben commitearse ni
+# borrarse en un despliegue. Se ignora todo el contenido, pero se conserva la
+# estructura de carpetas vía los .gitkeep (así siempre existen tras un deploy,
+# sin depender de que PHP tenga permiso para crearlas con mkdir).
+uploads/*
+!uploads/.gitkeep
+!uploads/receipts/
+uploads/receipts/*
+!uploads/receipts/.gitkeep
+!uploads/raffles/
+uploads/raffles/*
+!uploads/raffles/.gitkeep
