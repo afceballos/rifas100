@@ -3,21 +3,44 @@
 // al resto del backend). En hosting compartido tipo Hostinger normalmente
 // funciona sin configuración adicional siempre que el remitente use el mismo
 // dominio del sitio.
+//
+// Las plantillas visuales (HTML con el estilo del sitio) viven en
+// email_templates/ — cada tipo de correo tiene su propio archivo ahí, todos
+// comparten el mismo envoltorio de marca (email_templates/shell.php). Este
+// archivo solo arma y envía el mensaje multipart/alternative (texto + HTML).
 
-function send_verification_email($toEmail, $toName, $verifyUrl) {
+require_once __DIR__ . '/email_templates/verification.php';
+
+// Envío genérico multipart/alternative (texto plano + HTML) — lo usan todas
+// las funciones send_*_email de abajo.
+function send_email($toEmail, $subject, $textBody, $htmlBody) {
     $host = preg_replace('/^www\./', '', $_SERVER['HTTP_HOST'] ?? 'localhost');
     $fromEmail = 'no-reply@' . $host;
-
-    $subject = '=?UTF-8?B?' . base64_encode('Confirma tu correo · Ticket100') . '?=';
-
-    $body = "Hola {$toName},\n\n"
-        . "Gracias por registrarte en Ticket100. Confirma tu correo para poder iniciar sesión:\n\n"
-        . "{$verifyUrl}\n\n"
-        . "Este enlace vence en 24 horas. Si tú no creaste esta cuenta, puedes ignorar este mensaje.\n";
+    $boundary = md5(uniqid((string)time(), true));
 
     $headers = "From: Ticket100 <{$fromEmail}>\r\n"
         . "Reply-To: {$fromEmail}\r\n"
-        . "Content-Type: text/plain; charset=UTF-8\r\n";
+        . "MIME-Version: 1.0\r\n"
+        . "Content-Type: multipart/alternative; boundary=\"{$boundary}\"\r\n";
 
-    return @mail($toEmail, $subject, $body, $headers);
+    $message = "--{$boundary}\r\n"
+        . "Content-Type: text/plain; charset=UTF-8\r\n"
+        . "Content-Transfer-Encoding: 8bit\r\n\r\n"
+        . $textBody . "\r\n\r\n"
+        . "--{$boundary}\r\n"
+        . "Content-Type: text/html; charset=UTF-8\r\n"
+        . "Content-Transfer-Encoding: 8bit\r\n\r\n"
+        . $htmlBody . "\r\n\r\n"
+        . "--{$boundary}--";
+
+    return @mail($toEmail, $subject, $message, $headers);
+}
+
+function send_verification_email($toEmail, $toName, $verifyUrl) {
+    return send_email(
+        $toEmail,
+        verification_email_subject(),
+        verification_email_text($toName, $verifyUrl),
+        verification_email_html($toName, $verifyUrl)
+    );
 }
