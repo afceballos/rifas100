@@ -5,6 +5,7 @@ import TicketGrid from './components/TicketGrid'
 import TicketPage from './components/TicketPage'
 import Admin from './components/Admin'
 import Register from './components/Register'
+import RegisterPending from './components/RegisterPending'
 import VerifyEmail from './components/VerifyEmail'
 import AdminRaffle from './components/AdminRaffle'
 import AdminRaffleSettings from './components/AdminRaffleSettings'
@@ -25,6 +26,7 @@ function App() {
         <Route path="/ticket/:code" element={<TicketPage />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/registro" element={<Register />} />
+        <Route path="/registro/pendiente" element={<RegisterPending />} />
         <Route path="/verificar-correo" element={<VerifyEmail />} />
         <Route
           path="/admin/raffle/:id"
