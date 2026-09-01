@@ -306,6 +306,50 @@ export default function TicketGrid() {
     if (clamped !== page) setPage(clamped);
   };
 
+  // Se muestra arriba y abajo de la grilla: en rifas grandes (muchas páginas)
+  // así no hay que volver a subir para pasar de página.
+  const paginationControls = showPagination && (
+    <div className={`my-6 ${isEnded ? 'opacity-50 pointer-events-none' : ''}`}>
+      <div className="text-center mb-3 text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+        Mostrando {rangeStart.toString().padStart(pad, '0')}–{(rangeEnd - 1).toString().padStart(pad, '0')} de {raffle.total_tickets}
+      </div>
+      <div className="flex items-center justify-center gap-1.5 flex-wrap">
+        <button
+          onClick={() => goToPage(page - 1)}
+          disabled={page === 0}
+          className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400 dark:hover:border-lime-500 transition-colors"
+        >
+          <ChevronLeft size={18} />
+        </button>
+
+        {pageList.map(item => item.type === 'ellipsis' ? (
+          <span key={item.key} className="px-1 text-zinc-400 select-none">…</span>
+        ) : (
+          <button
+            key={item.value}
+            onClick={() => goToPage(item.value)}
+            style={item.value === page ? { background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' } : undefined}
+            className={`min-w-[2.5rem] h-10 px-3 rounded-xl font-mono font-bold text-sm transition-colors ${
+              item.value === page
+                ? 'text-white shadow-md'
+                : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-lime-400 dark:hover:border-lime-500'
+            }`}
+          >
+            {item.value + 1}
+          </button>
+        ))}
+
+        <button
+          onClick={() => goToPage(page + 1)}
+          disabled={page >= totalPages - 1}
+          className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400 dark:hover:border-lime-500 transition-colors"
+        >
+          <ChevronRight size={18} />
+        </button>
+      </div>
+    </div>
+  );
+
   // Si el enlace trae ?seller=CODE y ese vendedor tiene rango, salta una sola
   // vez a la página donde empieza (solo aplica a rifas con varias páginas).
   // Los vendedores con números al azar no usan "página": ya se trajeron
@@ -662,47 +706,7 @@ export default function TicketGrid() {
               </div>
             )}
 
-            {showPagination && (
-              <div className={`mb-6 ${isEnded ? 'opacity-50 pointer-events-none' : ''}`}>
-                <div className="text-center mb-3 text-xs font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-                  Mostrando {rangeStart.toString().padStart(pad, '0')}–{(rangeEnd - 1).toString().padStart(pad, '0')} de {raffle.total_tickets}
-                </div>
-                <div className="flex items-center justify-center gap-1.5 flex-wrap">
-                  <button
-                    onClick={() => goToPage(page - 1)}
-                    disabled={page === 0}
-                    className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400 dark:hover:border-lime-500 transition-colors"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-
-                  {pageList.map(item => item.type === 'ellipsis' ? (
-                    <span key={item.key} className="px-1 text-zinc-400 select-none">…</span>
-                  ) : (
-                    <button
-                      key={item.value}
-                      onClick={() => goToPage(item.value)}
-                      style={item.value === page ? { background: 'linear-gradient(135deg, var(--theme-c1), var(--theme-c2))' } : undefined}
-                      className={`min-w-[2.5rem] h-10 px-3 rounded-xl font-mono font-bold text-sm transition-colors ${
-                        item.value === page
-                          ? 'text-white shadow-md'
-                          : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:border-lime-400 dark:hover:border-lime-500'
-                      }`}
-                    >
-                      {item.value + 1}
-                    </button>
-                  ))}
-
-                  <button
-                    onClick={() => goToPage(page + 1)}
-                    disabled={page >= totalPages - 1}
-                    className="shrink-0 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:border-lime-400 dark:hover:border-lime-500 transition-colors"
-                  >
-                    <ChevronRight size={18} />
-                  </button>
-                </div>
-              </div>
-            )}
+            {paginationControls}
 
             <div ref={gridSectionRef} className="relative scroll-mt-4">
               {pageLoading && (
@@ -742,6 +746,8 @@ export default function TicketGrid() {
                 })}
               </div>
             </div>
+
+            {paginationControls}
           </div>
 
           {/* Columna derecha: título/fecha/descripción (no sticky) + imagen, info y acciones de la rifa (sticky) */}
