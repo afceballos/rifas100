@@ -56,7 +56,7 @@ export default function Register() {
         <p className="text-center text-sm text-zinc-500 dark:text-zinc-400 mb-8">Empieza a crear tus propias rifas gratis.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            type="text" placeholder="Nombre del negocio" required
+            type="text" placeholder="Nombre de la persona o negocio" required
             className="w-full bg-zinc-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl p-3"
             value={form.tenant_name} onChange={e => setForm({ ...form, tenant_name: e.target.value })}
           />

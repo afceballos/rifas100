@@ -14,8 +14,9 @@ if($stmt->fetchColumn() == 0) {
     $pdo->query("INSERT INTO users (username, password_hash, role) VALUES ('admin', '$hash', 'super_admin')");
 }
 
-$stmt = $pdo->prepare("SELECT id, password_hash, tenant_id, role, email, email_verified_at FROM users WHERE username = ?");
-$stmt->execute([$user]);
+// Se permite iniciar sesión con el usuario o con el correo, en el mismo campo.
+$stmt = $pdo->prepare("SELECT id, password_hash, tenant_id, role, email, email_verified_at FROM users WHERE username = ? OR email = ?");
+$stmt->execute([$user, $user]);
 $row = $stmt->fetch();
 
 if ($row && password_verify($pass, $row['password_hash'])) {
