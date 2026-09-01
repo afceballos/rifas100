@@ -8,9 +8,15 @@ require_auth();
 $data = json_decode(file_get_contents('php://input'), true);
 $raffle_id = isset($data['raffle_id']) ? (int)$data['raffle_id'] : 0;
 $methods = isset($data['payment_methods']) && is_array($data['payment_methods']) ? $data['payment_methods'] : [];
+$onlinePaymentLink = isset($data['online_payment_link']) ? trim($data['online_payment_link']) : '';
 
 if ($raffle_id <= 0) {
     echo json_encode(['success' => false, 'error' => 'Datos inválidos']);
+    exit;
+}
+
+if ($onlinePaymentLink !== '' && !filter_var($onlinePaymentLink, FILTER_VALIDATE_URL)) {
+    echo json_encode(['success' => false, 'error' => 'El link de pago en línea no es una URL válida']);
     exit;
 }
 
@@ -46,10 +52,10 @@ foreach ($methods as $entry) {
 }
 
 try {
-    $stmt = $pdo->prepare("UPDATE raffles SET payment_info = ? WHERE id = ?");
-    $stmt->execute([json_encode($clean, JSON_UNESCAPED_UNICODE), $raffle_id]);
+    $stmt = $pdo->prepare("UPDATE raffles SET payment_info = ?, online_payment_link = ? WHERE id = ?");
+    $stmt->execute([json_encode($clean, JSON_UNESCAPED_UNICODE), $onlinePaymentLink !== '' ? $onlinePaymentLink : null, $raffle_id]);
 
-    echo json_encode(['success' => true, 'payment_methods' => $clean]);
+    echo json_encode(['success' => true, 'payment_methods' => $clean, 'online_payment_link' => $onlinePaymentLink]);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'error' => 'Error al guardar los métodos de pago']);
 }

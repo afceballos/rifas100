@@ -42,6 +42,7 @@ CREATE TABLE raffles (
     allow_seller_selection TINYINT(1) NOT NULL DEFAULT 0,
     seller_portal_enabled TINYINT(1) NOT NULL DEFAULT 1,
     receipt_upload_enabled TINYINT(1) NOT NULL DEFAULT 0,
+    online_payment_link VARCHAR(500) NULL,
     price_per_ticket DECIMAL(10,2) NOT NULL,
     draw_date DATETIME NOT NULL,
     total_tickets INT NOT NULL,
@@ -83,6 +84,7 @@ CREATE TABLE raffles (
 --   7) ALTER TABLE raffles ADD COLUMN seller_portal_enabled TINYINT(1) NOT NULL DEFAULT 1;
 
 -- ALTER TABLE raffles ADD COLUMN receipt_upload_enabled TINYINT(1) NOT NULL DEFAULT 0;
+-- ALTER TABLE raffles ADD COLUMN online_payment_link VARCHAR(500) NULL;
 
 -- 4. Vendedores (rango de números asignado dentro de una rifa; el rango es
 -- opcional — si queda NULL, el vendedor puede vender cualquier número)

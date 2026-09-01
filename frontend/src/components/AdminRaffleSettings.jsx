@@ -11,7 +11,7 @@ import SellerSalesModal from './SellerSalesModal';
 import SellerPasswordModal from './SellerPasswordModal';
 import TicketQRCode from './TicketQRCode';
 import QRCode from 'qrcode';
-import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2, Download, Copy, Check, Users, UserPlus, QrCode, Phone, Mail, ListChecks, KeyRound } from 'lucide-react';
+import { ArrowLeft, Pencil, EyeOff, Eye, Trash2, Wallet, UserCircle2, Download, Copy, Check, Users, UserPlus, QrCode, Phone, Mail, ListChecks, KeyRound, Link2 } from 'lucide-react';
 import { parsePaymentMethods } from '../utils/paymentInfo';
 
 const formatDrawDate = (value) => {
@@ -333,6 +333,13 @@ export default function AdminRaffleSettings() {
                   <Pencil size={15} /> {paymentMethods.length ? 'Editar' : 'Configurar'}
                 </button>
               </div>
+
+              {raffle?.online_payment_link && (
+                <div className="flex items-center gap-2 mb-3 px-3 py-2 rounded-xl bg-lime-50 dark:bg-lime-500/10 border border-lime-100 dark:border-lime-900/50 text-xs font-semibold text-lime-700 dark:text-lime-400">
+                  <Link2 size={13} className="shrink-0" />
+                  <span className="truncate">Pago en línea configurado: {raffle.online_payment_link}</span>
+                </div>
+              )}
 
               {paymentMethods.length > 0 ? (
                 <div className="space-y-2">

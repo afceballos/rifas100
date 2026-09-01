@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Banknote, Building2, CreditCard, Copy, Check } from 'lucide-react';
+import { X, Banknote, Building2, CreditCard, Copy, Check, ExternalLink } from 'lucide-react';
 import { parsePaymentMethods } from '../utils/paymentInfo';
 
 const methodIcon = (method) => {
@@ -39,6 +39,17 @@ export default function PaymentInfoModal({ raffle, onClose }) {
             <X size={20} />
           </button>
         </div>
+
+        {raffle?.online_payment_link && (
+          <a
+            href={raffle.online_payment_link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 w-full py-3.5 mb-4 rounded-2xl bg-gradient-to-r from-lime-500 to-lime-600 text-white font-bold shadow-lg shadow-lime-500/30 hover:shadow-xl hover:shadow-lime-500/40 transition-all active:scale-95"
+          >
+            <CreditCard size={18} /> Pagar en línea <ExternalLink size={15} className="opacity-70" />
+          </a>
+        )}
 
         {methods.length > 0 ? (
           <div className="space-y-3 mb-6">

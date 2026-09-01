@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Trash2, Plus, X } from 'lucide-react';
+import { Trash2, Plus, X, Link2 } from 'lucide-react';
 import { parsePaymentMethods } from '../utils/paymentInfo';
 
 const METHOD_OPTIONS = ['Transferencia', 'Pago Móvil', 'Zelle', 'PayPal', 'Binance / Cripto', 'Efectivo', 'Otro'];
@@ -11,6 +11,7 @@ export default function PaymentMethodModal({ raffle, onClose, onSaved, showAlert
   const existing = parsePaymentMethods(raffle?.payment_info);
 
   const [methods, setMethods] = useState(existing.length ? existing : [blankMethod()]);
+  const [onlinePaymentLink, setOnlinePaymentLink] = useState(raffle?.online_payment_link || '');
   const [submitting, setSubmitting] = useState(false);
 
   const updateMethod = (index, field, value) => {
@@ -46,6 +47,7 @@ export default function PaymentMethodModal({ raffle, onClose, onSaved, showAlert
         body: JSON.stringify({
           raffle_id: raffle.id,
           payment_methods: methods,
+          online_payment_link: onlinePaymentLink.trim(),
         }),
       });
       const data = await res.json();
@@ -75,6 +77,20 @@ export default function PaymentMethodModal({ raffle, onClose, onSaved, showAlert
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="p-4 rounded-2xl border border-lime-200 dark:border-lime-900/50 bg-lime-50/60 dark:bg-lime-500/5 space-y-2">
+            <label className="flex items-center gap-1.5 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
+              <Link2 size={15} /> Link de pago en línea (opcional)
+            </label>
+            <input
+              type="url" placeholder="https://checkout.wompi.co/l/tu-link"
+              className="w-full p-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm"
+              value={onlinePaymentLink} onChange={e => setOnlinePaymentLink(e.target.value)}
+            />
+            <p className="text-xs text-zinc-500 dark:text-zinc-400">
+              Pega tu propio link de pago (Wompi, ePayco, PayU, etc.). El dinero llega directo a tu cuenta — esta plataforma no lo toca. Si lo llenas, el comprador verá un botón "Pagar en línea" antes de los métodos manuales.
+            </p>
+          </div>
+
           {methods.map((m, mIndex) => (
             <div key={mIndex} className="p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 space-y-3">
               <div className="flex items-center justify-between">

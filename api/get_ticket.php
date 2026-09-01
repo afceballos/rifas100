@@ -22,7 +22,7 @@ try {
         SELECT t.ticket_number, t.status, t.buyer_name, t.buyer_phone, t.updated_at, t.receipt_image,
                r.id AS raffle_id, r.slug AS raffle_slug, r.title AS raffle_title, r.draw_date,
                r.price_per_ticket, r.organizer_name, r.organizer_photo, r.payment_info, r.is_published, r.total_tickets, r.number_start,
-               r.receipt_upload_enabled
+               r.receipt_upload_enabled, r.online_payment_link
         FROM tickets t
         JOIN raffles r ON r.id = t.raffle_id
         WHERE t.ticket_code = ?
@@ -85,6 +85,7 @@ try {
             'total_tickets' => (int)$first['total_tickets'],
             'number_start' => (int)$first['number_start'],
             'receipt_upload_enabled' => (int)$first['receipt_upload_enabled'] === 1,
+            'online_payment_link' => $first['online_payment_link'],
         ],
     ]);
 } catch (Exception $e) {
