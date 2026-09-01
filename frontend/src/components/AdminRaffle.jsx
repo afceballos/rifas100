@@ -4,7 +4,8 @@ import ThemeToggle from './ThemeToggle';
 import Dialog from './Dialog';
 import AdminRaffleSidebar from './AdminRaffleSidebar';
 import ParticipantModal from './ParticipantModal';
-import { DollarSign, Ticket, Clock, Eye as EyeIcon, CheckCircle2, ArrowLeft, Trash2, Search, ChevronLeft, ChevronRight, Info, X } from 'lucide-react';
+import ImageLightbox from './ImageLightbox';
+import { DollarSign, Ticket, Clock, Eye as EyeIcon, CheckCircle2, ArrowLeft, Trash2, Search, ChevronLeft, ChevronRight, Info, X, Receipt } from 'lucide-react';
 
 const CircularProgress = ({ percent, size = 132, strokeWidth = 11 }) => {
   const radius = (size - strokeWidth) / 2;
@@ -65,6 +66,7 @@ export default function AdminRaffle() {
   const [money, setMoney] = useState(0);
   const [buyers, setBuyers] = useState([]);
   const [viewingTicket, setViewingTicket] = useState(null);
+  const [viewingReceipt, setViewingReceipt] = useState(null);
 
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
@@ -423,6 +425,15 @@ export default function AdminRaffle() {
                             >
                               <Info size={15} />
                             </button>
+                            {b.receipt_image && (
+                              <button
+                                onClick={() => setViewingReceipt(b.receipt_image)}
+                                title="Ver comprobante"
+                                className="p-1.5 text-zinc-500 hover:text-lime-600 dark:hover:text-lime-400 hover:bg-lime-50 dark:hover:bg-lime-900/20 rounded-lg transition-colors"
+                              >
+                                <Receipt size={15} />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleDeleteBuyer(b)}
                               title="Liberar boletos"
@@ -500,6 +511,10 @@ export default function AdminRaffle() {
           onDelete={handleDeleteBuyer}
           showAlert={showAlert}
         />
+      )}
+
+      {viewingReceipt && (
+        <ImageLightbox src={viewingReceipt} alt="Comprobante" onClose={() => setViewingReceipt(null)} />
       )}
 
       <Dialog {...dialog} />
